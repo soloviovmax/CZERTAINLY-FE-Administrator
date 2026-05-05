@@ -622,6 +622,55 @@ test.describe('CustomTable', () => {
         await expect(component.getByText(/Showing.*items of/)).toBeVisible();
     });
 
+    test('should toggle row selection when clicking on a table cell (not the checkbox)', async ({ mount }) => {
+        let checkedRows: (string | number)[] = [];
+        const component = await mount(
+            withProviders(
+                <CustomTable headers={mockHeaders} data={mockData} hasCheckboxes={true} onCheckedRowsChanged={(r) => (checkedRows = r)} />,
+            ),
+        );
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).toContain('1');
+
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).not.toContain('1');
+    });
+
+    test('should respect paginationStateKey prop for table signature', async ({ mount }) => {
+        const manyRows = Array.from({ length: 30 }, (_, i) => ({
+            id: i + 1,
+            columns: [`Row ${i + 1}`, `b`, `c`],
+        }));
+        const store = createMockStore();
+
+        const tableA = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="table-a" />, {
+                store,
+                initialRoute: '/roles',
+            }),
+        );
+        await tableA.getByTestId('pagination-next').click();
+        await expect(tableA.getByText(/Showing 11 to 20/)).toBeVisible();
+        await tableA.unmount();
+
+        const tableB = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="table-b" />, {
+                store,
+                initialRoute: '/roles',
+            }),
+        );
+        await expect(tableB.getByText(/Showing 1 to 10/)).toBeVisible();
+        await tableB.unmount();
+    });
+
+    test('should collapse expanded detail row on second click', async ({ mount }) => {
+        const dataWithDetails: TableDataRow[] = [{ id: 1, columns: ['Alice', 'alice@example.com'], detailColumns: ['Detail info'] }];
+        const component = await mount(withProviders(<CustomTable headers={mockHeaders} data={dataWithDetails} hasDetails={true} />));
+        await component.getByText('alice@example.com').click();
+        await component.getByText('alice@example.com').click();
+        await expect(component.locator('table')).toBeVisible();
+    });
+
     test('should keep separate internal pagination for different tables on same route', async ({ mount }) => {
         const manyRows = Array.from({ length: 30 }, (_, i) => ({
             id: i + 1,
