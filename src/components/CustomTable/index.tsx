@@ -15,6 +15,7 @@ import SimpleBar from 'simplebar-react';
 import cn from 'classnames';
 import { useLocation } from 'react-router';
 import { TableProperties } from 'lucide-react';
+import TableSkeleton from './TableSkeleton';
 
 export type { TableDataRow, TableHeader } from './types';
 
@@ -48,6 +49,7 @@ interface Props {
     disablePaginationControls?: boolean;
     disableSelectionControls?: boolean;
     disableSearchControls?: boolean;
+    isLoading?: boolean;
 }
 
 const emptyCheckedRows: (string | number)[] = [];
@@ -75,6 +77,7 @@ function CustomTable({
     disablePaginationControls = false,
     disableSelectionControls = false,
     disableSearchControls = false,
+    isLoading = false,
 }: Props) {
     const location = useLocation();
     const [tblHeaders, setTblHeaders] = useState<TableHeader[]>();
@@ -227,7 +230,12 @@ function CustomTable({
                     size: 'xl',
                     title: caption,
                     content: (
-                        <CustomTable headers={detailTableHeaders} data={detailData} hasHeader={!!detailHeaders} hasPagination={false} />
+                        <CustomTable
+                            headers={detailTableHeaders}
+                            data={detailData}
+                            hasHeader={Boolean(detailHeaders)}
+                            hasPagination={false}
+                        />
                     ),
                     showCloseButton: true,
                 }),
@@ -635,56 +643,68 @@ function CustomTable({
 
     return (
         <div data-testid="custom-table">
-            {canSearch && (
-                <div className="flex justify-end mb-3">
-                    <div className="max-w-sm">
-                        <input
-                            id="search"
-                            placeholder="Search"
-                            onChange={(event) => setSearchKey(event.target.value)}
-                            type="text"
-                            disabled={disableSearchControls}
-                            className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
-                        />
-                    </div>
-                </div>
-            )}
-            {(hasHeader || body?.length > 0 || !data.length) && (
-                <div className="py-2">
-                    <SimpleBar forceVisible="x">
-                        <div className={cn('rounded-md', { 'border border-gray-100': hasHeader })}>
-                            <div className="min-w-full inline-block align-middle">
-                                <div className="overflow-hidden">
-                                    <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700 bg-white">
-                                        {hasHeader && (
-                                            <thead className="bg-gray-50 dark:bg-neutral-700">
-                                                <tr>{header}</tr>
-                                            </thead>
-                                        )}
-                                        <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">{body}</tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </SimpleBar>
-                    {body.length === 0 && (
-                        <div className="flex flex-col items-center justify-center gap-3 py-8">
-                            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 dark:bg-neutral-800">
-                                <TableProperties size={28} strokeWidth={1.5} className="text-gray-400 dark:text-neutral-500" />
-                            </div>
-                            <div className="flex flex-col items-center gap-1">
-                                <span className="text-sm font-medium text-gray-600 dark:text-neutral-400">
-                                    {data.length > 0 ? 'No matching items' : 'No items to show'}
-                                </span>
-                                <span className="text-xs text-gray-400 dark:text-neutral-500">
-                                    {data.length > 0
-                                        ? 'Try adjusting your search or filters to see results'
-                                        : 'There are no records to display here yet'}
-                                </span>
+            {isLoading ? (
+                <TableSkeleton
+                    columnsCount={headers.length}
+                    hasCheckboxes={Boolean(hasCheckboxes)}
+                    hasPagination={false}
+                    canSearch={Boolean(canSearch)}
+                    rowCount={paginationData ? paginationData.pageSize : pageSize}
+                />
+            ) : (
+                <>
+                    {canSearch && (
+                        <div className="flex justify-end mb-3">
+                            <div className="max-w-sm">
+                                <input
+                                    id="search"
+                                    placeholder="Search"
+                                    onChange={(event) => setSearchKey(event.target.value)}
+                                    type="text"
+                                    disabled={disableSearchControls}
+                                    className="py-2.5 sm:py-3 px-4 block w-full border-gray-200 rounded-lg sm:text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+                                />
                             </div>
                         </div>
                     )}
-                </div>
+                    {(hasHeader || body?.length > 0 || !data.length) && (
+                        <div className="py-2">
+                            <SimpleBar forceVisible="x">
+                                <div className={cn('rounded-md', { 'border border-gray-100': hasHeader })}>
+                                    <div className="min-w-full inline-block align-middle">
+                                        <div className="overflow-hidden">
+                                            <table className="min-w-full divide-y divide-gray-200 dark:divide-neutral-700 bg-white">
+                                                {hasHeader && (
+                                                    <thead className="bg-gray-50 dark:bg-neutral-700">
+                                                        <tr>{header}</tr>
+                                                    </thead>
+                                                )}
+                                                <tbody className="divide-y divide-gray-200 dark:divide-neutral-700">{body}</tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </SimpleBar>
+                            {body.length === 0 && (
+                                <div className="flex flex-col items-center justify-center gap-3 py-8">
+                                    <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 dark:bg-neutral-800">
+                                        <TableProperties size={28} strokeWidth={1.5} className="text-gray-400 dark:text-neutral-500" />
+                                    </div>
+                                    <div className="flex flex-col items-center gap-1">
+                                        <span className="text-sm font-medium text-gray-600 dark:text-neutral-400">
+                                            {data.length > 0 ? 'No matching items' : 'No items to show'}
+                                        </span>
+                                        <span className="text-xs text-gray-400 dark:text-neutral-500">
+                                            {data.length > 0
+                                                ? 'Try adjusting your search or filters to see results'
+                                                : 'There are no records to display here yet'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </>
             )}
             {hasPagination && (
                 <div className="flex justify-between items-center gap-2 mt-6">
