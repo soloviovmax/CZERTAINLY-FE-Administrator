@@ -1,11 +1,11 @@
 import DetailPageSkeleton from 'components/DetailPageSkeleton';
-import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
+import CustomTable, { type TableDataRow } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import FlowChart from 'components/FlowChart';
 import TabLayout from 'components/Layout/TabLayout';
 import Switch from 'components/Switch';
 import Widget from 'components/Widget';
-import type { WidgetButtonProps } from 'components/WidgetButtons';
+import { propertyValueActionsHeaders, createDeleteButton } from 'utils/automationDetailUtils';
 import { actions as alertActions } from 'ducks/alerts';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
@@ -248,35 +248,8 @@ const TriggerDetails = () => {
         [dispatch, id, triggerDetails],
     );
 
-    const buttons: WidgetButtonProps[] = useMemo(
-        () => [
-            {
-                icon: 'trash',
-                disabled: false,
-                onClick: () => setConfirmDelete(true),
-            },
-        ],
-        [],
-    );
-
-    const triggerDetailHeader: TableHeader[] = useMemo(
-        () => [
-            {
-                id: 'property',
-                content: 'Property',
-            },
-            {
-                id: 'value',
-                content: 'Value',
-            },
-            {
-                id: 'actions',
-                content: 'Actions',
-                align: 'center',
-            },
-        ],
-        [],
-    );
+    const buttons = useMemo(() => createDeleteButton(() => setConfirmDelete(true)), []);
+    const triggerDetailHeader = propertyValueActionsHeaders;
 
     const triggerDetailsData: TableDataRow[] = useMemo(
         () =>
