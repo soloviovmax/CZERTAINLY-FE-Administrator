@@ -671,6 +671,63 @@ test.describe('CustomTable', () => {
         await expect(component.locator('table')).toBeVisible();
     });
 
+    test('should disable page size select when disablePaginationControls is true', async ({ mount }) => {
+        const paginationData = {
+            page: 1,
+            totalItems: 50,
+            pageSize: 10,
+            loadedPageSize: 10,
+            totalPages: 5,
+            itemsPerPageOptions: [10, 20, 50],
+        };
+
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasPagination={true}
+                    paginationData={paginationData}
+                    disablePaginationControls={true}
+                />,
+            ),
+        );
+
+        await expect(component.locator('[data-testid="select-pageSize-input"]')).toBeDisabled();
+    });
+
+    test('should call onPageSizeChanged with a numeric value when page size select is changed', async ({ mount }) => {
+        let calledWith: number | undefined;
+        const paginationData = {
+            page: 1,
+            totalItems: 50,
+            pageSize: 10,
+            loadedPageSize: 10,
+            totalPages: 5,
+            itemsPerPageOptions: [10, 20, 50],
+        };
+
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasPagination={true}
+                    paginationData={paginationData}
+                    onPageSizeChanged={(size) => {
+                        calledWith = size;
+                    }}
+                />,
+            ),
+        );
+
+        await component.locator('[data-testid="select-pageSize-input"]').evaluate((el: HTMLSelectElement) => {
+            el.value = '20';
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        expect(calledWith).toBe(20);
+    });
+
     test('should keep separate internal pagination for different tables on same route', async ({ mount }) => {
         const manyRows = Array.from({ length: 30 }, (_, i) => ({
             id: i + 1,
