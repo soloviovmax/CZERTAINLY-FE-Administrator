@@ -252,6 +252,7 @@ const TriggerDetails = () => {
         () => [
             {
                 icon: 'trash',
+                tooltip: 'Delete',
                 disabled: false,
                 onClick: () => setConfirmDelete(true),
             },

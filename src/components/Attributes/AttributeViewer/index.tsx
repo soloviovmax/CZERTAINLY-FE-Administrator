@@ -196,6 +196,7 @@ export default function AttributeViewer({
                     <Button
                         data-testid="source-button"
                         variant="transparent"
+                        title="Show source objects"
                         className="!p-1 ml-1 relative top-[3px]"
                         onClick={() => {
                             dispatch(

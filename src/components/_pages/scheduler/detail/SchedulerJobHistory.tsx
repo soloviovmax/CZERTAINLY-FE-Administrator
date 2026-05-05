@@ -86,6 +86,7 @@ function SchedulerJobHistory({ uuid }: Props) {
                         {history.resultMessage && (
                             <Button
                                 variant="transparent"
+                                title="Show message"
                                 className="!p-1"
                                 onClick={() => {
                                     setMessage(history.resultMessage ?? '');
@@ -98,6 +99,7 @@ function SchedulerJobHistory({ uuid }: Props) {
                         {history.resultObjectType && history.resultObjectIdentification ? (
                             <Button
                                 variant="transparent"
+                                title="Go to details"
                                 className="!p-1"
                                 onClick={() => {
                                     navigate(

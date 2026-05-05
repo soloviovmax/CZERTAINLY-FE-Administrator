@@ -45,6 +45,7 @@ const NewRowWidget = ({ newItemsList, isBusy, onAddClick, immediateAdd, selectHi
                         disabled={isBusy}
                         variant="transparent"
                         color="secondary"
+                        title="Add"
                         onClick={() => {
                             onAddClick(selectedItems);
                             setSelectedItems([]);

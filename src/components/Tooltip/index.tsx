@@ -1,5 +1,5 @@
 import cn from 'classnames';
-import { type ReactNode, useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 // export type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right' | 'auto';
 export type TooltipPlacement = 'bottom';
@@ -15,10 +15,6 @@ interface Props {
 }
 
 function Tooltip({ content, placement = 'bottom', children, className, triggerClassName, contentClassName, disabled = false }: Props) {
-    useEffect(() => {
-        (window as any).HSTooltip?.autoInit();
-    }, []);
-
     const getArrowClasses = () => {
         const baseClasses = 'absolute w-0 h-0 border-4';
         switch (placement) {
@@ -35,11 +31,12 @@ function Tooltip({ content, placement = 'bottom', children, className, triggerCl
     };
 
     return (
-        <div className={cn('hs-tooltip [--placement:bottom] inline-block', disabled && 'pointer-events-none')}>
-            {children}
+        <div className={cn('group relative inline-block', disabled && 'pointer-events-none', className)}>
+            <span className={cn(triggerClassName)}>{children}</span>
             <span
                 className={cn(
-                    'hs-tooltip-content hs-tooltip-shown:opacity-100 hs-tooltip-shown:visible opacity-0 transition-opacity inline-block absolute invisible z-10 py-1 px-2 bg-[var(--tooltip-background-color)] text-xs font-medium text-white rounded-md shadow-2xs dark:bg-neutral-700 border-[var(--tooltip-background-color)]',
+                    'absolute top-full left-1/2 -translate-x-1/2 mt-2 z-10 py-1 px-2 bg-[var(--tooltip-background-color)] text-xs font-medium text-white rounded-md shadow-2xs dark:bg-neutral-700 whitespace-nowrap pointer-events-none',
+                    'opacity-0 transition-opacity delay-0 group-hover:opacity-100 group-hover:delay-[400ms]',
                     contentClassName,
                 )}
                 role="tooltip"

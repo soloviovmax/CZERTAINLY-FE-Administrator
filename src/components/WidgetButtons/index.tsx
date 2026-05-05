@@ -8,6 +8,7 @@ export interface WidgetButtonProps {
     icon: IconName;
     id?: string;
     tooltip?: string;
+    disabledTooltip?: string;
     disabled: boolean;
     custom?: React.ReactNode;
     onClick: (event: React.MouseEvent) => void;
@@ -46,6 +47,7 @@ function WidgetButtons({ buttons, justify = 'center', className }: Props) {
                         className={button.className}
                         data-testid={`${button.id ?? button.icon}-button`}
                         title={button.tooltip}
+                        disabledTooltip={button.disabledTooltip}
                         onClick={button.onClick}
                         disabled={button.disabled}
                     >

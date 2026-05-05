@@ -115,6 +115,7 @@ function Widget({
         if (widgetInfoCard)
             updatedWidgetButtons.push({
                 icon: 'info',
+                tooltip: 'Widget Info',
                 onClick: () => setShowWidgetInfo(!showWidgetInfo),
                 disabled: false,
             });

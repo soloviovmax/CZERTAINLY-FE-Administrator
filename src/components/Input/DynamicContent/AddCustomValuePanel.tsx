@@ -94,11 +94,18 @@ export function AddCustomValuePanel({
                     variant="transparent"
                     onClick={handleAdd}
                     disabled={!canAdd}
+                    title="Save"
                     data-testid={`${idPrefix}-add-custom-value`}
                 >
                     <Check size={16} />
                 </Button>
-                <Button type="button" variant="transparent" onClick={handleCancel} data-testid={`${idPrefix}-cancel-custom-value`}>
+                <Button
+                    type="button"
+                    variant="transparent"
+                    onClick={handleCancel}
+                    title="Cancel"
+                    data-testid={`${idPrefix}-cancel-custom-value`}
+                >
                     <X size={16} />
                 </Button>
             </div>

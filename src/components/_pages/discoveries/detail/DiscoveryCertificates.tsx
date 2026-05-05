@@ -112,6 +112,7 @@ export default function DiscoveryCertificates({ id, triggerHistorySummary }: Pro
                         r.processedError ? (
                             <Button
                                 variant="transparent"
+                                title="Show error"
                                 className="p-1"
                                 onClick={() => {
                                     setMessage(r.processedError ?? '');

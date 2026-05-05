@@ -13,6 +13,7 @@ export interface Props {
     disabled?: boolean;
     className?: string;
     title?: string;
+    disabledTooltip?: string;
     type?: 'submit' | 'reset' | 'button';
     'data-testid'?: string;
 }
@@ -66,23 +67,10 @@ function Button({
     disabled = false,
     color = 'primary',
     title,
+    disabledTooltip,
     type = 'button',
     'data-testid': dataTestId,
 }: Props) {
-    // const buttonClasses = {
-    //     solid: 'py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent focus:outline-hidden focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none',
-    //     outline:
-    //         'py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border text-blue-600 hover:text-blue-500 focus:outline-hidden  focus:text-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:border-blue-500 dark:text-blue-500 dark:hover:text-blue-400 dark:hover:border-blue-400',
-    //     transparent:
-    //         'py-1 px-1 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-white text-gray-800 hover:bg-gray-200 focus:outline-hidden disabled:opacity-50 disabled:pointer-events-none',
-    // };
-
-    // const colorClasses = {
-    //     primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:bg-blue-700 border-blue-600 hover:border-blue-500 focus:border-blue-500',
-    //     danger: '',
-    //     secondary: '',
-    // };
-
     const buttonElement = (
         <button
             type={type}
@@ -96,12 +84,9 @@ function Button({
         </button>
     );
 
-    if (title) {
-        return (
-            <Tooltip content={title} disabled={disabled}>
-                {buttonElement}
-            </Tooltip>
-        );
+    const tooltipContent = disabled && disabledTooltip ? disabledTooltip : title;
+    if (tooltipContent) {
+        return <Tooltip content={tooltipContent}>{buttonElement}</Tooltip>;
     }
 
     return buttonElement;

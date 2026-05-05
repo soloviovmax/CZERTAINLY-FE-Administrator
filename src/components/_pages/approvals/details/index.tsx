@@ -143,6 +143,7 @@ export default function ApprovalDetails() {
                                   <StatusBadge textStatus={approvalDetails.status} />
                                   <Button
                                       variant="transparent"
+                                      title="Go to details"
                                       className="p-0 ml-1"
                                       onClick={() => {
                                           navigate(`../../${approvalDetails.resource}/detail/${approvalDetails.objectUuid}`);

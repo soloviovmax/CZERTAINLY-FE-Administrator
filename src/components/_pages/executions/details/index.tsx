@@ -89,6 +89,7 @@ const ExecutionDetails = () => {
         () => [
             {
                 icon: 'trash',
+                tooltip: 'Delete',
                 disabled: false,
                 onClick: () => setConfirmDelete(true),
             },
