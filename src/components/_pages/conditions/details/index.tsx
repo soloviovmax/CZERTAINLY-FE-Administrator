@@ -1,10 +1,10 @@
 import DetailPageSkeleton from 'components/DetailPageSkeleton';
 import ConditionAndSetFieldExecutionItemsViewer from 'components/ConditionAndSetFieldExecutionItemsViewer';
-import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
+import CustomTable, { type TableDataRow } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import Breadcrumb from 'components/Breadcrumb';
 import Widget from 'components/Widget';
-import type { WidgetButtonProps } from 'components/WidgetButtons';
+import { propertyValueActionsHeaders, createDeleteButton } from 'utils/automationDetailUtils';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -68,35 +68,8 @@ const ConditionDetails = () => {
         setUpdateDescription(false);
     }, [dispatch, id, conditionDetails, updatedDescription, updateDescriptionEditEnable]);
 
-    const buttons: WidgetButtonProps[] = useMemo(
-        () => [
-            {
-                icon: 'trash',
-                disabled: false,
-                onClick: () => setConfirmDelete(true),
-            },
-        ],
-        [],
-    );
-
-    const tableHeader: TableHeader[] = useMemo(
-        () => [
-            {
-                id: 'property',
-                content: 'Property',
-            },
-            {
-                id: 'value',
-                content: 'Value',
-            },
-            {
-                id: 'actions',
-                content: 'Actions',
-                align: 'center',
-            },
-        ],
-        [],
-    );
+    const buttons = useMemo(() => createDeleteButton(() => setConfirmDelete(true)), []);
+    const tableHeader = propertyValueActionsHeaders;
 
     const conditionGroupsDetailData: TableDataRow[] = useMemo(
         () =>
