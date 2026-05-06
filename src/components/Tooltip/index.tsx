@@ -36,7 +36,7 @@ function Tooltip({ content, placement = 'bottom', children, className, triggerCl
             <span
                 className={cn(
                     'absolute top-full left-1/2 -translate-x-1/2 mt-2 z-10 py-1 px-2 bg-[var(--tooltip-background-color)] text-xs font-medium text-white rounded-md shadow-2xs dark:bg-neutral-700 whitespace-nowrap pointer-events-none',
-                    'opacity-0 transition-opacity delay-0 group-hover:opacity-100 group-hover:delay-[400ms]',
+                    'opacity-0 transition-opacity delay-0 group-hover:opacity-100 group-hover:delay-[400ms] group-focus-within:opacity-100 group-focus-within:delay-[400ms]',
                     contentClassName,
                 )}
                 role="tooltip"
