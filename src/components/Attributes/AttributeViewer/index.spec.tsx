@@ -257,7 +257,7 @@ test.describe('AttributeViewer', () => {
         await page.getByRole('button', { name: 'C1' }).click();
         await expect(page.getByTestId('source-button')).toBeVisible({ timeout: 10000 });
         await page.getByTestId('source-button').click();
-        await expect(page.getByText('Source objects')).toBeVisible();
+        await expect(page.getByRole('heading', { name: 'Source objects' })).toBeVisible();
     });
 
     test('METADATA_FLAT type: renders flat table with connector and source object in row', async ({ mount, page }) => {
