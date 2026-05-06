@@ -242,9 +242,8 @@ const RuleDetails = () => {
 
     const conditionsData: TableDataRow[] = useMemo(() => {
         const isDeleteDisabled = ruleDetails?.conditions.length === 1 || isFetchingRuleDetails || isUpdatingRule;
-        const conditionsData = !ruleDetails?.conditions.length
-            ? []
-            : ruleDetails?.conditions.map((condition) => {
+        const conditionsData = ruleDetails?.conditions.length
+            ? ruleDetails?.conditions.map((condition) => {
                   return {
                       id: condition.uuid,
                       columns: [
@@ -268,7 +267,8 @@ const RuleDetails = () => {
                           </Button>,
                       ],
                   };
-              });
+              })
+            : [];
 
         return conditionsData;
     }, [ruleDetails, isUpdatingRule, onDeleteCondition, isFetchingRuleDetails, conditionTypeEnum]);

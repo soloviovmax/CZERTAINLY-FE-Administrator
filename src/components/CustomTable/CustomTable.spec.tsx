@@ -762,6 +762,29 @@ test.describe('CustomTable', () => {
         await tableB.unmount();
     });
 
+    test('should toggle two rows independently in multiSelect mode via cell click', async ({ mount }) => {
+        let checkedRows: (string | number)[] = [];
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasCheckboxes={true}
+                    multiSelect={true}
+                    onCheckedRowsChanged={(r) => (checkedRows = r)}
+                />,
+            ),
+        );
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).toContain('1');
+        await component.getByText('jane@example.com').click();
+        expect(checkedRows).toContain('1');
+        expect(checkedRows).toContain('2');
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).not.toContain('1');
+        expect(checkedRows).toContain('2');
+    });
+
     test('should show placeholder div instead of select-all checkbox when multiSelect is false', async ({ mount }) => {
         const component = await mount(
             withProviders(
@@ -882,5 +905,22 @@ test.describe('CustomTable', () => {
         await checkboxes.nth(1).click();
         expect(checkedRows).toHaveLength(1);
         expect(checkedRows[0]).not.toBe(firstId);
+    });
+
+    test('should reset page to last page when current page exceeds total pages after data shrinks', async ({ mount }) => {
+        const paginationKey = 'custom-table-pagination:/roles:name|email|status|no-checkboxes|no-details';
+        const store = createMockStore({
+            tablePagination: {
+                byKey: { [paginationKey]: { page: 3, pageSize: 10 } },
+                activeRootRoute: 'roles',
+            },
+        });
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={mockData} hasPagination={true} />, {
+                store,
+                initialRoute: '/roles',
+            }),
+        );
+        await expect(component.getByText(/Showing 1 to 3 of 3/)).toBeVisible();
     });
 });

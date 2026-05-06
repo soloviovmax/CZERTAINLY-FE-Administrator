@@ -28,6 +28,7 @@ function NotificationsOverview() {
                           <div className="flex items-start gap-1 mb-2">
                               <Button
                                   variant="transparent"
+                                  title="Mark as read"
                                   onClick={() => dispatch(actions.markAsReadNotification({ uuid: notification.uuid }))}
                               >
                                   <Check size={16} />

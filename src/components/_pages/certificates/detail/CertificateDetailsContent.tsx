@@ -308,6 +308,7 @@ export default function CertificateDetailsContent({ certificate, validationResul
             },
             {
                 icon: 'download',
+                tooltip: 'Download',
                 disabled: !certificate?.certificateContent,
                 onClick: onDownloadClick,
             },
@@ -520,6 +521,7 @@ export default function CertificateDetailsContent({ certificate, validationResul
 
                               <Button
                                   variant="transparent"
+                                  title="Remove owner"
                                   disabled={!certificate?.ownerUuid || isCertificateArchived}
                                   onClick={() => {
                                       if (!certificate?.ownerUuid || !certificate?.uuid) return;
@@ -562,6 +564,7 @@ export default function CertificateDetailsContent({ certificate, validationResul
                               </Button>
                               <Button
                                   variant="transparent"
+                                  title="Remove groups"
                                   disabled={!certificate?.groups?.length || isCertificateArchived}
                                   onClick={() => {
                                       if (!certificate?.uuid) return;
@@ -606,6 +609,7 @@ export default function CertificateDetailsContent({ certificate, validationResul
                               </Button>
                               <Button
                                   variant="transparent"
+                                  title="Remove RA profile"
                                   disabled={!certificate?.raProfile?.uuid || isCertificateArchived}
                                   onClick={() => {
                                       if (!certificate?.raProfile?.authorityInstanceUuid || !certificate?.uuid) return;

@@ -61,6 +61,7 @@ export default function CodeBlock({ content }: Props) {
             {content.data.language}&nbsp;
             <Button
                 variant="transparent"
+                title="View code"
                 className="!p-1 relative ml-1 top-[3px]"
                 onClick={handleOpenDialog}
                 data-testid="code-block-open-btn"

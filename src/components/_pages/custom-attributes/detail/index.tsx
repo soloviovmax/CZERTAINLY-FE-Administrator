@@ -200,7 +200,7 @@ export default function CustomAttributeDetail() {
                               <div key="content-actions" className="flex items-center gap-2">
                                   {getAttributeContent(customAttribute.contentType, customAttribute.content)}
                                   {customAttribute?.content?.length ? (
-                                      <Button variant="transparent" onClick={onContentCopyClick}>
+                                      <Button variant="transparent" title="Copy" onClick={onContentCopyClick}>
                                           {' '}
                                           <Copy size={16} />{' '}
                                       </Button>

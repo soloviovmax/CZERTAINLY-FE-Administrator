@@ -115,7 +115,7 @@ const TriggerHistorySummaryViewer = ({ triggerHistoryObjectSummary }: TriggerHis
         <div className="flex justify-start" style={{ marginBottom: '4px' }}>
             <div className="p-2">{getIcon}</div>
             {hasRecords && (
-                <Button variant="transparent" onClick={onIconClick}>
+                <Button variant="transparent" title="Details" onClick={onIconClick}>
                     <Info size={16} />
                 </Button>
             )}

@@ -245,9 +245,8 @@ const RuleDetails = () => {
 
     const executionsData: TableDataRow[] = useMemo(() => {
         const isDeleteDisabled = actionDetails?.executions.length === 1 || isFetchingActionDetails || isUpdatingAction;
-        const conditionGroupData = !actionDetails?.executions.length
-            ? []
-            : actionDetails?.executions.map((conditionGroup) => {
+        const conditionGroupData = actionDetails?.executions.length
+            ? actionDetails?.executions.map((conditionGroup) => {
                   return {
                       id: conditionGroup.uuid,
                       columns: [
@@ -271,7 +270,8 @@ const RuleDetails = () => {
                           </Button>,
                       ],
                   };
-              });
+              })
+            : [];
 
         return conditionGroupData;
     }, [actionDetails, isUpdatingAction, onDeleteExecution, isFetchingActionDetails, executionTypeEnum]);
