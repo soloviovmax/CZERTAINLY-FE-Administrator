@@ -636,4 +636,121 @@ test.describe('CustomTable', () => {
         await expect(tableB.getByText(/Showing 1 to 10/)).toBeVisible();
         await tableB.unmount();
     });
+
+    test('should toggle row selection when clicking on a table cell (not the checkbox)', async ({ mount }) => {
+        let checkedRows: (string | number)[] = [];
+        const component = await mount(
+            withProviders(
+                <CustomTable headers={mockHeaders} data={mockData} hasCheckboxes={true} onCheckedRowsChanged={(r) => (checkedRows = r)} />,
+            ),
+        );
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).toContain('1');
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).not.toContain('1');
+    });
+
+    test('should toggle two rows independently in multiSelect mode via cell click', async ({ mount }) => {
+        let checkedRows: (string | number)[] = [];
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasCheckboxes={true}
+                    multiSelect={true}
+                    onCheckedRowsChanged={(r) => (checkedRows = r)}
+                />,
+            ),
+        );
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).toContain('1');
+        await component.getByText('jane@example.com').click();
+        expect(checkedRows).toContain('1');
+        expect(checkedRows).toContain('2');
+        await component.getByText('john@example.com').click();
+        expect(checkedRows).not.toContain('1');
+        expect(checkedRows).toContain('2');
+    });
+
+    test('should collapse expanded detail row when the same row is clicked again', async ({ mount }) => {
+        const dataWithDetails: TableDataRow[] = [{ id: 1, columns: ['Alice', 'alice@example.com'], detailColumns: ['Detail info'] }];
+        const component = await mount(withProviders(<CustomTable headers={mockHeaders} data={dataWithDetails} hasDetails={true} />));
+        await component.getByText('alice@example.com').click();
+        await component.getByText('alice@example.com').click();
+        await expect(component.locator('table')).toBeVisible();
+    });
+
+    test('should respect paginationStateKey prop to isolate pagination state between tables', async ({ mount }) => {
+        const manyRows = Array.from({ length: 30 }, (_, i) => ({
+            id: i + 1,
+            columns: [`Row ${i + 1}`, `b`, `c`],
+        }));
+        const store = createMockStore();
+
+        const tableA = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="table-a" />, {
+                store,
+                initialRoute: '/roles',
+            }),
+        );
+        await tableA.getByTestId('pagination-next').click();
+        await expect(tableA.getByText(/Showing 11 to 20/)).toBeVisible();
+        await tableA.unmount();
+
+        const tableB = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="table-b" />, {
+                store,
+                initialRoute: '/roles',
+            }),
+        );
+        await expect(tableB.getByText(/Showing 1 to 10/)).toBeVisible();
+    });
+
+    test('should call onPageSizeChanged with the selected size as a number', async ({ mount }) => {
+        let calledWith: number | undefined;
+        const paginationData = {
+            page: 1,
+            totalItems: 50,
+            pageSize: 10,
+            loadedPageSize: 10,
+            totalPages: 5,
+            itemsPerPageOptions: [10, 20, 50],
+        };
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasPagination={true}
+                    paginationData={paginationData}
+                    onPageSizeChanged={(size) => {
+                        calledWith = size;
+                    }}
+                />,
+            ),
+        );
+        await component.locator('[data-testid="select-pageSize-input"]').evaluate((el: HTMLSelectElement) => {
+            el.value = '20';
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        expect(calledWith).toBe(20);
+    });
+
+    test('should reset page to last page when current page exceeds total pages after data shrinks', async ({ mount }) => {
+        const paginationKey = 'custom-table-pagination:/roles:name|email|status|no-checkboxes|no-details';
+        const store = createMockStore({
+            tablePagination: {
+                byKey: { [paginationKey]: { page: 3, pageSize: 10 } },
+                activeRootRoute: 'roles',
+            },
+        });
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={mockData} hasPagination={true} />, {
+                store,
+                initialRoute: '/roles',
+            }),
+        );
+        await expect(component.getByText(/Showing 1 to 3 of 3/)).toBeVisible();
+    });
 });

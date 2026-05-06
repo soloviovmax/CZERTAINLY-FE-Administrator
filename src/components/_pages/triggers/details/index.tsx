@@ -418,9 +418,8 @@ const TriggerDetails = () => {
     const actionsData: TableDataRow[] = useMemo(() => {
         const isDeleteDisabled = triggerDetails?.actions?.length === 1 || isUpdatingTrigger || isFetchingTriggerDetail;
 
-        const actionsData = !triggerDetails?.actions.length
-            ? []
-            : triggerDetails?.actions.map((action) => {
+        const actionsData = triggerDetails?.actions.length
+            ? triggerDetails?.actions.map((action) => {
                   return {
                       id: action.uuid,
                       columns: [
@@ -443,7 +442,8 @@ const TriggerDetails = () => {
                           </Button>,
                       ],
                   };
-              });
+              })
+            : [];
 
         return actionsData;
     }, [triggerDetails, onDeleteAction, isUpdatingTrigger, isFetchingTriggerDetail]);
@@ -468,9 +468,8 @@ const TriggerDetails = () => {
 
     const rulesData: TableDataRow[] = useMemo(
         () =>
-            !triggerDetails?.rules.length
-                ? []
-                : triggerDetails?.rules.map((rule, i) => {
+            triggerDetails?.rules.length
+                ? triggerDetails?.rules.map((rule, i) => {
                       return {
                           id: rule.uuid,
                           columns: [
@@ -489,7 +488,8 @@ const TriggerDetails = () => {
                               </Button>,
                           ],
                       };
-                  }),
+                  })
+                : [],
         [triggerDetails, isUpdatingTrigger, onDeleteRule],
     );
 
