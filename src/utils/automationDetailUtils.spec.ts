@@ -9,10 +9,6 @@ describe('automationDetailUtils', () => {
             expect(propertyValueActionsHeaders[1]).toEqual({ id: 'value', content: 'Value' });
             expect(propertyValueActionsHeaders[2]).toEqual({ id: 'actions', content: 'Actions', align: 'center' });
         });
-
-        test('should be the same reference on every access', () => {
-            expect(propertyValueActionsHeaders).toBe(propertyValueActionsHeaders);
-        });
     });
 
     describe('createDeleteButton', () => {

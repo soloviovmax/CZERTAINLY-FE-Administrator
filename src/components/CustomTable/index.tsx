@@ -208,9 +208,9 @@ function CustomTable({
                           sortable: false,
                       }));
 
-            const processedColumns = row.detailColumns.map((col) => {
+            const processedColumns = row.detailColumns.map((col, index) => {
                 if (Array.isArray(col)) {
-                    return <div key={`detail-${rowId}-${col.map((c) => String(c)).join('-')}`}>{col}</div>;
+                    return <div key={`detail-${rowId}-${index}`}>{col}</div>;
                 }
                 return col;
             });

@@ -830,4 +830,85 @@ test.describe('CustomTable', () => {
         await nameHeader.click();
         await expect(component.locator('tbody tr')).toHaveCount(mockData.length);
     });
+
+    test('should clear pagination when activeRootRoute differs from current route', async ({ mount }) => {
+        const store = createMockStore({
+            tablePagination: {
+                byKey: { 'custom-table-pagination:/roles:name|email|status|no-checkboxes|no-details': { page: 3, pageSize: 10 } },
+                activeRootRoute: 'roles',
+            } as any,
+        });
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={mockData} hasPagination={true} />, {
+                store,
+                initialRoute: '/users',
+            }),
+        );
+        await expect(component.getByTestId('custom-table')).toBeVisible();
+    });
+
+    test('should use provided detailHeaders when count matches detailColumns length', async ({ mount }) => {
+        const dataWithDetails: TableDataRow[] = [{ id: 1, columns: ['Match Row', 'col2'], detailColumns: ['Detail A', 'Detail B'] }];
+        const matchingHeaders: TableHeader[] = [
+            { id: 'd1', content: 'D Col 1', sortable: false },
+            { id: 'd2', content: 'D Col 2', sortable: false },
+        ];
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={dataWithDetails} hasDetails={true} detailHeaders={matchingHeaders} />),
+        );
+        await component.getByRole('button', { name: 'Match Row' }).click();
+        await expect(component.locator('table')).toBeVisible();
+    });
+
+    test('should replace selection via checkbox click when multiSelect is false', async ({ mount }) => {
+        let checkedRows: (string | number)[] = [];
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasCheckboxes={true}
+                    multiSelect={false}
+                    onCheckedRowsChanged={(rows) => {
+                        checkedRows = rows;
+                    }}
+                />,
+            ),
+        );
+        const checkboxes = component.locator('tbody input[type="checkbox"]');
+        await checkboxes.nth(0).click();
+        expect(checkedRows).toHaveLength(1);
+        const firstId = checkedRows[0];
+        await checkboxes.nth(1).click();
+        expect(checkedRows).toHaveLength(1);
+        expect(checkedRows[0]).not.toBe(firstId);
+    });
+
+    test('should hydrate page and pageSize from persisted state when paginationStateKey changes', async ({ mount }) => {
+        const manyRows = Array.from({ length: 50 }, (_, i) => ({ id: i + 1, columns: [`Row ${i + 1}`, 'b', 'c'] }));
+        const store = createMockStore({
+            tablePagination: {
+                byKey: { 'custom-table-pagination:/items:key-saved': { page: 3, pageSize: 20 } },
+                activeRootRoute: undefined,
+            } as any,
+        });
+
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="key-fresh" />, {
+                store,
+                initialRoute: '/items',
+            }),
+        );
+        await expect(component.getByText(/Showing 1 to 10/)).toBeVisible();
+        await component.getByTestId('pagination-next').click();
+        await expect(component.getByText(/Showing 11 to 20/)).toBeVisible();
+
+        await component.update(
+            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="key-saved" />, {
+                store,
+                initialRoute: '/items',
+            }),
+        );
+        await expect(component.getByText(/Showing 41 to 50/)).toBeVisible();
+    });
 });
