@@ -1,11 +1,11 @@
 import DetailPageSkeleton from 'components/DetailPageSkeleton';
 import { SendNotificationExecutionItems } from 'components/_pages/executions/SendNotificationExecutionItems';
 import ConditionAndSetFieldExecutionItemsViewer from 'components/ConditionAndSetFieldExecutionItemsViewer';
-import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
+import CustomTable, { type TableDataRow } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import Breadcrumb from 'components/Breadcrumb';
 import Widget from 'components/Widget';
-import type { WidgetButtonProps } from 'components/WidgetButtons';
+import { propertyValueActionsHeaders, createDeleteButton } from 'utils/automationDetailUtils';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -85,36 +85,8 @@ const ExecutionDetails = () => {
         setUpdateDescription(false);
     }, [dispatch, id, executionDetails, updatedDescription, updateDescriptionEditEnable]);
 
-    const buttons: WidgetButtonProps[] = useMemo(
-        () => [
-            {
-                icon: 'trash',
-                tooltip: 'Delete',
-                disabled: false,
-                onClick: () => setConfirmDelete(true),
-            },
-        ],
-        [],
-    );
-
-    const executionTableHeaders: TableHeader[] = useMemo(
-        () => [
-            {
-                id: 'property',
-                content: 'Property',
-            },
-            {
-                id: 'value',
-                content: 'Value',
-            },
-            {
-                id: 'actions',
-                content: 'Actions',
-                align: 'center',
-            },
-        ],
-        [],
-    );
+    const buttons = useMemo(() => createDeleteButton(() => setConfirmDelete(true)), []);
+    const executionTableHeaders = propertyValueActionsHeaders;
 
     const executionDetailsData: TableDataRow[] = useMemo(
         () =>
