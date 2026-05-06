@@ -107,9 +107,8 @@ export default function ApprovalDetails() {
 
     const detailData: TableDataRow[] = useMemo(
         () =>
-            !approvalDetails
-                ? []
-                : [
+            approvalDetails
+                ? [
                       {
                           id: 'uuid',
                           columns: ['UUID', approvalDetails.approvalUuid],
@@ -182,7 +181,8 @@ export default function ApprovalDetails() {
                           id: 'version',
                           columns: ['Version', approvalDetails?.version.toString() || ''],
                       },
-                  ],
+                  ]
+                : [],
         [approvalDetails, navigate],
     );
 
@@ -259,9 +259,8 @@ export default function ApprovalDetails() {
 
     const stepsRows: TableDataRow[] = useMemo(
         () =>
-            !approvalDetails
-                ? []
-                : (approvalDetails.approvalSteps || []).map((approvalStep) => ({
+            approvalDetails
+                ? (approvalDetails.approvalSteps || []).map((approvalStep) => ({
                       id: approvalStep.order,
                       columns: [
                           approvalStep.order.toString(),
@@ -282,7 +281,8 @@ export default function ApprovalDetails() {
                           <></>,
                           approvalStep.approvalStepRecipients.length ? renderRecipiensDetails(approvalStep) : '',
                       ],
-                  })),
+                  }))
+                : [],
         [approvalDetails, renderApproverRedirect, renderRecipiensDetails],
     );
 

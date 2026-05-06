@@ -19,7 +19,7 @@ import TableSkeleton from './TableSkeleton';
 
 export type { TableDataRow, TableHeader } from './types';
 
-interface Props {
+type Props = Readonly<{
     headers: TableHeader[];
     data: TableDataRow[];
     canSearch?: boolean;
@@ -50,7 +50,7 @@ interface Props {
     disableSelectionControls?: boolean;
     disableSearchControls?: boolean;
     isLoading?: boolean;
-}
+}>;
 
 const emptyCheckedRows: (string | number)[] = [];
 
@@ -318,9 +318,11 @@ function CustomTable({
                                 ? Number.parseFloat(aVal) - Number.parseFloat(bVal)
                                 : Number.parseFloat(bVal) - Number.parseFloat(aVal);
 
-                        default:
+                        default: {
                             if (aVal === bVal) return 0;
-                            return aVal > bVal ? (sortDirection === 'asc' ? 1 : -1) : sortDirection === 'asc' ? -1 : 1;
+                            const ascResult = aVal > bVal ? 1 : -1;
+                            return sortDirection === 'asc' ? ascResult : -ascResult;
+                        }
                     }
                 });
             }
@@ -350,14 +352,14 @@ function CustomTable({
             if (disableSelectionControls) return;
             if (!value) {
                 setTblCheckedRows([]);
-                if (onCheckedRowsChanged) onCheckedRowsChanged([]);
+                onCheckedRowsChanged?.([]);
                 return;
             }
 
             const checkedRows = tblData.map((row) => row.id);
 
             setTblCheckedRows(checkedRows);
-            if (onCheckedRowsChanged) onCheckedRowsChanged(checkedRows);
+            onCheckedRowsChanged?.(checkedRows);
         },
         [disableSelectionControls, tblData, onCheckedRowsChanged],
     );
@@ -395,7 +397,7 @@ function CustomTable({
                 const checkedRows: string[] = tblCheckedRows.includes(id) ? [] : [id];
 
                 setTblCheckedRows(checkedRows);
-                if (onCheckedRowsChanged) onCheckedRowsChanged(checkedRows);
+                onCheckedRowsChanged?.(checkedRows);
 
                 return;
             }
@@ -409,7 +411,7 @@ function CustomTable({
             }
 
             setTblCheckedRows(checkedRows);
-            if (onCheckedRowsChanged) onCheckedRowsChanged(checkedRows);
+            onCheckedRowsChanged?.(checkedRows);
 
             e.stopPropagation();
             e.preventDefault();
@@ -425,7 +427,7 @@ function CustomTable({
             if (!multiSelect) {
                 const checked: string[] = tblCheckedRows.includes(id) ? [] : [id];
                 setTblCheckedRows(checked);
-                if (onCheckedRowsChanged) onCheckedRowsChanged(checked);
+                onCheckedRowsChanged?.(checked);
                 return;
             }
 
@@ -531,26 +533,29 @@ function CustomTable({
                         ...(header.align ? { textAlign: header.align } : {}),
                     }}
                 >
-                    {header.id === '__checkbox__' ? (
-                        hasAllCheckBox && multiSelect ? (
-                            <Checkbox
-                                checked={checkAllChecked}
-                                onChange={(value) => onCheckAllCheckboxClick(value)}
-                                id={`${header.id}__checkbox__`}
-                                disabled={disableSelectionControls}
-                            />
-                        ) : (
-                            <div>&nbsp;</div>
-                        )
-                    ) : header.sortable ? (
-                        <div className={cn('flex items-center gap-1', { 'justify-center': header.align === 'center' })}>
-                            {header.content}
-                            &nbsp;
-                            {getSortIcon(header.sort)}
-                        </div>
-                    ) : (
-                        header.content
-                    )}
+                    {(() => {
+                        const checkboxContent =
+                            hasAllCheckBox && multiSelect ? (
+                                <Checkbox
+                                    checked={checkAllChecked}
+                                    onChange={(value) => onCheckAllCheckboxClick(value)}
+                                    id={`${header.id}__checkbox__`}
+                                    disabled={disableSelectionControls}
+                                />
+                            ) : (
+                                <div>&nbsp;</div>
+                            );
+                        const sortableContent = (
+                            <div className={cn('flex items-center gap-1', { 'justify-center': header.align === 'center' })}>
+                                {header.content}
+                                &nbsp;
+                                {getSortIcon(header.sort)}
+                            </div>
+                        );
+                        if (header.id === '__checkbox__') return checkboxContent;
+                        if (header.sortable) return sortableContent;
+                        return header.content;
+                    })()}
                 </th>
             </Fragment>
         ));

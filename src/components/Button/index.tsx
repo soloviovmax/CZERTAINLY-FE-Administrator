@@ -4,7 +4,7 @@ import Tooltip from 'components/Tooltip';
 export type ButtonVariant = 'solid' | 'outline' | 'transparent';
 
 export type ButtonColor = 'primary' | 'danger' | 'secondary' | 'warning' | 'lightGray';
-export interface Props {
+export type Props = Readonly<{
     variant?: ButtonVariant;
     color?: ButtonColor;
     onClick?: (event: React.MouseEvent) => void;
@@ -16,7 +16,7 @@ export interface Props {
     disabledTooltip?: string;
     type?: 'submit' | 'reset' | 'button';
     'data-testid'?: string;
-}
+}>;
 
 const baseButton =
     'inline-flex items-center gap-x-2 text-sm font-medium rounded-lg disabled:opacity-35 disabled:pointer-events-none focus:outline-hidden border';
