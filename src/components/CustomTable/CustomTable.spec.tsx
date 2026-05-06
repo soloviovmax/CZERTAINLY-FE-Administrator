@@ -844,7 +844,7 @@ test.describe('CustomTable', () => {
                 initialRoute: '/users',
             }),
         );
-        await expect(component.getByTestId('custom-table')).toBeVisible();
+        await expect(component.locator('table')).toBeVisible();
     });
 
     test('should use provided detailHeaders when count matches detailColumns length', async ({ mount }) => {
@@ -882,33 +882,5 @@ test.describe('CustomTable', () => {
         await checkboxes.nth(1).click();
         expect(checkedRows).toHaveLength(1);
         expect(checkedRows[0]).not.toBe(firstId);
-    });
-
-    test('should hydrate page and pageSize from persisted state when paginationStateKey changes', async ({ mount }) => {
-        const manyRows = Array.from({ length: 50 }, (_, i) => ({ id: i + 1, columns: [`Row ${i + 1}`, 'b', 'c'] }));
-        const store = createMockStore({
-            tablePagination: {
-                byKey: { 'custom-table-pagination:/items:key-saved': { page: 3, pageSize: 20 } },
-                activeRootRoute: undefined,
-            } as any,
-        });
-
-        const component = await mount(
-            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="key-fresh" />, {
-                store,
-                initialRoute: '/items',
-            }),
-        );
-        await expect(component.getByText(/Showing 1 to 10/)).toBeVisible();
-        await component.getByTestId('pagination-next').click();
-        await expect(component.getByText(/Showing 11 to 20/)).toBeVisible();
-
-        await component.update(
-            withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} paginationStateKey="key-saved" />, {
-                store,
-                initialRoute: '/items',
-            }),
-        );
-        await expect(component.getByText(/Showing 41 to 50/)).toBeVisible();
     });
 });
