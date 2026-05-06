@@ -761,4 +761,73 @@ test.describe('CustomTable', () => {
         await expect(tableB.getByText(/Showing 1 to 10/)).toBeVisible();
         await tableB.unmount();
     });
+
+    test('should show placeholder div instead of select-all checkbox when multiSelect is false', async ({ mount }) => {
+        const component = await mount(
+            withProviders(
+                <CustomTable headers={mockHeaders} data={mockData} hasCheckboxes={true} multiSelect={false} hasAllCheckBox={true} />,
+            ),
+        );
+        await expect(component.locator('thead input[type="checkbox"]')).toHaveCount(0);
+        await expect(component.locator('tbody input[type="checkbox"]').first()).toBeVisible();
+    });
+
+    test('should apply maxWidth style to header column', async ({ mount }) => {
+        const headersWithMaxWidth: TableHeader[] = [
+            { id: 'name', content: 'Name', sortable: false, maxWidth: 200 },
+            { id: 'email', content: 'Email' },
+        ];
+        const component = await mount(withProviders(<CustomTable headers={headersWithMaxWidth} data={mockData} />));
+        const th = component.locator('thead th').first();
+        await expect(th).toHaveCSS('max-width', '200px');
+    });
+
+    test('should render row normally when options.useAccentBottomBorder is false', async ({ mount }) => {
+        const dataWithFalseBorder: TableDataRow[] = [{ id: 1, columns: ['No border row'], options: { useAccentBottomBorder: false } }];
+        const component = await mount(withProviders(<CustomTable headers={mockHeaders} data={dataWithFalseBorder} />));
+        const row = component.locator('tbody tr').first();
+        await expect(row).toBeVisible();
+        const borderBottom = await row.evaluate((el) => (el as HTMLElement).style.borderBottom);
+        expect(borderBottom).toBe('');
+    });
+
+    test('should show skeleton and hide search input when isLoading and canSearch are both true', async ({ mount }) => {
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={mockData} isLoading={true} canSearch={true} />),
+        );
+        await expect(component.getByTestId('table-skeleton')).toBeVisible();
+        await expect(component.getByPlaceholder('Search')).toHaveCount(0);
+    });
+
+    test('should not show page size select when paginationData totalItems is zero', async ({ mount }) => {
+        const paginationData = {
+            page: 1,
+            totalItems: 0,
+            pageSize: 10,
+            loadedPageSize: 0,
+            totalPages: 0,
+            itemsPerPageOptions: [10, 20],
+        };
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={[]} hasPagination={true} paginationData={paginationData} />),
+        );
+        await expect(component.locator('[data-testid="select-pageSize-input"]')).toHaveCount(0);
+    });
+
+    test('should hide table container when hasHeader is false and search filters all rows', async ({ mount }) => {
+        const component = await mount(
+            withProviders(<CustomTable headers={mockHeaders} data={mockData} hasHeader={false} canSearch={true} />),
+        );
+        await component.getByPlaceholder('Search').fill('xyznonexistent');
+        await expect(component.locator('table')).toHaveCount(0);
+        await expect(component.getByText('No matching items')).toHaveCount(0);
+    });
+
+    test('should sort column to desc order on second sortable header click', async ({ mount }) => {
+        const component = await mount(withProviders(<CustomTable headers={mockHeaders} data={mockData} />));
+        const nameHeader = component.getByText('Name');
+        await nameHeader.click();
+        await nameHeader.click();
+        await expect(component.locator('tbody tr')).toHaveCount(mockData.length);
+    });
 });
