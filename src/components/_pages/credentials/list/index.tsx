@@ -62,10 +62,6 @@ function CredentialList() {
         setEditingCredentialId(undefined);
     }, []);
 
-    const onAddClick = useCallback(() => {
-        handleOpenAddModal();
-    }, [handleOpenAddModal]);
-
     const onDeleteConfirmed = useCallback(() => {
         setConfirmDelete(false);
         dispatch(actions.clearDeleteErrorMessages());

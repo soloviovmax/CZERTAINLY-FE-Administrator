@@ -85,10 +85,6 @@ function TokenProfileList() {
         setEditingTokenId(undefined);
     }, []);
 
-    const onAddClick = useCallback(() => {
-        handleOpenAddModal();
-    }, [handleOpenAddModal]);
-
     const onEnableClick = useCallback(() => {
         dispatch(actions.bulkEnableTokenProfiles({ uuids: checkedRows }));
     }, [checkedRows, dispatch]);
