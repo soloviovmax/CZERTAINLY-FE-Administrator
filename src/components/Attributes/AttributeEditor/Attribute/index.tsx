@@ -18,14 +18,14 @@ import { AttributeFieldSelect } from './AttributeFieldSelect';
 import { AttributeFieldFile } from './AttributeFieldFile';
 import { AttributeFieldInput } from './AttributeFieldInput';
 
-type Props = Readonly<{
+type Props = {
     name: string;
     descriptor: DataAttributeModel | InfoAttributeModel | CustomAttributeModel | undefined;
     options?: { label: string; value: any }[];
     busy?: boolean;
     userInteractedRef?: React.RefObject<boolean>;
     deleteButton?: React.ReactNode;
-}>;
+};
 
 export function Attribute({
     name,
@@ -34,7 +34,7 @@ export function Attribute({
     busy = false,
     userInteractedRef: userInteractionRef,
     deleteButton,
-}: Props): React.ReactNode {
+}: Readonly<Props>): React.ReactNode {
     const { setValue } = useFormContext<Record<string, any>>();
     const [addNewAttributeValue, setAddNewAttributeValue] = useState<AddNewAttributeType | undefined>();
     const attributeCallbackValue = useSelector(userInterfaceSelectors.selectAttributeCallbackValue);
@@ -179,8 +179,7 @@ export function Attribute({
         return <AttributeFieldInput name={name} descriptor={descriptor} busy={busy} deleteButton={deleteButton} />;
     }
 
-    const infoDescriptor = descriptor as InfoAttributeModel;
-    const rawContent = getAttributeContent(infoDescriptor.contentType, infoDescriptor.content);
+    const rawContent = getAttributeContent(descriptor.contentType, descriptor.content);
     let content = '';
     if (typeof rawContent === 'string') {
         content = rawContent;
@@ -188,5 +187,5 @@ export function Attribute({
         content = JSON.stringify(rawContent);
     }
 
-    return <AttributeInfo name={infoDescriptor.name} label={infoDescriptor.properties.label} content={content} />;
+    return <AttributeInfo name={descriptor.name} label={descriptor.properties.label} content={content} />;
 }
