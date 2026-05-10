@@ -252,6 +252,7 @@ function authTestReducer(state: AuthTestState = authTestInitialState, _action: U
 export type CustomAttributesTestState = {
     resourceCustomAttributes: any[];
     resourceCustomAttributesContents: Array<{ resource: string; resourceUuid: string; customAttributes: any[] }>;
+    secondaryResourceCustomAttributes: any[];
     isFetchingResourceCustomAttributes: boolean;
     isUpdatingContent: boolean;
 };
@@ -259,6 +260,7 @@ export type CustomAttributesTestState = {
 const customAttributesTestInitialState: CustomAttributesTestState = {
     resourceCustomAttributes: [],
     resourceCustomAttributesContents: [],
+    secondaryResourceCustomAttributes: [],
     isFetchingResourceCustomAttributes: false,
     isUpdatingContent: false,
 };
@@ -505,6 +507,46 @@ function pagingsTestReducer(state: PagingsTestState = pagingsTestInitialState, a
     return state;
 }
 
+export type CertificatesTestState = {
+    finalizingIssueCertificateUuids: string[];
+    confirmingRevokeCertificateUuids: string[];
+    cancelingPendingCertificateUuids: string[];
+};
+
+const certificatesTestInitialState: CertificatesTestState = {
+    finalizingIssueCertificateUuids: [],
+    confirmingRevokeCertificateUuids: [],
+    cancelingPendingCertificateUuids: [],
+};
+
+function certificatesTestReducer(state: CertificatesTestState | undefined, _action: UnknownAction): CertificatesTestState {
+    return state ?? certificatesTestInitialState;
+}
+
+export type UtilsCertificateTestState = {
+    parsedCertificate: any;
+};
+
+const utilsCertificateTestInitialState: UtilsCertificateTestState = {
+    parsedCertificate: undefined,
+};
+
+function utilsCertificateTestReducer(state: UtilsCertificateTestState | undefined, _action: UnknownAction): UtilsCertificateTestState {
+    return state ?? utilsCertificateTestInitialState;
+}
+
+export type UtilsActuatorTestState = {
+    health: any;
+};
+
+const utilsActuatorTestInitialState: UtilsActuatorTestState = {
+    health: undefined,
+};
+
+function utilsActuatorTestReducer(state: UtilsActuatorTestState | undefined, _action: UnknownAction): UtilsActuatorTestState {
+    return state ?? utilsActuatorTestInitialState;
+}
+
 export const testReducers = combineReducers({
     userInterface: userInterfaceTestReducer,
     enums: enumsTestReducer,
@@ -519,6 +561,9 @@ export const testReducers = combineReducers({
     tablePagination: tablePaginationTestReducer,
     alerts: alertsTestReducer,
     pagings: pagingsTestReducer,
+    certificates: certificatesTestReducer,
+    utilsCertificate: utilsCertificateTestReducer,
+    utilsActuator: utilsActuatorTestReducer,
 });
 
 export const testInitialState = {
@@ -535,4 +580,7 @@ export const testInitialState = {
     tablePagination: tablePaginationTestInitialState,
     alerts: alertsTestInitialState,
     pagings: pagingsTestInitialState,
+    certificates: certificatesTestInitialState,
+    utilsCertificate: utilsCertificateTestInitialState,
+    utilsActuator: utilsActuatorTestInitialState,
 };
