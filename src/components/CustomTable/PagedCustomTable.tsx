@@ -11,9 +11,10 @@ type Props = {
     onReloadData: (pageSize: number, pageNumber: number) => void;
     stateKey?: string;
     tableStateKey?: string;
+    isLoading?: boolean;
 };
 
-export default function PagedCustomTable({ headers, data, totalItems, onReloadData, stateKey, tableStateKey }: Readonly<Props>) {
+export default function PagedCustomTable({ headers, data, totalItems, onReloadData, stateKey, tableStateKey, isLoading }: Readonly<Props>) {
     const dispatch = useDispatch();
     const location = useLocation();
     const [pageSize, setPageSize] = useState(10);
@@ -91,6 +92,7 @@ export default function PagedCustomTable({ headers, data, totalItems, onReloadDa
                 paginationData={paginationData}
                 onPageChanged={setPageNumber}
                 onPageSizeChanged={setPageSize}
+                isLoading={isLoading}
             />
         </div>
     );
