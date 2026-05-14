@@ -429,7 +429,7 @@ export default function TokenForm({ tokenId, onCancel, onSuccess }: TokenFormPro
                                             <AttributeEditor
                                                 id="token"
                                                 attributeDescriptors={tokenProviderAttributeDescriptors}
-                                                attributes={tokenDetail?.attributes}
+                                                attributes={editMode ? tokenDetail?.attributes : undefined}
                                                 connectorUuid={tokenProvider.uuid}
                                                 functionGroupCode={FunctionGroupCode.CryptographyProvider}
                                                 kind={watchedStoreKind}
