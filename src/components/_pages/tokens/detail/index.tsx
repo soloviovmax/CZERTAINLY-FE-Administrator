@@ -266,8 +266,8 @@ export default function TokenDetail() {
                 toggle={() => setConfirmDelete(false)}
                 icon="delete"
                 buttons={[
-                    { color: 'danger', onClick: onDeleteConfirmed, body: 'Delete' },
                     { color: 'secondary', variant: 'outline', onClick: () => setConfirmDelete(false), body: 'Cancel' },
+                    { color: 'danger', onClick: onDeleteConfirmed, body: 'Delete' },
                 ]}
             />
 
@@ -278,8 +278,8 @@ export default function TokenDetail() {
                   related to the token not work. Is this what you want to do?"
                 toggle={() => setConfirmDeactivation(false)}
                 buttons={[
-                    { color: 'danger', onClick: onDeactivationConfirmed, body: 'Deactivate' },
                     { color: 'secondary', variant: 'outline', onClick: () => setConfirmDeactivation(false), body: 'Cancel' },
+                    { color: 'danger', onClick: onDeactivationConfirmed, body: 'Deactivate' },
                 ]}
             />
 
