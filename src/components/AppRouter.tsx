@@ -130,6 +130,7 @@ const UsersList = lazy(() => import('./_pages/users/list'));
 const NotificationsList = lazy(() => import('./_pages/notifications/list'));
 const NotificationInstanceDetail = lazy(() => import('./_pages/notifications/notification-instance-details'));
 const EventsSettings = lazy(() => import('./_pages/notifications/events-settings'));
+const EventDetail = lazy(() => import('./_pages/notifications/events-settings/detail'));
 
 const NotificationProfileDetail = lazy(() => import('./_pages/notifications/notification-profiles/detail'));
 const NotificationProfilesList = lazy(() => import('./_pages/notifications/notification-profiles/list'));
@@ -399,6 +400,7 @@ export default function AppRouter() {
 
                     <Route path={`/notifications`} element={<NotificationsList />} />
                     <Route path={`/events`} element={<EventsSettings />} />
+                    <Route path={`/events/detail/:event`} element={<EventDetail />} />
                     <Route path={`/notificationinstances/detail/:id`} element={<NotificationInstanceDetail />} />
 
                     <Route path={`/notificationprofiles`} element={<NotificationProfilesList />} />
