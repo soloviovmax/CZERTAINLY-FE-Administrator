@@ -40,6 +40,7 @@ import { slice as raProfilesSlice } from './ra-profiles';
 import { slice as resourceSlice } from './resource';
 import { slice as rolesSlice } from './roles';
 import { slice as rulesSlice } from './rules';
+import { slice as eventHistorySlice } from './event-history';
 import { slice as schedulerSlice } from './scheduler';
 import { slice as settingsSlice } from './settings';
 import { slice as dashboardSlice } from './statisticsDashboard';
@@ -78,6 +79,7 @@ export const reducers = combineReducers({
     [rolesSlice.name]: rolesSlice.reducer,
     [resourceSlice.name]: resourceSlice.reducer,
     [rulesSlice.name]: rulesSlice.reducer,
+    [eventHistorySlice.name]: eventHistorySlice.reducer,
     [certificatesSlice.name]: certificatesSlice.reducer,
     [authoritiesSlice.name]: authoritiesSlice.reducer,
     [raProfilesSlice.name]: raProfilesSlice.reducer,
