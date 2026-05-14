@@ -11,7 +11,7 @@
  * Do not edit the class manually.
  */
 
-import type { ResponseAttribute } from './';
+import type { ResponseAttribute, SimplifiedSigningProfileDto } from './';
 
 /**
  * TSP (Timestamping Protocol) profile details
@@ -43,6 +43,12 @@ export interface TspProfileDto {
      * @memberof TspProfileDto
      */
     enabled: boolean;
+    /**
+     * Default Signing Profile
+     * @type {SimplifiedSigningProfileDto}
+     * @memberof TspProfileDto
+     */
+    defaultSigningProfile?: SimplifiedSigningProfileDto;
     /**
      * TSP URL for signing
      * @type {string}

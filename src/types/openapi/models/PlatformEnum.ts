@@ -82,4 +82,9 @@ export enum PlatformEnum {
     SecretType = 'SecretType',
     KeyStoreType = 'KeyStoreType',
     SecretState = 'SecretState',
+    ManagedSigningType = 'ManagedSigningType',
+    QcType = 'QcType',
+    SigningProtocol = 'SigningProtocol',
+    SigningScheme = 'SigningScheme',
+    SigningWorkflowType = 'SigningWorkflowType',
 }

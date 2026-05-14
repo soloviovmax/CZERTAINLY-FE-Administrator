@@ -27,4 +27,6 @@ export enum ConnectorInterface {
     Cryptography = 'cryptography',
     Notification = 'notification',
     Secret = 'secret',
+    SignatureFormatting = 'signatureFormatting',
+    Signing = 'signing',
 }

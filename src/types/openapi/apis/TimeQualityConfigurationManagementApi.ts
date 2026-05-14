@@ -22,6 +22,7 @@ import type {
     PaginationResponseDtoTimeQualityConfigurationListDto,
     SearchFieldDataByGroupDto,
     SearchRequestDto,
+    SimplifiedSigningProfileDto,
     TimeQualityConfigurationDto,
     TimeQualityConfigurationRequestDto,
 } from '../models';
@@ -39,6 +40,10 @@ export interface DeleteTimeQualityConfigurationRequest {
 }
 
 export interface GetTimeQualityConfigurationRequest {
+    uuid: string;
+}
+
+export interface ListSigningProfilesForTimeQualityConfigurationRequest {
     uuid: string;
 }
 
@@ -157,6 +162,31 @@ export class TimeQualityConfigurationManagementApi extends BaseAPI {
         return this.request<TimeQualityConfigurationDto>(
             {
                 url: '/v1/timeQualityConfigurations/{uuid}'.replace('{uuid}', encodeURI(uuid)),
+                method: 'GET',
+            },
+            opts?.responseOpts,
+        );
+    }
+
+    /**
+     * List Signing Profiles using this Time Quality Configuration
+     */
+    listSigningProfilesForTimeQualityConfiguration({
+        uuid,
+    }: ListSigningProfilesForTimeQualityConfigurationRequest): Observable<Array<SimplifiedSigningProfileDto>>;
+    listSigningProfilesForTimeQualityConfiguration(
+        { uuid }: ListSigningProfilesForTimeQualityConfigurationRequest,
+        opts?: OperationOpts,
+    ): Observable<AjaxResponse<Array<SimplifiedSigningProfileDto>>>;
+    listSigningProfilesForTimeQualityConfiguration(
+        { uuid }: ListSigningProfilesForTimeQualityConfigurationRequest,
+        opts?: OperationOpts,
+    ): Observable<Array<SimplifiedSigningProfileDto> | AjaxResponse<Array<SimplifiedSigningProfileDto>>> {
+        throwIfNullOrUndefined(uuid, 'uuid', 'listSigningProfilesForTimeQualityConfiguration');
+
+        return this.request<Array<SimplifiedSigningProfileDto>>(
+            {
+                url: '/v1/timeQualityConfigurations/{uuid}/signingProfiles'.replace('{uuid}', encodeURI(uuid)),
                 method: 'GET',
             },
             opts?.responseOpts,
