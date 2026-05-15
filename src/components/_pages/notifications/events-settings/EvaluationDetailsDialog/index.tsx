@@ -10,33 +10,42 @@ type Props = {
 };
 
 type Row = { label: string; value: string };
+type Section = { id: string; rows: Row[] };
 
 export default function EvaluationDetailsDialog({ isOpen, onClose, objectLabel, trigger }: Readonly<Props>) {
-    const sections: { rows: Row[] }[] = useMemo(() => {
+    const sections: Section[] = useMemo(() => {
         if (!trigger) return [];
 
-        const header: Row[] = [
-            { label: 'Object', value: objectLabel },
-            { label: 'Trigger', value: trigger.triggerName },
-        ];
+        const header: Section = {
+            id: 'header',
+            rows: [
+                { label: 'Object', value: objectLabel },
+                { label: 'Trigger', value: trigger.triggerName },
+            ],
+        };
 
-        const recordSections = trigger.records.map((record) => {
-            const rows: Row[] = [];
-            if (record.condition) {
-                rows.push({ label: 'Condition', value: record.condition.name });
-                rows.push({ label: 'Result', value: 'Not met' });
-            }
-            if (record.execution) {
-                rows.push({ label: 'Action', value: record.execution.name });
-                rows.push({ label: 'Result', value: 'Skipped' });
-            }
-            if (record.message) {
-                rows.push({ label: 'Reason', value: record.message });
-            }
-            return { rows };
+        const recordSections: Section[] = trigger.records.map((record, index) => {
+            const conditionRows: Row[] = record.condition
+                ? [
+                      { label: 'Condition', value: record.condition.name },
+                      { label: 'Result', value: 'Not met' },
+                  ]
+                : [];
+            const executionRows: Row[] = record.execution
+                ? [
+                      { label: 'Action', value: record.execution.name },
+                      { label: 'Result', value: 'Skipped' },
+                  ]
+                : [];
+            const reasonRows: Row[] = record.message ? [{ label: 'Reason', value: record.message }] : [];
+
+            return {
+                id: `record-${index}`,
+                rows: [...conditionRows, ...executionRows, ...reasonRows],
+            };
         });
 
-        return [{ rows: header }, ...recordSections];
+        return [header, ...recordSections];
     }, [trigger, objectLabel]);
 
     return (
@@ -47,8 +56,8 @@ export default function EvaluationDetailsDialog({ isOpen, onClose, objectLabel, 
             size="xl"
             body={
                 <div className="divide-y divide-gray-200 text-sm">
-                    {sections.map((section, index) => (
-                        <div key={index} className="grid grid-cols-[200px_1fr] gap-y-2 py-4 first:pt-0 last:pb-0">
+                    {sections.map((section) => (
+                        <div key={section.id} className="grid grid-cols-[200px_1fr] gap-y-2 py-4 first:pt-0 last:pb-0">
                             {section.rows.map((row) => (
                                 <Fragment key={row.label}>
                                     <div className="text-gray-600">{row.label}</div>
