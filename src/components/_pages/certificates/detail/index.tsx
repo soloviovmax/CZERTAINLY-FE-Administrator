@@ -62,6 +62,7 @@ import Breadcrumb from 'components/Breadcrumb';
 import CertificateDetailsContent from './CertificateDetailsContent';
 import CertificateRequestContent from './CertificateRequestContent';
 import Label from 'components/Label';
+import ObjectEventHistoryWidget from 'components/_pages/notifications/events-settings/ObjectEventHistoryWidget';
 
 type LocationPushFormProps = Readonly<{
     onSubmit: (values: any) => void;
@@ -1113,7 +1114,7 @@ export default function CertificateDetail() {
                 <Link key="profile" to={`../../../approvalprofiles/detail/${approval.approvalProfileUuid}`}>
                     {approval.approvalProfileName}
                 </Link>,
-                <StatusBadge key="status" textStatus={approval.status} /> || '',
+                <StatusBadge key="status" textStatus={approval.status} />,
                 approval.creatorUsername || '',
                 approval.resource || '',
                 approval.resourceAction || '',
@@ -1265,7 +1266,7 @@ export default function CertificateDetail() {
                             title: 'History',
                             content: (
                                 <Widget
-                                    title="Event History"
+                                    title="History"
                                     busy={isFetchingHistory}
                                     titleSize="large"
                                     refreshAction={getFreshCertificateHistory}
@@ -1274,6 +1275,14 @@ export default function CertificateDetail() {
                                     <CustomTable headers={historyHeaders} data={historyEntry} hasPagination={true} />
                                 </Widget>
                             ),
+                        },
+                        {
+                            title: 'Event History',
+                            content: certificate ? (
+                                <Container>
+                                    <ObjectEventHistoryWidget resource={Resource.Certificates} uuid={certificate.uuid} />
+                                </Container>
+                            ) : null,
                         },
                         {
                             title: 'Flow',
