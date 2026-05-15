@@ -15,6 +15,7 @@ import { LockWidgetNameEnum } from 'types/user-interface';
 import { PlatformEnum, Resource } from '../../../../types/openapi';
 import CustomAttributeWidget from '../../../Attributes/CustomAttributeWidget';
 import EventsTable from 'components/_pages/notifications/events-settings/EventsTable';
+import ObjectEventHistoryWidget from 'components/_pages/notifications/events-settings/ObjectEventHistoryWidget';
 import TabLayout from 'components/Layout/TabLayout';
 import { getEditAndDeleteWidgetButtons, createWidgetDetailHeaders } from 'utils/widget';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
@@ -150,6 +151,10 @@ export default function GroupDetail() {
                                         )}
                                     </>
                                 ),
+                            },
+                            {
+                                title: 'Event History',
+                                content: group ? <ObjectEventHistoryWidget resource={Resource.Groups} uuid={group.uuid} /> : null,
                             },
                         ]}
                     />
