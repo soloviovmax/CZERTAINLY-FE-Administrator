@@ -24,6 +24,24 @@ const sampleEventHistory = {
 
 const sampleRequest = { pagination: { itemsPerPage: 10, pageNumber: 1 } } as any;
 
+const sampleObjectEventHistory = {
+    items: [
+        {
+            event: ResourceEvent.CertificateStatusChanged,
+            trigger: { uuid: 't-1', name: 'cert_status_trigger' },
+            conditionsMatched: true,
+            actionsPerformed: true,
+            triggeredAt: '2026-05-14T10:24:13Z',
+            message: 'OK',
+            records: [],
+        },
+    ],
+    totalItems: 1,
+    itemsPerPage: 10,
+    pageNumber: 1,
+    totalPages: 1,
+} as any;
+
 describe('event-history slice', () => {
     test('returns initial state for unknown action', () => {
         expect(reducer(undefined, { type: 'unknown' })).toEqual(initialState);
@@ -59,9 +77,49 @@ describe('event-history slice', () => {
     });
 
     test('resetEventHistory wipes eventHistory and isFetchingEventHistory', () => {
-        const dirty = { isFetchingEventHistory: true, eventHistory: sampleEventHistory };
+        const dirty = {
+            isFetchingEventHistory: true,
+            eventHistory: sampleEventHistory,
+            isFetchingObjectEventHistory: true,
+            objectEventHistory: sampleObjectEventHistory,
+        };
         const state = reducer(dirty, actions.resetEventHistory());
         expect(state).toEqual(initialState);
+    });
+
+    test('getObjectEventHistory clears objectEventHistory and sets isFetchingObjectEventHistory to true', () => {
+        const state = reducer(
+            {
+                isFetchingEventHistory: false,
+                isFetchingObjectEventHistory: false,
+                objectEventHistory: sampleObjectEventHistory,
+            },
+            actions.getObjectEventHistory({
+                resource: Resource.Certificates,
+                uuid: 'object-uuid',
+                itemsPerPage: 10,
+                pageNumber: 1,
+            }),
+        );
+        expect(state.isFetchingObjectEventHistory).toBe(true);
+        expect(state.objectEventHistory).toBeUndefined();
+    });
+
+    test('getObjectEventHistorySuccess sets objectEventHistory and clears isFetchingObjectEventHistory', () => {
+        const state = reducer(
+            { isFetchingEventHistory: false, isFetchingObjectEventHistory: true, objectEventHistory: undefined },
+            actions.getObjectEventHistorySuccess({ objectEventHistory: sampleObjectEventHistory }),
+        );
+        expect(state.isFetchingObjectEventHistory).toBe(false);
+        expect(state.objectEventHistory).toEqual(sampleObjectEventHistory);
+    });
+
+    test('getObjectEventHistoryFailure clears isFetchingObjectEventHistory', () => {
+        const state = reducer(
+            { isFetchingEventHistory: false, isFetchingObjectEventHistory: true, objectEventHistory: undefined },
+            actions.getObjectEventHistoryFailure({ error: 'boom' }),
+        );
+        expect(state.isFetchingObjectEventHistory).toBe(false);
     });
 
     describe('selectors', () => {
@@ -69,6 +127,8 @@ describe('event-history slice', () => {
             eventHistory: {
                 isFetchingEventHistory: true,
                 eventHistory: sampleEventHistory,
+                isFetchingObjectEventHistory: true,
+                objectEventHistory: sampleObjectEventHistory,
             },
         };
 
@@ -83,6 +143,14 @@ describe('event-history slice', () => {
 
         test('isFetchingEventHistory returns the flag', () => {
             expect(selectors.isFetchingEventHistory(store)).toBe(true);
+        });
+
+        test('objectEventHistory returns objectEventHistory from state', () => {
+            expect(selectors.objectEventHistory(store)).toEqual(sampleObjectEventHistory);
+        });
+
+        test('isFetchingObjectEventHistory returns the flag', () => {
+            expect(selectors.isFetchingObjectEventHistory(store)).toBe(true);
         });
 
         test('state falls back to initialState when slice missing', () => {

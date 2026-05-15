@@ -1,14 +1,21 @@
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { ResourceEvent } from 'types/openapi';
-import type { EventHistoryRequestDto, PaginationResponseDtoEventHistoryDto } from 'types/openapi-workflows';
+import type { Resource, ResourceEvent } from 'types/openapi';
+import type {
+    EventHistoryRequestDto,
+    PaginationResponseDtoEventHistoryDto,
+    PaginationResponseDtoObjectEventHistoryDto,
+} from 'types/openapi-workflows';
 
 export type State = {
     eventHistory?: PaginationResponseDtoEventHistoryDto;
     isFetchingEventHistory: boolean;
+    objectEventHistory?: PaginationResponseDtoObjectEventHistoryDto;
+    isFetchingObjectEventHistory: boolean;
 };
 
 export const initialState: State = {
     isFetchingEventHistory: false,
+    isFetchingObjectEventHistory: false,
 };
 
 export const slice = createSlice({
@@ -27,10 +34,25 @@ export const slice = createSlice({
             state.isFetchingEventHistory = false;
         },
 
-        resetEventHistory: (state) => {
-            state.eventHistory = undefined;
-            state.isFetchingEventHistory = false;
+        getObjectEventHistory: (
+            state,
+            action: PayloadAction<{ resource: Resource; uuid: string; itemsPerPage: number; pageNumber: number }>,
+        ) => {
+            state.objectEventHistory = undefined;
+            state.isFetchingObjectEventHistory = true;
         },
+        getObjectEventHistorySuccess: (
+            state,
+            action: PayloadAction<{ objectEventHistory: PaginationResponseDtoObjectEventHistoryDto }>,
+        ) => {
+            state.objectEventHistory = action.payload.objectEventHistory;
+            state.isFetchingObjectEventHistory = false;
+        },
+        getObjectEventHistoryFailure: (state, action: PayloadAction<{ error: string | undefined }>) => {
+            state.isFetchingObjectEventHistory = false;
+        },
+
+        resetEventHistory: () => initialState,
     },
 });
 
@@ -38,11 +60,15 @@ const state = (reduxStore: any): State => reduxStore?.[slice.name] ?? initialSta
 
 const eventHistory = createSelector(state, (s) => s.eventHistory);
 const isFetchingEventHistory = createSelector(state, (s) => s.isFetchingEventHistory);
+const objectEventHistory = createSelector(state, (s) => s.objectEventHistory);
+const isFetchingObjectEventHistory = createSelector(state, (s) => s.isFetchingObjectEventHistory);
 
 export const selectors = {
     state,
     eventHistory,
     isFetchingEventHistory,
+    objectEventHistory,
+    isFetchingObjectEventHistory,
 };
 
 export const actions = slice.actions;

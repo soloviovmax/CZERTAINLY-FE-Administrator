@@ -545,11 +545,15 @@ function utilsActuatorTestReducer(state: UtilsActuatorTestState | undefined, _ac
 export type EventHistoryTestState = {
     eventHistory?: any;
     isFetchingEventHistory: boolean;
+    objectEventHistory?: any;
+    isFetchingObjectEventHistory: boolean;
 };
 
 const eventHistoryTestInitialState: EventHistoryTestState = {
     eventHistory: undefined,
     isFetchingEventHistory: false,
+    objectEventHistory: undefined,
+    isFetchingObjectEventHistory: false,
 };
 
 function eventHistoryTestReducer(state: EventHistoryTestState | undefined, _action: UnknownAction): EventHistoryTestState {

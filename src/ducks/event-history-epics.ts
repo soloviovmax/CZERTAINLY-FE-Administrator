@@ -28,6 +28,31 @@ const getPlatformSettingsEventHistory: AppEpic = (action$, state$, deps) => {
     );
 };
 
-const epics = [getPlatformSettingsEventHistory];
+const getObjectEventHistory: AppEpic = (action$, state$, deps) => {
+    return action$.pipe(
+        filter(slice.actions.getObjectEventHistory.match),
+        switchMap((action) =>
+            deps.apiClients.events
+                .getObjectEventHistory({
+                    resource: action.payload.resource,
+                    uuid: action.payload.uuid,
+                    itemsPerPage: action.payload.itemsPerPage,
+                    pageNumber: action.payload.pageNumber,
+                })
+                .pipe(
+                    map((objectEventHistory) => slice.actions.getObjectEventHistorySuccess({ objectEventHistory })),
+                    catchError((err) =>
+                        of(
+                            slice.actions.getObjectEventHistoryFailure({
+                                error: extractError(err, 'Failed to get object event history'),
+                            }),
+                        ),
+                    ),
+                ),
+        ),
+    );
+};
+
+const epics = [getPlatformSettingsEventHistory, getObjectEventHistory];
 
 export default epics;
