@@ -1,10 +1,11 @@
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { Resource, ResourceEvent } from 'types/openapi';
 import type {
     EventHistoryRequestDto,
     PaginationResponseDtoEventHistoryDto,
     PaginationResponseDtoObjectEventHistoryDto,
-} from 'types/openapi-workflows';
+    Resource,
+    ResourceEvent,
+} from 'types/openapi';
 
 export type State = {
     eventHistory?: PaginationResponseDtoEventHistoryDto;

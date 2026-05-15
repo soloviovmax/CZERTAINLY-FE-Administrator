@@ -1,6 +1,6 @@
 import Dialog from 'components/Dialog';
 import { Fragment, useMemo } from 'react';
-import type { TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi-workflows';
+import type { TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi';
 
 type Props = {
     isOpen: boolean;

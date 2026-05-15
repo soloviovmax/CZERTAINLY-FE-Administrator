@@ -9,8 +9,7 @@ import { Check, Info, X } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useDispatch, useSelector } from 'react-redux';
-import { PlatformEnum, type Resource } from 'types/openapi';
-import type { ObjectEventHistoryDto, TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi-workflows';
+import { type ObjectEventHistoryDto, PlatformEnum, type Resource, type TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi';
 import { dateFormatter } from 'utils/dateUtil';
 
 type Props = {

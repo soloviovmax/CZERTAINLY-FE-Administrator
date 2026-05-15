@@ -5,7 +5,7 @@ import EvaluationDetailsDialog from 'components/_pages/notifications/events-sett
 import { Check, Info, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import type { EventHistoryDto, TriggerHistoryObjectSummaryDto, TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi-workflows';
+import type { EventHistoryDto, TriggerHistoryObjectSummaryDto, TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi';
 import { dateFormatter } from 'utils/dateUtil';
 
 type Props = {

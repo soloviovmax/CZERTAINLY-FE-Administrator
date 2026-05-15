@@ -53,6 +53,7 @@ apis/UserManagementApi.ts
 apis/VaultInstanceManagementApi.ts
 apis/VaultProfileManagementApi.ts
 apis/WorkflowActionsManagementApi.ts
+apis/WorkflowEventManagementApi.ts
 apis/WorkflowRulesManagementApi.ts
 apis/WorkflowTriggersManagementApi.ts
 apis/index.ts
@@ -304,7 +305,10 @@ models/EntityInstanceResponseDto.ts
 models/EntityInstanceUpdateRequestDto.ts
 models/EnumItemDto.ts
 models/ErrorMessageDto.ts
+models/EventHistoryDto.ts
+models/EventHistoryRequestDto.ts
 models/EventSettingsDto.ts
+models/EventStatus.ts
 models/EventsSettingsDto.ts
 models/ExecutionDto.ts
 models/ExecutionItemDto.ts
@@ -386,6 +390,7 @@ models/OAuth2ProviderSettingsResponseDto.ts
 models/OAuth2ProviderSettingsUpdateDto.ts
 models/ObjectAttributeContentV2.ts
 models/ObjectAttributeContentV3.ts
+models/ObjectEventHistoryDto.ts
 models/ObjectPermissionsDto.ts
 models/ObjectPermissionsRequestDto.ts
 models/OidCategory.ts
@@ -394,8 +399,11 @@ models/OperationResult.ts
 models/PaginationRequestDto.ts
 models/PaginationResponseDtoCbomDto.ts
 models/PaginationResponseDtoConnectorDtoV2.ts
+models/PaginationResponseDtoEventHistoryDto.ts
+models/PaginationResponseDtoObjectEventHistoryDto.ts
 models/PaginationResponseDtoSecretDto.ts
 models/PaginationResponseDtoTimeQualityConfigurationListDto.ts
+models/PaginationResponseDtoTriggerHistoryObjectSummaryDto.ts
 models/PaginationResponseDtoTspProfileListDto.ts
 models/PaginationResponseDtoVaultInstanceDto.ts
 models/PaginationResponseDtoVaultProfileDto.ts

@@ -51,22 +51,6 @@
                     "stringEnums": true,
                     "typescriptThreePlus": true
                 }
-            },
-            "typescript-rxjs-workflows": {
-                "generatorName": "typescript-rxjs",
-                "inputSpec": "https://api.otilm.com/main/doc-openapi-core-workflows.yaml",
-                "output": "./src/types/openapi-workflows",
-                "typeMappings": {
-                    "set": "Array",
-                    "Date": "string"
-                },
-                "additionalProperties": {
-                    "withoutRuntimeChecks": true,
-                    "supportsES6": true,
-                    "withInterfaces": true,
-                    "stringEnums": true,
-                    "typescriptThreePlus": true
-                }
             }
         }
     }

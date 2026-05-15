@@ -2,8 +2,7 @@ import { describe, expect, test } from 'vitest';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
-import { ResourceEvent } from 'types/openapi';
-import { EventStatus, Resource } from 'types/openapi-workflows';
+import { EventStatus, Resource, ResourceEvent } from 'types/openapi';
 
 import epics from './event-history-epics';
 import { actions } from './event-history';

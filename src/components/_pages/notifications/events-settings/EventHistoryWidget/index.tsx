@@ -9,8 +9,7 @@ import { getEnumLabel, selectors as enumSelectors } from 'ducks/enums';
 import { Info } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { PlatformEnum, type ResourceEvent } from 'types/openapi';
-import { type EventHistoryDto, EventStatus } from 'types/openapi-workflows';
+import { type EventHistoryDto, EventStatus, PlatformEnum, type ResourceEvent } from 'types/openapi';
 import { dateFormatter } from 'utils/dateUtil';
 
 type Props = {

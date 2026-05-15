@@ -49,7 +49,7 @@
     },
     "linter": {
         "enabled": true,
-        "includes": ["**", "!src/types/openapi/**", "!src/types/openapi-workflows/**"],
+        "includes": ["**", "!src/types/openapi/**"],
         "rules": {
             "recommended": true,
             "a11y": {

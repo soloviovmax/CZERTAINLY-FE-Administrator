@@ -52,5 +52,6 @@ export * from './UserManagementApi';
 export * from './VaultInstanceManagementApi';
 export * from './VaultProfileManagementApi';
 export * from './WorkflowActionsManagementApi';
+export * from './WorkflowEventManagementApi';
 export * from './WorkflowRulesManagementApi';
 export * from './WorkflowTriggersManagementApi';

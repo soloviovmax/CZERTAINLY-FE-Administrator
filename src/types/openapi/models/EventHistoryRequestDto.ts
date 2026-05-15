@@ -1,7 +1,7 @@
 // tslint:disable
 /**
- * Workflows API
- * REST API for managing workflows resources in the platform
+ * Core API
+ * REST API for CZERTAINLY Core
  *
  * The version of the OpenAPI document: 2.17.1-SNAPSHOT
  * Contact: info@otilm.com

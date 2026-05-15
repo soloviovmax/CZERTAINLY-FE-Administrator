@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ResourceEvent } from 'types/openapi';
-import { EventStatus, Resource } from 'types/openapi-workflows';
+import { EventStatus, Resource, ResourceEvent } from 'types/openapi';
 import reducer, { actions, initialState, selectors } from './event-history';
 
 const sampleEventHistory = {

@@ -1,7 +1,7 @@
 // tslint:disable
 /**
- * Workflows API
- * REST API for managing workflows resources in the platform
+ * Core API
+ * REST API for CZERTAINLY Core
  *
  * The version of the OpenAPI document: 2.17.1-SNAPSHOT
  * Contact: info@otilm.com
@@ -72,7 +72,6 @@ export class WorkflowEventManagementApi extends BaseAPI {
 
         const headers: HttpHeaders = {
             'Content-Type': 'application/json',
-            ...(this.configuration.apiKey && { 'ssl-client-cert': this.configuration.apiKey('ssl-client-cert') }), // CertificateAuth authentication
         };
 
         return this.request<PaginationResponseDtoEventHistoryDto>(
@@ -109,10 +108,6 @@ export class WorkflowEventManagementApi extends BaseAPI {
         throwIfNullOrUndefined(resource, 'resource', 'getObjectEventHistory');
         throwIfNullOrUndefined(uuid, 'uuid', 'getObjectEventHistory');
 
-        const headers: HttpHeaders = {
-            ...(this.configuration.apiKey && { 'ssl-client-cert': this.configuration.apiKey('ssl-client-cert') }), // CertificateAuth authentication
-        };
-
         const query: HttpQuery = {};
 
         if (itemsPerPage != null) {
@@ -128,7 +123,6 @@ export class WorkflowEventManagementApi extends BaseAPI {
                     .replace('{resource}', encodeURI(resource))
                     .replace('{uuid}', encodeURI(uuid)),
                 method: 'GET',
-                headers,
                 query,
             },
             opts?.responseOpts,
@@ -155,7 +149,6 @@ export class WorkflowEventManagementApi extends BaseAPI {
 
         const headers: HttpHeaders = {
             'Content-Type': 'application/json',
-            ...(this.configuration.apiKey && { 'ssl-client-cert': this.configuration.apiKey('ssl-client-cert') }), // CertificateAuth authentication
         };
 
         return this.request<PaginationResponseDtoEventHistoryDto>(

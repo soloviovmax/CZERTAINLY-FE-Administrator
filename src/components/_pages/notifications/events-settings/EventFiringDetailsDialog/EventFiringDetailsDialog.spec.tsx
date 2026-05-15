@@ -1,4 +1,4 @@
-import { EventStatus, type EventHistoryDto, Resource } from 'types/openapi-workflows';
+import { EventStatus, type EventHistoryDto, Resource } from 'types/openapi';
 import { withProviders } from 'utils/test-helpers';
 import { test, expect } from '../../../../../../playwright/ct-test';
 import EventFiringDetailsDialog from './index';

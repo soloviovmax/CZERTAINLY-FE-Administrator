@@ -1,4 +1,4 @@
-import type { TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi-workflows';
+import type { TriggerHistoryObjectTriggerSummaryDto } from 'types/openapi';
 import { withProviders } from 'utils/test-helpers';
 import { test, expect } from '../../../../../../playwright/ct-test';
 import EvaluationDetailsDialog from './index';

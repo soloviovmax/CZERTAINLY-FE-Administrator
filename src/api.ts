@@ -43,6 +43,7 @@ import {
     TokenProfileManagementApi,
     UserManagementApi,
     WorkflowActionsManagementApi,
+    WorkflowEventManagementApi,
     WorkflowRulesManagementApi,
     WorkflowTriggersManagementApi,
     SecretManagementApi,
@@ -55,7 +56,6 @@ import {
 // Deep import: the openapi barrel only re-exports TokenInstanceManagementApi because
 // both modules export overlapping request interfaces that would collide via `export *`.
 import { TokenInstanceControllerApi } from 'types/openapi/apis/TokenInstanceControllerApi';
-import { Configuration as ConfigurationWorkflows, WorkflowEventManagementApi } from 'types/openapi-workflows';
 import {
     ActuatorApi,
     CertificateUtilsAPIApi,
@@ -136,7 +136,7 @@ const factories: Partial<{ [K in ApiClientKey]: () => ApiClients[K] }> = {
     actions: () => new WorkflowActionsManagementApi(configuration),
     rules: () => new WorkflowRulesManagementApi(configuration),
     triggers: () => new WorkflowTriggersManagementApi(configuration),
-    events: () => new WorkflowEventManagementApi(new ConfigurationWorkflows({ basePath: apiUrl })),
+    events: () => new WorkflowEventManagementApi(configuration),
     certificates: () => new CertificateInventoryApi(configuration),
     auditLogs: () => new AuditLogApi(configuration),
     raProfiles: () => new RAProfileManagementApi(configuration),

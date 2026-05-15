@@ -1,7 +1,7 @@
 // tslint:disable
 /**
- * Workflows API
- * REST API for managing workflows resources in the platform
+ * Core API
+ * REST API for CZERTAINLY Core
  *
  * The version of the OpenAPI document: 2.17.1-SNAPSHOT
  * Contact: info@otilm.com
@@ -11,41 +11,41 @@
  * Do not edit the class manually.
  */
 
-import type { EventHistoryDto } from './';
+import type { ObjectEventHistoryDto } from './';
 
 /**
  * @export
- * @interface PaginationResponseDtoEventHistoryDto
+ * @interface PaginationResponseDtoObjectEventHistoryDto
  */
-export interface PaginationResponseDtoEventHistoryDto {
+export interface PaginationResponseDtoObjectEventHistoryDto {
     /**
      * Items returned
-     * @type {Array<EventHistoryDto>}
-     * @memberof PaginationResponseDtoEventHistoryDto
+     * @type {Array<ObjectEventHistoryDto>}
+     * @memberof PaginationResponseDtoObjectEventHistoryDto
      */
-    items: Array<EventHistoryDto>;
+    items: Array<ObjectEventHistoryDto>;
     /**
      * Number of entries per page
      * @type {number}
-     * @memberof PaginationResponseDtoEventHistoryDto
+     * @memberof PaginationResponseDtoObjectEventHistoryDto
      */
     itemsPerPage: number;
     /**
      * Page number for the request
      * @type {number}
-     * @memberof PaginationResponseDtoEventHistoryDto
+     * @memberof PaginationResponseDtoObjectEventHistoryDto
      */
     pageNumber: number;
     /**
      * Number of pages available
      * @type {number}
-     * @memberof PaginationResponseDtoEventHistoryDto
+     * @memberof PaginationResponseDtoObjectEventHistoryDto
      */
     totalPages: number;
     /**
      * Number of items available
      * @type {number}
-     * @memberof PaginationResponseDtoEventHistoryDto
+     * @memberof PaginationResponseDtoObjectEventHistoryDto
      */
     totalItems: number;
 }
