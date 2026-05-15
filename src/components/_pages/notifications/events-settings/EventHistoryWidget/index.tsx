@@ -7,7 +7,7 @@ import EventFiringDetailsDialog from 'components/_pages/notifications/events-set
 import { actions, selectors } from 'ducks/event-history';
 import { getEnumLabel, selectors as enumSelectors } from 'ducks/enums';
 import { Info } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { PlatformEnum, type ResourceEvent } from 'types/openapi';
 import { type EventHistoryDto, EventStatus } from 'types/openapi-workflows';
@@ -51,18 +51,8 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
         [dispatch, event],
     );
 
-    useEffect(() => {
-        dispatch(
-            actions.getPlatformSettingsEventHistory({
-                event,
-                request: { pagination: { itemsPerPage: 10, pageNumber: 1 } },
-            }),
-        );
-    }, [dispatch, event]);
-
     const headers: TableHeader[] = useMemo(
         () => [
-            { id: 'details', content: 'Details', width: '60px' },
             { id: 'startedAt', content: 'Started At' },
             { id: 'finishedAt', content: 'Finished At' },
             { id: 'status', content: 'Status' },
@@ -70,6 +60,7 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
             { id: 'objectsEvaluated', content: 'Obj. Evaluated' },
             { id: 'objectsMatched', content: 'Obj. Matched' },
             { id: 'objectsIgnored', content: 'Obj. Ignored' },
+            { id: 'details', content: 'Details', width: '60px' },
         ],
         [],
     );
@@ -79,16 +70,6 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
             (eventHistory?.items ?? []).map((entry, index) => ({
                 id: `${entry.startedAt}-${index}`,
                 columns: [
-                    <Button
-                        key="details"
-                        variant="transparent"
-                        color="primary"
-                        className="p-1"
-                        title="Details"
-                        onClick={() => setSelectedEntry(entry)}
-                    >
-                        <Info size={16} />
-                    </Button>,
                     dateFormatter(entry.startedAt),
                     entry.finishedAt ? dateFormatter(entry.finishedAt) : '',
                     <Badge key="status" color={statusBadgeColor[entry.status]}>
@@ -98,6 +79,16 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
                     entry.objectsEvaluated.toString(),
                     entry.objectsMatched.toString(),
                     entry.objectsIgnored.toString(),
+                    <Button
+                        key="details"
+                        variant="transparent"
+                        color="primary"
+                        className="!p-1"
+                        title="Details"
+                        onClick={() => setSelectedEntry(entry)}
+                    >
+                        <Info size={16} />
+                    </Button>,
                 ],
             })),
         [eventHistory, resourceEnum],

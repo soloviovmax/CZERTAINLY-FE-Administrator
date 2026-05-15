@@ -46,7 +46,7 @@ export default function EvaluationDetailsDialog({ isOpen, onClose, objectLabel, 
             caption="Evaluation details"
             size="xl"
             body={
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-gray-200 text-sm">
                     {sections.map((section, index) => (
                         <div key={index} className="grid grid-cols-[200px_1fr] gap-y-2 py-4 first:pt-0 last:pb-0">
                             {section.rows.map((row) => (

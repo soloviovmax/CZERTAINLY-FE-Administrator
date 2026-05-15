@@ -224,6 +224,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                             title="Edit"
                             key="edit"
                             onClick={() => onEdit(event as ResourceEvent)}
+                            className="!p-1"
                         >
                             <Edit size={16} />
                         </Button>,

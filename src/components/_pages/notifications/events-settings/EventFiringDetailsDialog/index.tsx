@@ -64,7 +64,7 @@ export default function EventFiringDetailsDialog({ isOpen, onClose, entry }: Rea
                         key="details"
                         variant="transparent"
                         color="primary"
-                        className="p-1"
+                        className="!p-1"
                         title="Details"
                         onClick={() => setSelectedDetails({ objectLabel, trigger })}
                     >
