@@ -1,45 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import { EventStatus, Resource, ResourceEvent } from 'types/openapi';
+import { Resource, ResourceEvent } from 'types/openapi';
 import reducer, { actions, initialState, selectors } from './event-history';
-
-const sampleEventHistory = {
-    items: [
-        {
-            startedAt: '2026-05-14T10:24:12Z',
-            finishedAt: '2026-05-14T10:24:13Z',
-            status: EventStatus.Finished,
-            resource: Resource.Certificates,
-            objectsEvaluated: 1,
-            objectsMatched: 1,
-            objectsIgnored: 0,
-            objectHistories: { items: [], totalItems: 0, itemsPerPage: 10, pageNumber: 1, totalPages: 0 },
-        },
-    ],
-    totalItems: 1,
-    itemsPerPage: 10,
-    pageNumber: 1,
-    totalPages: 1,
-} as any;
-
-const sampleRequest = { pagination: { itemsPerPage: 10, pageNumber: 1 } } as any;
-
-const sampleObjectEventHistory = {
-    items: [
-        {
-            event: ResourceEvent.CertificateStatusChanged,
-            trigger: { uuid: 't-1', name: 'cert_status_trigger' },
-            conditionsMatched: true,
-            actionsPerformed: true,
-            triggeredAt: '2026-05-14T10:24:13Z',
-            message: 'OK',
-            records: [],
-        },
-    ],
-    totalItems: 1,
-    itemsPerPage: 10,
-    pageNumber: 1,
-    totalPages: 1,
-} as any;
+import { sampleEventHistory, sampleEventHistoryRequest, sampleObjectEventHistory } from './__fixtures__/event-history';
 
 describe('event-history slice', () => {
     test('returns initial state for unknown action', () => {
@@ -48,10 +10,10 @@ describe('event-history slice', () => {
 
     test('getPlatformSettingsEventHistory clears eventHistory and sets isFetchingEventHistory to true', () => {
         const state = reducer(
-            { isFetchingEventHistory: false, eventHistory: sampleEventHistory },
+            { isFetchingEventHistory: false, eventHistory: sampleEventHistory, isFetchingObjectEventHistory: false },
             actions.getPlatformSettingsEventHistory({
                 event: ResourceEvent.CertificateStatusChanged,
-                request: sampleRequest,
+                request: sampleEventHistoryRequest,
             }),
         );
         expect(state.isFetchingEventHistory).toBe(true);
@@ -60,7 +22,7 @@ describe('event-history slice', () => {
 
     test('getPlatformSettingsEventHistorySuccess sets eventHistory and clears isFetchingEventHistory', () => {
         const state = reducer(
-            { isFetchingEventHistory: true, eventHistory: undefined },
+            { isFetchingEventHistory: true, eventHistory: undefined, isFetchingObjectEventHistory: false },
             actions.getPlatformSettingsEventHistorySuccess({ eventHistory: sampleEventHistory }),
         );
         expect(state.isFetchingEventHistory).toBe(false);
@@ -69,7 +31,7 @@ describe('event-history slice', () => {
 
     test('getPlatformSettingsEventHistoryFailure clears isFetchingEventHistory', () => {
         const state = reducer(
-            { isFetchingEventHistory: true, eventHistory: undefined },
+            { isFetchingEventHistory: true, eventHistory: undefined, isFetchingObjectEventHistory: false },
             actions.getPlatformSettingsEventHistoryFailure({ error: 'boom' }),
         );
         expect(state.isFetchingEventHistory).toBe(false);

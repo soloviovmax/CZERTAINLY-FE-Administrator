@@ -2,49 +2,11 @@ import { describe, expect, test } from 'vitest';
 import { firstValueFrom, of, throwError } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
-import { EventStatus, Resource, ResourceEvent } from 'types/openapi';
+import { Resource, ResourceEvent } from 'types/openapi';
 
 import epics from './event-history-epics';
 import { actions } from './event-history';
-
-const sampleEventHistory = {
-    items: [
-        {
-            startedAt: '2026-05-14T10:24:12Z',
-            finishedAt: '2026-05-14T10:24:13Z',
-            status: EventStatus.Finished,
-            resource: Resource.Certificates,
-            objectsEvaluated: 1,
-            objectsMatched: 1,
-            objectsIgnored: 0,
-            objectHistories: { items: [], totalItems: 0, itemsPerPage: 10, pageNumber: 1, totalPages: 0 },
-        },
-    ],
-    totalItems: 1,
-    itemsPerPage: 10,
-    pageNumber: 1,
-    totalPages: 1,
-} as any;
-
-const sampleRequest = { pagination: { itemsPerPage: 10, pageNumber: 1 } } as any;
-
-const sampleObjectEventHistory = {
-    items: [
-        {
-            event: ResourceEvent.CertificateStatusChanged,
-            trigger: { uuid: 't-1', name: 'cert_status_trigger' },
-            conditionsMatched: true,
-            actionsPerformed: true,
-            triggeredAt: '2026-05-14T10:24:13Z',
-            message: 'OK',
-            records: [],
-        },
-    ],
-    totalItems: 1,
-    itemsPerPage: 10,
-    pageNumber: 1,
-    totalPages: 1,
-} as any;
+import { sampleEventHistory, sampleEventHistoryRequest, sampleObjectEventHistory } from './__fixtures__/event-history';
 
 async function runEpic(epicIndex: number, action: any, depsOverrides: any, takeCount = 1): Promise<any[]> {
     const deps = {
@@ -68,7 +30,7 @@ describe('event-history epics', () => {
             0,
             actions.getPlatformSettingsEventHistory({
                 event: ResourceEvent.CertificateStatusChanged,
-                request: sampleRequest,
+                request: sampleEventHistoryRequest,
             }),
             {
                 getPlatformSettingsEventHistory: (req: any) => {
@@ -81,7 +43,7 @@ describe('event-history epics', () => {
         expect(calls).toEqual([
             {
                 event: ResourceEvent.CertificateStatusChanged,
-                eventHistoryRequestDto: sampleRequest,
+                eventHistoryRequestDto: sampleEventHistoryRequest,
             },
         ]);
         expect(emitted).toEqual([actions.getPlatformSettingsEventHistorySuccess({ eventHistory: sampleEventHistory })]);
@@ -92,7 +54,7 @@ describe('event-history epics', () => {
             0,
             actions.getPlatformSettingsEventHistory({
                 event: ResourceEvent.CertificateStatusChanged,
-                request: sampleRequest,
+                request: sampleEventHistoryRequest,
             }),
             {
                 getPlatformSettingsEventHistory: () => throwError(() => new Error('boom')),
