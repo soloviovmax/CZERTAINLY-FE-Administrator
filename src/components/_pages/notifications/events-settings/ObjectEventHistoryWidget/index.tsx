@@ -1,8 +1,9 @@
 import Button from 'components/Button';
-import type { TableDataRow, TableHeader } from 'components/CustomTable';
+import type { TableDataRow } from 'components/CustomTable';
 import PagedCustomTable from 'components/CustomTable/PagedCustomTable';
 import Widget from 'components/Widget';
 import EvaluationDetailsDialog from 'components/_pages/notifications/events-settings/EvaluationDetailsDialog';
+import { objectEventHistoryHeaders } from 'components/_pages/notifications/events-settings/tableHeaders';
 import { getEnumLabel, selectors as enumSelectors } from 'ducks/enums';
 import { actions, selectors } from 'ducks/event-history';
 import { Check, Info, X } from 'lucide-react';
@@ -37,19 +38,6 @@ export default function ObjectEventHistoryWidget({ resource, uuid }: Readonly<Pr
             dispatch(actions.getObjectEventHistory({ resource, uuid, itemsPerPage: pageSize, pageNumber }));
         },
         [dispatch, resource, uuid],
-    );
-
-    const headers: TableHeader[] = useMemo(
-        () => [
-            { id: 'event', content: 'Event' },
-            { id: 'trigger', content: 'Trigger' },
-            { id: 'conditions', content: 'Conditions' },
-            { id: 'actions', content: 'Actions' },
-            { id: 'triggeredAt', content: 'Triggered at' },
-            { id: 'message', content: 'Message' },
-            { id: 'details', content: 'Details', width: '60px' },
-        ],
-        [],
     );
 
     const data: TableDataRow[] = useMemo(
@@ -103,7 +91,7 @@ export default function ObjectEventHistoryWidget({ resource, uuid }: Readonly<Pr
         <Widget title="Event History" titleSize="large">
             <PagedCustomTable
                 key={`${resource}-${uuid}`}
-                headers={headers}
+                headers={objectEventHistoryHeaders}
                 data={data}
                 totalItems={objectEventHistory?.totalItems}
                 onReloadData={onReloadData}

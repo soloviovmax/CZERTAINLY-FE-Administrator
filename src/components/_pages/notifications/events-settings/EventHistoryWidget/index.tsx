@@ -1,9 +1,10 @@
 import Badge, { type BadgeColor } from 'components/Badge';
 import Button from 'components/Button';
-import type { TableDataRow, TableHeader } from 'components/CustomTable';
+import type { TableDataRow } from 'components/CustomTable';
 import PagedCustomTable from 'components/CustomTable/PagedCustomTable';
 import Widget from 'components/Widget';
 import EventFiringDetailsDialog from 'components/_pages/notifications/events-settings/EventFiringDetailsDialog';
+import { eventHistoryHeaders } from 'components/_pages/notifications/events-settings/tableHeaders';
 import { actions, selectors } from 'ducks/event-history';
 import { getEnumLabel, selectors as enumSelectors } from 'ducks/enums';
 import { Info } from 'lucide-react';
@@ -50,20 +51,6 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
         [dispatch, event],
     );
 
-    const headers: TableHeader[] = useMemo(
-        () => [
-            { id: 'startedAt', content: 'Started At' },
-            { id: 'finishedAt', content: 'Finished At' },
-            { id: 'status', content: 'Status' },
-            { id: 'resource', content: 'Resource' },
-            { id: 'objectsEvaluated', content: 'Obj. Evaluated' },
-            { id: 'objectsMatched', content: 'Obj. Matched' },
-            { id: 'objectsIgnored', content: 'Obj. Ignored' },
-            { id: 'details', content: 'Details', width: '60px' },
-        ],
-        [],
-    );
-
     const data: TableDataRow[] = useMemo(
         () =>
             (eventHistory?.items ?? []).map((entry, index) => ({
@@ -97,7 +84,7 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
         <Widget title="Event History" titleSize="large">
             <PagedCustomTable
                 key={event}
-                headers={headers}
+                headers={eventHistoryHeaders}
                 data={data}
                 totalItems={eventHistory?.totalItems}
                 onReloadData={onReloadData}
