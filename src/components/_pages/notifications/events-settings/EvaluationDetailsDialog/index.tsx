@@ -16,13 +16,14 @@ export default function EvaluationDetailsDialog({ isOpen, onClose, objectLabel, 
     const sections: Section[] = useMemo(() => {
         if (!trigger) return [];
 
-        const header: Section = {
-            id: 'header',
-            rows: [
-                { label: 'Object', value: objectLabel },
-                { label: 'Trigger', value: trigger.triggerName },
-            ],
-        };
+        const headerRows: Row[] = [
+            { label: 'Object', value: objectLabel },
+            { label: 'Trigger', value: trigger.triggerName },
+        ];
+        if (trigger.notificationsSent !== undefined) {
+            headerRows.push({ label: 'Notification sent', value: trigger.notificationsSent ? 'Yes' : 'No' });
+        }
+        const header: Section = { id: 'header', rows: headerRows };
 
         const recordSections: Section[] = trigger.records.map((record, index) => {
             const conditionRows: Row[] = record.condition

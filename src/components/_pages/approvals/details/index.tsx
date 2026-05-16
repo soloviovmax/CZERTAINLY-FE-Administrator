@@ -293,7 +293,7 @@ export default function ApprovalDetails() {
     if (isFetchingDetail) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
-    console.log('Resource.Approvals', Resource.Approvals);
+
     return (
         <div>
             <Breadcrumb
