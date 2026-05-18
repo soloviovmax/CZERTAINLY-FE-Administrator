@@ -44,6 +44,8 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
                     event,
                     request: {
                         pagination: { itemsPerPage: pageSize, pageNumber },
+                        // Load all object histories for each firing so the details popup renders the full list.
+                        objectsPagination: { itemsPerPage: 1000, pageNumber: 1 },
                     },
                 }),
             );
