@@ -134,11 +134,69 @@ export function buildCertificateRowColumns(
     ];
 }
 
+function buildQcStatementRows(
+    qc: NonNullable<CertificateDetailResponseModel['qcStatements']>,
+    qcTypeEnum: any,
+    getEnumLabel: (e: any, key: string) => string,
+): TableDataRow[] {
+    const rows: TableDataRow[] = [
+        {
+            id: 'qcCompliance',
+            columns: [
+                'Qualified Certificate Compliance',
+                <Badge key="qcCompliance" color={qc.qcCompliance ? 'success' : 'secondary'}>
+                    {qc.qcCompliance ? 'Qualified' : 'Not Qualified'}
+                </Badge>,
+            ],
+        },
+        {
+            id: 'qcSscd',
+            columns: [
+                'Qualified Certificate Key Storage',
+                <Badge key="qcSscd" color={qc.qcSscd ? 'success' : 'secondary'}>
+                    {qc.qcSscd ? 'QESCD / Hardware' : 'Software'}
+                </Badge>,
+            ],
+        },
+    ];
+
+    if (qc.qcType?.length) {
+        rows.push({
+            id: 'qcType',
+            columns: [
+                'Qualified Certificate Type',
+                qc.qcType.map((t) => (
+                    <div key={t} style={{ margin: '1px' }}>
+                        <Badge>{getEnumLabel(qcTypeEnum, t)}</Badge>&nbsp;
+                    </div>
+                )),
+            ],
+        });
+    }
+
+    if (qc.qcCcLegislation?.length) {
+        rows.push({
+            id: 'qcCcLegislation',
+            columns: [
+                'QC Legislation',
+                qc.qcCcLegislation.map((cc) => (
+                    <div key={cc} style={{ margin: '1px' }}>
+                        <Badge>{cc}</Badge>&nbsp;
+                    </div>
+                )),
+            ],
+        });
+    }
+
+    return rows;
+}
+
 export function buildCertificateDetailBaseRows(
     certificate: CertificateDetailResponseModel,
     validationResult: CertificateValidationResultDto | undefined,
     isCertificateArchived: boolean,
     certificateKeyUsageEnum: any,
+    qcTypeEnum: any,
     dateFormatter: (d: Date) => string,
     getEnumLabel: (e: any, key: string) => string,
     onPendingAction: (action: PendingAction) => void,
@@ -295,5 +353,10 @@ export function buildCertificateDetailBaseRows(
             ],
         },
     );
+
+    if (certificate.qcStatements) {
+        rows.push(...buildQcStatementRows(certificate.qcStatements, qcTypeEnum, getEnumLabel));
+    }
+
     return rows;
 }
