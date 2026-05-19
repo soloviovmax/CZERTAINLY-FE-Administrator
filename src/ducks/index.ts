@@ -40,6 +40,7 @@ import type { reducers } from './reducers';
 import resourcesEpics from './resource-epics';
 import rolesEpics from './roles-epics';
 import rulesEpics from './rules-epics';
+import eventHistoryEpics from './event-history-epics';
 import schedulerEpics from './scheduler-epics';
 import settingsEpics from './settings-epics';
 import startupEpics from './startup-epics';
@@ -83,6 +84,7 @@ export const epics = combineEpics(
     ...rolesEpics,
     ...resourcesEpics,
     ...rulesEpics,
+    ...eventHistoryEpics,
     ...certificatesEpics,
     ...authoritiesEpics,
     ...raProfilesEpics,

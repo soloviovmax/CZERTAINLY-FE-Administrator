@@ -3,6 +3,7 @@ import AttributeViewer from 'components/Attributes/AttributeViewer';
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import TabLayout from 'components/Layout/TabLayout';
+import ObjectEventHistoryWidget from 'components/_pages/notifications/events-settings/ObjectEventHistoryWidget';
 
 import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
@@ -381,38 +382,57 @@ export default function CryptographicKeyDetail() {
         <div>
             <Breadcrumb items={breadcrumbItems} />
             <Widget widgetLockName={LockWidgetNameEnum.keyDetails} busy={isBusy} noBorder>
-                <Container className="md:flex-row">
-                    <Widget
-                        title="Key Details"
-                        busy={isBusy}
-                        widgetButtons={buttons}
-                        titleSize="large"
-                        refreshAction={getFreshCryptographicKeyDetails}
-                        lockSize="large"
-                        className="w-full md:w-1/2"
-                    >
-                        <CustomTable headers={detailHeaders} data={detailData} />
-                    </Widget>
-                    <Container className="w-full md:w-1/2">
-                        <Widget title="Key Attributes" titleSize="large">
-                            <AttributeViewer attributes={cryptographicKey?.attributes} />
-                        </Widget>
+                <TabLayout
+                    tabs={[
+                        {
+                            title: 'Details',
+                            content: (
+                                <>
+                                    <Container className="md:flex-row">
+                                        <Widget
+                                            title="Key Details"
+                                            busy={isBusy}
+                                            widgetButtons={buttons}
+                                            titleSize="large"
+                                            refreshAction={getFreshCryptographicKeyDetails}
+                                            lockSize="large"
+                                            className="w-full md:w-1/2"
+                                        >
+                                            <CustomTable headers={detailHeaders} data={detailData} />
+                                        </Widget>
+                                        <Container className="w-full md:w-1/2">
+                                            <Widget title="Key Attributes" titleSize="large">
+                                                <AttributeViewer attributes={cryptographicKey?.attributes} />
+                                            </Widget>
 
-                        {cryptographicKey && (
-                            <CustomAttributeWidget
-                                resource={Resource.Keys}
-                                resourceUuid={cryptographicKey.uuid}
-                                attributes={cryptographicKey.customAttributes}
-                            />
-                        )}
-                    </Container>
-                </Container>
-                <Container marginTop>
-                    {itemTabs.tabs.length > 0 && <TabLayout tabs={itemTabs.tabs} selectedTab={selectedTab} />}
-                    <Widget title="Key Associations" titleSize="large">
-                        <CustomTable headers={associationHeaders} data={associationBody} />
-                    </Widget>
-                </Container>
+                                            {cryptographicKey && (
+                                                <CustomAttributeWidget
+                                                    resource={Resource.Keys}
+                                                    resourceUuid={cryptographicKey.uuid}
+                                                    attributes={cryptographicKey.customAttributes}
+                                                />
+                                            )}
+                                        </Container>
+                                    </Container>
+                                    <Container marginTop>
+                                        {itemTabs.tabs.length > 0 && <TabLayout tabs={itemTabs.tabs} selectedTab={selectedTab} />}
+                                        <Widget title="Key Associations" titleSize="large">
+                                            <CustomTable headers={associationHeaders} data={associationBody} />
+                                        </Widget>
+                                    </Container>
+                                </>
+                            ),
+                        },
+                        {
+                            title: 'Event History',
+                            content: cryptographicKey ? (
+                                <Container>
+                                    <ObjectEventHistoryWidget resource={Resource.Keys} uuid={cryptographicKey.uuid} />
+                                </Container>
+                            ) : null,
+                        },
+                    ]}
+                />
             </Widget>
             <Dialog
                 isOpen={confirmDelete}

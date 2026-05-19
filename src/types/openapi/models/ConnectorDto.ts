@@ -14,6 +14,7 @@
 import type { AuthType, ConnectorStatus, FunctionGroupDto, ProxyDto, ResponseAttribute } from './';
 
 /**
+ * Connector details (V1)
  * @export
  * @interface ConnectorDto
  */

@@ -542,11 +542,30 @@ function utilsActuatorTestReducer(state: UtilsActuatorTestState | undefined, _ac
     return state ?? utilsActuatorTestInitialState;
 }
 
+export type EventHistoryTestState = {
+    eventHistory?: any;
+    isFetchingEventHistory: boolean;
+    objectEventHistory?: any;
+    isFetchingObjectEventHistory: boolean;
+};
+
+const eventHistoryTestInitialState: EventHistoryTestState = {
+    eventHistory: undefined,
+    isFetchingEventHistory: false,
+    objectEventHistory: undefined,
+    isFetchingObjectEventHistory: false,
+};
+
+function eventHistoryTestReducer(state: EventHistoryTestState | undefined, _action: UnknownAction): EventHistoryTestState {
+    return state ?? eventHistoryTestInitialState;
+}
+
 export const testReducers = combineReducers({
     userInterface: userInterfaceTestReducer,
     enums: enumsTestReducer,
     filters: filtersTestReducer,
     info: infoTestReducer,
+    eventHistory: eventHistoryTestReducer,
     notifications: notificationsTestReducer,
     auth: authTestReducer,
     customAttributes: customAttributesTestReducer,
@@ -566,6 +585,7 @@ export const testInitialState = {
     enums: enumsTestInitialState,
     filters: filtersTestInitialState,
     info: infoTestInitialState,
+    eventHistory: eventHistoryTestInitialState,
     notifications: notificationsTestInitialState,
     auth: authTestInitialState,
     customAttributes: customAttributesTestInitialState,

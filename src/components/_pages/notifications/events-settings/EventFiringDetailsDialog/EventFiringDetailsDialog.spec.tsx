@@ -1,0 +1,103 @@
+import { EventStatus, type EventHistoryDto, Resource } from 'types/openapi';
+import { withProviders } from 'utils/test-helpers';
+import { test, expect } from '../../../../../../playwright/ct-test';
+import EventFiringDetailsDialog from './index';
+
+const buildEntry = (): EventHistoryDto => ({
+    startedAt: '2026-05-14T10:24:12Z',
+    finishedAt: '2026-05-14T10:24:13Z',
+    status: EventStatus.Finished,
+    resource: Resource.Certificates,
+    objectsEvaluated: 3,
+    objectsMatched: 2,
+    objectsIgnored: 1,
+    objectHistories: {
+        items: [
+            {
+                objectUuid: 'google.cz',
+                matched: true,
+                ignored: false,
+                triggers: [
+                    {
+                        triggerUuid: 't-1',
+                        triggerName: 'cert_status_trigger',
+                        triggeredAt: '2026-05-14T10:24:13Z',
+                        message: 'OK',
+                        records: [],
+                    },
+                ],
+            },
+            {
+                objectUuid: 'yahoo.com',
+                matched: false,
+                ignored: false,
+                triggers: [
+                    {
+                        triggerUuid: 't-1',
+                        triggerName: 'cert_status_trigger',
+                        triggeredAt: '2026-05-14T10:24:13Z',
+                        message: 'Action failed',
+                        records: [
+                            {
+                                message: 'Condition not met',
+                                condition: { uuid: 'c-1', name: 'common_name ends with ".cz"' } as any,
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+        totalItems: 2,
+        itemsPerPage: 10,
+        pageNumber: 1,
+        totalPages: 1,
+    } as any,
+});
+
+test.describe('EventFiringDetailsDialog', () => {
+    test('does not render when closed', async ({ mount }) => {
+        const component = await mount(withProviders(<EventFiringDetailsDialog isOpen={false} onClose={() => {}} entry={buildEntry()} />));
+        await expect(component.getByText('Event firing details')).not.toBeVisible();
+    });
+
+    test('renders header and one row per object/trigger combination', async ({ mount, page }) => {
+        await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
+        await expect(page.getByText('Event firing details')).toBeVisible();
+        await expect(page.getByText('google.cz')).toBeVisible();
+        await expect(page.getByText('yahoo.com')).toBeVisible();
+        await expect(page.getByText('OK', { exact: true })).toBeVisible();
+        await expect(page.getByText('Action failed')).toBeVisible();
+    });
+
+    test('Trigger column is a link to trigger detail', async ({ mount, page }) => {
+        await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
+        const link = page.getByRole('link', { name: 'cert_status_trigger' }).first();
+        await expect(link).toBeVisible();
+        await expect(link).toHaveAttribute('href', /\/triggers\/detail\/t-1$/);
+    });
+
+    test('clicking Details opens evaluation details dialog', async ({ mount, page }) => {
+        await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
+        const yahooRow = page.getByRole('row').filter({ hasText: 'yahoo.com' });
+        await yahooRow.getByRole('button').click();
+        await expect(page.getByText('Evaluation details')).toBeVisible();
+        await expect(page.getByText('common_name ends with ".cz"')).toBeVisible();
+    });
+
+    test('Close button triggers onClose', async ({ mount, page }) => {
+        let closed = false;
+        await mount(
+            withProviders(
+                <EventFiringDetailsDialog
+                    isOpen={true}
+                    onClose={() => {
+                        closed = true;
+                    }}
+                    entry={buildEntry()}
+                />,
+            ),
+        );
+        await page.getByRole('button', { name: 'Close', exact: true }).last().click();
+        expect(closed).toBe(true);
+    });
+});

@@ -32,6 +32,12 @@ export interface TspProfileRequestDto {
      */
     description?: string;
     /**
+     * UUID of the default Signing Profile
+     * @type {string}
+     * @memberof TspProfileRequestDto
+     */
+    defaultSigningProfileUuid?: string;
+    /**
      * List of Custom Attributes
      * @type {Array<RequestAttribute>}
      * @memberof TspProfileRequestDto

@@ -48,4 +48,23 @@ test.describe('PagedCustomTable', () => {
         await page.waitForTimeout(100);
         expect(callCount).toBeGreaterThanOrEqual(1);
     });
+
+    test('should render skeleton when isLoading is true', async ({ mount }) => {
+        const component = await mount(
+            withProviders(
+                <PagedCustomTable headers={mockHeaders} data={mockData} totalItems={2} onReloadData={() => {}} isLoading={true} />,
+            ),
+        );
+        await expect(component.getByTestId('table-skeleton')).toBeVisible();
+    });
+
+    test('should hide skeleton when isLoading is false', async ({ mount, page }) => {
+        await mount(
+            withProviders(
+                <PagedCustomTable headers={mockHeaders} data={mockData} totalItems={2} onReloadData={() => {}} isLoading={false} />,
+            ),
+        );
+        await expect(page.getByTestId('table-skeleton')).toHaveCount(0);
+        await expect(page.getByText('Row 1')).toBeVisible();
+    });
 });

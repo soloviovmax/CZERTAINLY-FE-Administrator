@@ -16,11 +16,8 @@
  * @export
  * @enum {string}
  */
-export enum FeatureFlag {
-    Stateless = 'stateless',
-    OpenMetrics = 'openMetrics',
-    SecretVersioning = 'secretVersioning',
-    SecretRotation = 'secretRotation',
-    ContentSigning = 'contentSigning',
-    Timestamping = 'timestamping',
+export enum EventStatus {
+    InProgress = 'inProgress',
+    Finished = 'finished',
+    Failed = 'failed',
 }

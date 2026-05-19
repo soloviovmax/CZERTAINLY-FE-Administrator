@@ -43,6 +43,7 @@ import {
     TokenProfileManagementApi,
     UserManagementApi,
     WorkflowActionsManagementApi,
+    WorkflowEventManagementApi,
     WorkflowRulesManagementApi,
     WorkflowTriggersManagementApi,
     SecretManagementApi,
@@ -73,6 +74,7 @@ export interface ApiClients {
     actions: WorkflowActionsManagementApi;
     rules: WorkflowRulesManagementApi;
     triggers: WorkflowTriggersManagementApi;
+    events: WorkflowEventManagementApi;
     auditLogs: AuditLogApi;
     raProfiles: RAProfileManagementApi;
     credentials: CredentialManagementApi;
@@ -134,6 +136,7 @@ const factories: Partial<{ [K in ApiClientKey]: () => ApiClients[K] }> = {
     actions: () => new WorkflowActionsManagementApi(configuration),
     rules: () => new WorkflowRulesManagementApi(configuration),
     triggers: () => new WorkflowTriggersManagementApi(configuration),
+    events: () => new WorkflowEventManagementApi(configuration),
     certificates: () => new CertificateInventoryApi(configuration),
     auditLogs: () => new AuditLogApi(configuration),
     raProfiles: () => new RAProfileManagementApi(configuration),

@@ -8,6 +8,8 @@ import { actions as approvalActions, selectors as approvalSelectors } from 'duck
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import Breadcrumb from 'components/Breadcrumb';
 import Container from 'components/Container';
+import TabLayout from 'components/Layout/TabLayout';
+import ObjectEventHistoryWidget from 'components/_pages/notifications/events-settings/ObjectEventHistoryWidget';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useParams } from 'react-router';
@@ -301,12 +303,35 @@ export default function ApprovalDetails() {
                 ]}
             />
             <Container>
-                <Widget title="Approval Details" busy={isBusy} titleSize="large" widgetButtons={buttons} refreshAction={getFreshData}>
-                    <CustomTable headers={detailHeaders} data={detailData} />
-                </Widget>
-                <Widget title="Approval Steps" busy={isBusy}>
-                    <CustomTable headers={stepsHeaders} data={stepsRows} hasDetails={true} />
-                </Widget>
+                <TabLayout
+                    tabs={[
+                        {
+                            title: 'Details',
+                            content: (
+                                <>
+                                    <Widget
+                                        title="Approval Details"
+                                        busy={isBusy}
+                                        titleSize="large"
+                                        widgetButtons={buttons}
+                                        refreshAction={getFreshData}
+                                    >
+                                        <CustomTable headers={detailHeaders} data={detailData} />
+                                    </Widget>
+                                    <Widget title="Approval Steps" busy={isBusy}>
+                                        <CustomTable headers={stepsHeaders} data={stepsRows} hasDetails={true} />
+                                    </Widget>
+                                </>
+                            ),
+                        },
+                        {
+                            title: 'Event History',
+                            content: approvalDetails ? (
+                                <ObjectEventHistoryWidget resource={Resource.Approvals} uuid={approvalDetails.approvalUuid} />
+                            ) : null,
+                        },
+                    ]}
+                />
 
                 <Dialog
                     isOpen={recipientApproveDialog}

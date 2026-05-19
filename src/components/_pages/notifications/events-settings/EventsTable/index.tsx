@@ -3,6 +3,7 @@ import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { getEnumLabel, selectors as enumSelectors } from 'ducks/enums';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router';
 
 import { actions as resourceActions, selectors as resourceSelectors } from 'ducks/resource';
 import { actions as settingsActions, selectors as settingsSelectors } from 'ducks/settings';
@@ -208,7 +209,13 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                 return {
                     id: event,
                     columns: [
-                        getEnumLabel(resourceEventEnum, event),
+                        mode === 'platform' ? (
+                            <Link key={event} to={`/events/detail/${event}`}>
+                                {getEnumLabel(resourceEventEnum, event)}
+                            </Link>
+                        ) : (
+                            getEnumLabel(resourceEventEnum, event)
+                        ),
                         resourceEvent?.producedResource ? getEnumLabel(resourceEnum, resourceEvent.producedResource) : '',
                         (triggerUuids?.length ?? 0).toString(),
                         <Button
@@ -217,6 +224,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                             title="Edit"
                             key="edit"
                             onClick={() => onEdit(event as ResourceEvent)}
+                            className="!p-1"
                         >
                             <Edit size={16} />
                         </Button>,

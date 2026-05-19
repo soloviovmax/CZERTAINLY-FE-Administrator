@@ -22,6 +22,7 @@ import { LockWidgetNameEnum } from 'types/user-interface';
 import { dateFormatter, durationFormatter } from 'utils/dateUtil';
 import DiscoveryStatus from '../DiscoveryStatus';
 import DiscoveryCertificates from './DiscoveryCertificates';
+import ObjectEventHistoryWidget from 'components/_pages/notifications/events-settings/ObjectEventHistoryWidget';
 import { createWidgetDetailHeaders } from 'utils/widget';
 import Breadcrumb from 'components/Breadcrumb';
 import Container from 'components/Container';
@@ -309,6 +310,14 @@ export default function DiscoveryDetail() {
                                     )}
                                 </Container>
                             ),
+                        },
+                        {
+                            title: 'Event History',
+                            content: discovery ? (
+                                <Container>
+                                    <ObjectEventHistoryWidget resource={Resource.Discoveries} uuid={discovery.uuid} />
+                                </Container>
+                            ) : null,
                         },
                     ]}
                 />
