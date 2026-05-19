@@ -15,7 +15,7 @@ export default function EventDetail() {
 
     return (
         <div>
-            <Breadcrumb items={[{ label: 'Settings', href: '/settings' }, { label: 'Events', href: '/events' }, { label: eventLabel }]} />
+            <Breadcrumb items={[{ label: 'Events', href: '/events' }, { label: eventLabel }]} />
             <Container>{event && <EventHistoryWidget event={event as ResourceEvent} />}</Container>
         </div>
     );
