@@ -114,8 +114,9 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
         (values: FormValues) => {
             if (!values.event) return;
             // Block empty triggers only when adding. When editing, clearing all triggers
-            // is a legitimate "remove" operation (association mode deletes the key; platform
-            // mode stores `event: []`, which the table filters out — effectively the same).
+            // is a legitimate "remove" operation: association mode deletes the eventsMapping
+            // key, platform mode writes eventsMapping[event] = [] which the table filters out
+            // — effectively the same outcome.
             if (!editedEvent && !values.triggerUuids?.length) return;
             if (mode === 'association') {
                 dispatch(
