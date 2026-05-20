@@ -298,7 +298,8 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
 
     const formValues = useWatch({ control });
 
-    // Reset form when editedEvent or defaultValues change
+    // Reset form when default values change and when the triggers dialog opens/closes
+    // so form state is cleared between dialog sessions.
     useEffect(() => {
         reset({
             event: defaultValues.event,
