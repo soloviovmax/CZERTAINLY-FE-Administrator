@@ -157,7 +157,7 @@ const TriggerList = () => {
                         options={triggerResourceOptions}
                         value={selectedResource || 'Select Resource'}
                         onChange={(value) => {
-                            setSelectedResource(value as Resource);
+                            setSelectedResource((value || undefined) as Resource | undefined);
                         }}
                         isClearable
                     />
