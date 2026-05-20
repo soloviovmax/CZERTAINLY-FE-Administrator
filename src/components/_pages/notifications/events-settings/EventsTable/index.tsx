@@ -300,8 +300,12 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
 
     // Reset form when editedEvent or defaultValues change
     useEffect(() => {
-        reset(defaultValues);
-    }, [defaultValues, reset]);
+        reset({
+            event: defaultValues.event,
+            resource: defaultValues.resource,
+            triggerUuids: defaultValues.triggerUuids,
+        });
+    }, [isTriggersDialogOpen, defaultValues, reset]);
 
     const areDefaultValuesSame = useAreDefaultValuesSame(defaultValues);
 
@@ -421,7 +425,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                         </form>
                     </FormProvider>
                 }
-                toggle={() => setIsTriggersDialogOpen(false)}
+                toggle={onClose}
             />
         </>
     );
