@@ -401,19 +401,19 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                                     </>
                                 )}
                                 <Container className="flex-row justify-end modal-footer" gap={4}>
-                                    <Button
-                                        variant="outline"
-                                        color="secondary"
-                                        disabled={isBusy || isSubmitting}
-                                        onClick={onClose}
-                                        type="button"
-                                    >
+                                    <Button variant="outline" disabled={isBusy || isSubmitting} onClick={onClose} type="button">
                                         Cancel
                                     </Button>
                                     <ProgressButton
                                         title={editedEvent ? 'Save' : textContent.confirmDialogButtonText}
                                         inProgress={isSubmitting}
-                                        disabled={isBusy || isSubmitting || !isValid || areDefaultValuesSame(formValues)}
+                                        disabled={
+                                            isBusy ||
+                                            isSubmitting ||
+                                            !isValid ||
+                                            areDefaultValuesSame(formValues) ||
+                                            !formValues.triggerUuids?.length
+                                        }
                                         type="submit"
                                     />
                                 </Container>
