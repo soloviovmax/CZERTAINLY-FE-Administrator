@@ -113,8 +113,10 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
     const onSubmit = useCallback(
         (values: FormValues) => {
             if (!values.event) return;
-            const isUnassociate = mode === 'association' && !!editedEvent;
-            if (!values.triggerUuids?.length && !isUnassociate) return;
+            // Block empty triggers only when adding. When editing, clearing all triggers
+            // is a legitimate "remove" operation (association mode deletes the key; platform
+            // mode stores `event: []`, which the table filters out — effectively the same).
+            if (!editedEvent && !values.triggerUuids?.length) return;
             if (mode === 'association') {
                 dispatch(
                     rulesActions.associateEventTriggers({
@@ -238,14 +240,14 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
     const eventOptions = useMemo(() => {
         if (mode === 'association') {
             return resourceEvents
-                .filter((event) => !eventTriggerAssociation?.[event.event])
+                .filter((event) => !eventTriggerAssociation?.[event.event]?.length)
                 .map((event) => ({
                     value: event.event,
                     label: getEnumLabel(resourceEventEnum, event.event),
                 }));
         }
         return allResourceEvents
-            .filter((event) => !eventsSettings?.eventsMapping?.[event.event])
+            .filter((event) => !eventsSettings?.eventsMapping?.[event.event]?.length)
             .map((event) => ({
                 value: event.event,
                 label: getEnumLabel(resourceEventEnum, event.event),
@@ -420,7 +422,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                                             isSubmitting ||
                                             !isValid ||
                                             areDefaultValuesSame(formValues) ||
-                                            (!formValues.triggerUuids?.length && !(mode === 'association' && !!editedEvent))
+                                            (!editedEvent && !formValues.triggerUuids?.length)
                                         }
                                         type="submit"
                                     />
