@@ -218,6 +218,13 @@ function Select({
         return options.filter((opt) => opt.label.toLowerCase().includes(needle));
     }, [hasSearch, searchTerm, options]);
 
+    // Force-close popover if the trigger becomes disabled while open
+    // (e.g. last option of a multi-select was just chosen — leaving the
+    // modal popover open would block clicks on surrounding dialog controls).
+    useEffect(() => {
+        if (open && triggerDisabled) setOpen(false);
+    }, [open, triggerDisabled]);
+
     // Reset highlight + search when popover opens/closes.
     useEffect(() => {
         if (open) {
@@ -415,7 +422,7 @@ function Select({
                     modal={modal}
                     open={open}
                     onOpenChange={(o) => {
-                        if (triggerDisabled) return;
+                        if (o && triggerDisabled) return;
                         if (o) setModal(triggerRef.current?.closest('[role="dialog"]') != null);
                         setOpen(o);
                     }}
