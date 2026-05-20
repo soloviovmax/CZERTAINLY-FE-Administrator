@@ -113,6 +113,8 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
     const onSubmit = useCallback(
         (values: FormValues) => {
             if (!values.event) return;
+            const isUnassociate = mode === 'association' && !!editedEvent;
+            if (!values.triggerUuids?.length && !isUnassociate) return;
             if (mode === 'association') {
                 dispatch(
                     rulesActions.associateEventTriggers({
@@ -136,7 +138,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
             }
             onClose();
         },
-        [dispatch, onClose, mode, resource, resourceUuid],
+        [dispatch, onClose, mode, resource, resourceUuid, editedEvent],
     );
     const getResourceEventModel = useCallback(
         (event?: ResourceEvent | string | null) => {
@@ -352,6 +354,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                                                             label: getEnumLabel(resourceEnum, producedResource),
                                                         });
                                                     }
+                                                    setValue('triggerUuids', []);
                                                 }
                                             }}
                                             isDisabled={!!editedEvent}
@@ -412,7 +415,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                                             isSubmitting ||
                                             !isValid ||
                                             areDefaultValuesSame(formValues) ||
-                                            !formValues.triggerUuids?.length
+                                            (!formValues.triggerUuids?.length && !(mode === 'association' && !!editedEvent))
                                         }
                                         type="submit"
                                     />
