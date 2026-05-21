@@ -284,7 +284,7 @@ export default function UserDetail() {
         [permissions],
     );
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !role) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
 

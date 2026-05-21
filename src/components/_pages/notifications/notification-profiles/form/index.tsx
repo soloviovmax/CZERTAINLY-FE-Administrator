@@ -88,14 +88,7 @@ export default function NotificationProfileForm({
 
     useEffect(() => {
         if (editMode && id && version) {
-            // Fetch if id or version changed or if we don't have the correct profile loaded
-            if (
-                previousIdRef.current !== id ||
-                previousVersionRef.current !== version ||
-                notificationProfile?.uuid !== id ||
-                notificationProfile?.version !== Number(version)
-            ) {
-                dispatch(actions.resetState());
+            if (previousIdRef.current !== id || previousVersionRef.current !== version) {
                 dispatch(actions.getNotificationProfileDetail({ uuid: id, version: Number(version) }));
                 previousIdRef.current = id;
                 previousVersionRef.current = version;
@@ -104,7 +97,7 @@ export default function NotificationProfileForm({
             previousIdRef.current = undefined;
             previousVersionRef.current = undefined;
         }
-    }, [dispatch, editMode, id, version, notificationProfile]);
+    }, [dispatch, editMode, id, version]);
 
     const defaultValues: FormValues = useMemo(() => {
         if (editMode && notificationProfile) {

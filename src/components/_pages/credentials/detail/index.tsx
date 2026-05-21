@@ -137,7 +137,7 @@ function CredentialDetail() {
         [credential],
     );
 
-    if (isFetching) {
+    if (isFetching && !credential) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
 

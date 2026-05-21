@@ -130,6 +130,19 @@ describe('tokens slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getTokenDetail keeps token when refetching the same uuid', () => {
+        const loaded = { ...initialState, token: { uuid: 't-1' } as any };
+        const next = reducer(loaded, actions.getTokenDetail({ uuid: 't-1' }));
+        expect(next.token?.uuid).toBe('t-1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getTokenDetail clears token when uuid differs', () => {
+        const loaded = { ...initialState, token: { uuid: 't-1' } as any };
+        const next = reducer(loaded, actions.getTokenDetail({ uuid: 't-2' }));
+        expect(next.token).toBeUndefined();
+    });
+
     test('createToken / success / failure', () => {
         let next = reducer(initialState, actions.createToken({ name: 'T1' } as any));
         expect(next.isCreating).toBe(true);

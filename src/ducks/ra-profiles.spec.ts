@@ -78,6 +78,19 @@ describe('raProfiles slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getRaProfileDetail keeps profile when refetching the same uuid', () => {
+        const loaded = { ...initialState, raProfile: { uuid: 'ra-1' } as any };
+        const next = reducer(loaded, actions.getRaProfileDetail({ authorityUuid: 'a-1', uuid: 'ra-1' }));
+        expect(next.raProfile?.uuid).toBe('ra-1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getRaProfileDetail clears profile when uuid differs', () => {
+        const loaded = { ...initialState, raProfile: { uuid: 'ra-1' } as any };
+        const next = reducer(loaded, actions.getRaProfileDetail({ authorityUuid: 'a-1', uuid: 'ra-2' }));
+        expect(next.raProfile).toBeUndefined();
+    });
+
     test('clearRaProfileDetail', () => {
         const next = reducer({ ...initialState, raProfile: { uuid: 'ra-1' } as any }, actions.clearRaProfileDetail());
         expect(next.raProfile).toBeUndefined();
@@ -542,6 +555,19 @@ describe('raProfiles slice', () => {
 
         next = reducer({ ...next, isFetchingDetail: true }, actions.getRaProfileWithoutAuthorityFailure({ error: 'err' }));
         expect(next.isFetchingDetail).toBe(false);
+    });
+
+    test('getRaProfileWithoutAuthority keeps profile when refetching the same uuid', () => {
+        const loaded = { ...initialState, raProfile: { uuid: 'ra-1' } as any };
+        const next = reducer(loaded, actions.getRaProfileWithoutAuthority({ uuid: 'ra-1' }));
+        expect(next.raProfile?.uuid).toBe('ra-1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getRaProfileWithoutAuthority clears profile when uuid differs', () => {
+        const loaded = { ...initialState, raProfile: { uuid: 'ra-1' } as any };
+        const next = reducer(loaded, actions.getRaProfileWithoutAuthority({ uuid: 'ra-2' }));
+        expect(next.raProfile).toBeUndefined();
     });
 
     test('deleteRaProfileWithoutAuthority / success / failure', () => {

@@ -97,7 +97,9 @@ export const slice = createSlice({
         },
 
         getEntityDetail: (state, action: PayloadAction<{ uuid: string }>) => {
-            state.entity = undefined;
+            if (state.entity?.uuid !== action.payload.uuid) {
+                state.entity = undefined;
+            }
             state.isFetchingDetail = true;
         },
 

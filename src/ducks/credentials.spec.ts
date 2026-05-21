@@ -82,6 +82,19 @@ describe('credentials slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getCredentialDetail keeps credential when refetching the same uuid', () => {
+        const loaded = { ...initialState, credential: { uuid: 'c1' } as any };
+        const next = reducer(loaded, actions.getCredentialDetail({ uuid: 'c1' }));
+        expect(next.credential?.uuid).toBe('c1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getCredentialDetail clears credential when uuid differs', () => {
+        const loaded = { ...initialState, credential: { uuid: 'c1' } as any };
+        const next = reducer(loaded, actions.getCredentialDetail({ uuid: 'c2' }));
+        expect(next.credential).toBeUndefined();
+    });
+
     test('createCredential / success / failure', () => {
         let next = reducer(initialState, actions.createCredential({ credentialRequest: {} as any }));
         expect(next.isCreating).toBe(true);

@@ -672,7 +672,7 @@ export default function LocationDetail() {
         [location],
     );
 
-    if (isFetching) {
+    if (isFetching && !location) {
         return <DetailPageSkeleton layout="tabs" tabCount={5} />;
     }
 
