@@ -4,7 +4,13 @@ import Label from 'components/Label';
 import TextInput from 'components/TextInput';
 import DatePicker from 'components/DatePicker';
 import Switch from 'components/Switch';
-import Editor from 'react-simple-code-editor';
+// rolldown-vite double-wraps CJS default of react-simple-code-editor;
+// unwrap twice to get the actual component instead of {default: Editor}.
+import * as ReactSimpleCodeEditor from 'react-simple-code-editor';
+const Editor: React.ComponentType<any> =
+    ((ReactSimpleCodeEditor as any).default?.default as React.ComponentType<any>) ??
+    ((ReactSimpleCodeEditor as any).default as React.ComponentType<any>) ??
+    (ReactSimpleCodeEditor as unknown as React.ComponentType<any>);
 import cn from 'classnames';
 import type { CustomAttributeModel, DataAttributeModel } from 'types/attributes';
 import { AttributeContentType } from 'types/openapi';
@@ -173,8 +179,8 @@ export function AttributeFieldInput({ name, descriptor, busy, deleteButton }: Re
                                 textareaId={`${name}.codeTextArea`}
                                 id={`${name}.code`}
                                 value={field.value || ''}
-                                onValueChange={(code) => setValue(`${name}.code`, code)}
-                                highlight={(code) => getHighLightedCode(code, language)}
+                                onValueChange={(code: string) => setValue(`${name}.code`, code)}
+                                highlight={(code: string) => getHighLightedCode(code, language)}
                                 padding={10}
                                 style={{
                                     fontFamily: '"Fira code", "Fira Mono", monospace',
