@@ -43,6 +43,19 @@ describe('certificateGroups slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getGroupDetail keeps group when refetching the same uuid', () => {
+        const loaded = { ...initialState, certificateGroup: { uuid: 'g1' } as any };
+        const next = reducer(loaded, actions.getGroupDetail({ uuid: 'g1' }));
+        expect(next.certificateGroup?.uuid).toBe('g1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getGroupDetail clears group when uuid differs', () => {
+        const loaded = { ...initialState, certificateGroup: { uuid: 'g1' } as any };
+        const next = reducer(loaded, actions.getGroupDetail({ uuid: 'g2' }));
+        expect(next.certificateGroup).toBeUndefined();
+    });
+
     test('createGroup / success / failure', () => {
         let next = reducer(initialState, actions.createGroup({} as any));
         expect(next.isCreating).toBe(true);
