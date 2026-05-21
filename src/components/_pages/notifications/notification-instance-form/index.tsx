@@ -72,9 +72,10 @@ const NotificationInstanceForm = ({ notificationInstanceId, onCancel, onSuccess 
     }, [dispatch]);
 
     useEffect(() => {
-        clearNotificationInstanceDetail();
-        return clearNotificationInstanceDetail;
-    }, [clearNotificationInstanceDetail]);
+        if (!id) {
+            clearNotificationInstanceDetail();
+        }
+    }, [id, clearNotificationInstanceDetail]);
 
     useEffect(() => {
         if (!selectedNotificationInstanceProvider || !selectedKind) return;

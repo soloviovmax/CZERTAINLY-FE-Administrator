@@ -98,7 +98,7 @@ export default function GroupDetail() {
         [group],
     );
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !group) {
         return <DetailPageSkeleton layout="tabs" tabCount={2} />;
     }
 

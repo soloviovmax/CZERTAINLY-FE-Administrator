@@ -160,7 +160,9 @@ export const slice = createSlice({
         },
 
         getRaProfileDetail: (state, action: PayloadAction<{ authorityUuid: string; uuid: string }>) => {
-            state.raProfile = undefined;
+            if (state.raProfile?.uuid !== action.payload.uuid) {
+                state.raProfile = undefined;
+            }
             state.isFetchingDetail = true;
         },
 
@@ -634,7 +636,9 @@ export const slice = createSlice({
         },
 
         getRaProfileWithoutAuthority: (state, action: PayloadAction<{ uuid: string }>) => {
-            state.raProfile = undefined;
+            if (state.raProfile?.uuid !== action.payload.uuid) {
+                state.raProfile = undefined;
+            }
             state.isFetchingDetail = true;
         },
 

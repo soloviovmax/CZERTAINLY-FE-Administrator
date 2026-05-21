@@ -218,7 +218,7 @@ export default function TokenProfileDetail() {
         setKeyUsageUpdate(false);
     }, [dispatch, tokenProfile, keyUsages]);
 
-    if (isFetchingProfile) {
+    if (isFetchingProfile && !tokenProfile) {
         return <DetailPageSkeleton layout="simple" buttonsCount={4} />;
     }
 

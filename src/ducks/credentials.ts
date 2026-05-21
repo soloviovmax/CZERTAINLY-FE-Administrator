@@ -119,7 +119,9 @@ export const slice = createSlice({
         },
 
         getCredentialDetail: (state, action: PayloadAction<{ uuid: string }>) => {
-            state.credential = undefined;
+            if (state.credential?.uuid !== action.payload.uuid) {
+                state.credential = undefined;
+            }
             state.isFetchingDetail = true;
         },
 

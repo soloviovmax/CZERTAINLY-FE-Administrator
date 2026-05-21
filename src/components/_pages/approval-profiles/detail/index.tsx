@@ -194,7 +194,7 @@ const ApprovalProfileDetails = () => {
         [profileApprovalDetail, renderApproverRedirect],
     );
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !profileApprovalDetail) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
 

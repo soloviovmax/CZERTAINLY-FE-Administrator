@@ -154,7 +154,9 @@ export const slice = createSlice({
         },
 
         getAuthorityDetail: (state, action: PayloadAction<{ uuid: string }>) => {
-            state.authority = undefined;
+            if (state.authority?.uuid !== action.payload.uuid) {
+                state.authority = undefined;
+            }
             state.isFetchingDetail = true;
         },
 

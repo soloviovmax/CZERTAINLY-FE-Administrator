@@ -376,7 +376,7 @@ export default function ConnectorDetail() {
         return data;
     }, [health, renderStatusBadge]);
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !connector) {
         return <DetailPageSkeleton layout="simple" buttonsCount={4} />;
     }
 
