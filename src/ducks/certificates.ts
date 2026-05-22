@@ -807,7 +807,7 @@ export const slice = createSlice({
             state.isUploading = true;
         },
 
-        uploadCertificateSuccess: (state, action: PayloadAction<{ fingerprint: string }>) => {
+        uploadCertificateSuccess: (state) => {
             state.isUploading = false;
         },
 
