@@ -4,13 +4,7 @@ import Label from 'components/Label';
 import TextInput from 'components/TextInput';
 import DatePicker from 'components/DatePicker';
 import Switch from 'components/Switch';
-// rolldown-vite double-wraps CJS default of react-simple-code-editor;
-// unwrap twice to get the actual component instead of {default: Editor}.
-import * as ReactSimpleCodeEditor from 'react-simple-code-editor';
-const Editor: React.ComponentType<any> =
-    ((ReactSimpleCodeEditor as any).default?.default as React.ComponentType<any>) ??
-    ((ReactSimpleCodeEditor as any).default as React.ComponentType<any>) ??
-    (ReactSimpleCodeEditor as unknown as React.ComponentType<any>);
+import Editor from 'components/Input/CodeEditor/CodeEditor';
 import cn from 'classnames';
 import type { CustomAttributeModel, DataAttributeModel } from 'types/attributes';
 import { AttributeContentType } from 'types/openapi';
