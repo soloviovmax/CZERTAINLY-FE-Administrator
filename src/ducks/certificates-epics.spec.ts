@@ -89,6 +89,25 @@ async function runEpic(
     return firstValueFrom(output$.pipe(take(takeCount), toArray()));
 }
 
+async function runUploadEpic(
+    action: UnknownAction,
+    certificatesOverrides: { uploadAsync?: (args: any) => any } = {},
+    takeCount = 2,
+): Promise<UnknownAction[]> {
+    const epics = certificatesEpics as ((action$: any, state$: any, deps: any) => any)[];
+    const deps = {
+        apiClients: {
+            certificates: {
+                uploadAsync: () => of({ fingerprint: 'fp-1' }),
+                ...certificatesOverrides,
+            },
+        },
+    };
+    const state$ = { value: { certificates: { isIncludeArchived: false } } };
+    const output$ = epics[UPLOAD_EPIC_INDEX](of(action), state$ as any, deps as any);
+    return firstValueFrom(output$.pipe(take(takeCount), toArray()));
+}
+
 describe('certificates epics', () => {
     test('revokeCertificate success emits Success, alert, getCertificateDetail, getCertificateHistory', async () => {
         const emitted = await runEpic(
@@ -224,25 +243,6 @@ describe('certificates epics', () => {
         expect(emitted[1].type).toBe(certificatesActions.getCertificateDetail.type);
         expect(emitted[2].type).toBe(appRedirectActions.fetchError.type);
     });
-
-    async function runUploadEpic(
-        action: UnknownAction,
-        certificatesOverrides: { uploadAsync?: (args: any) => any } = {},
-        takeCount = 2,
-    ): Promise<UnknownAction[]> {
-        const epics = certificatesEpics as ((action$: any, state$: any, deps: any) => any)[];
-        const deps = {
-            apiClients: {
-                certificates: {
-                    uploadAsync: () => of({ fingerprint: 'fp-1' }),
-                    ...certificatesOverrides,
-                },
-            },
-        };
-        const state$ = { value: { certificates: { isIncludeArchived: false } } };
-        const output$ = epics[UPLOAD_EPIC_INDEX](of(action), state$ as any, deps as any);
-        return firstValueFrom(output$.pipe(take(takeCount), toArray()));
-    }
 
     test('uploadCertificate success emits Success, alert, and listCertificates', async () => {
         const emitted = await runUploadEpic(
