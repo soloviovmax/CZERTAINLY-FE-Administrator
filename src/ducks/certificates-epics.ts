@@ -996,32 +996,17 @@ const uploadCertificate: AppEpic = (action$, state, deps) => {
     return action$.pipe(
         filter(slice.actions.uploadCertificate.match),
         switchMap((action) =>
-            deps.apiClients.certificates.upload({ uploadCertificateRequestDto: transformCertificateUploadModelToDto(action.payload) }).pipe(
-                switchMap((obj) =>
-                    deps.apiClients.certificates.getCertificate({ uuid: obj.uuid }).pipe(
-                        map((certificate) =>
-                            slice.actions.uploadCertificateSuccess({
-                                uuid: obj.uuid,
-                                certificate: transformCertificateDetailResponseDtoToModel(certificate),
-                            }),
-                        ),
-
-                        catchError((err) =>
-                            of(
-                                slice.actions.uploadCertificateFailure({ error: extractError(err, 'Failed to upload certificate') }),
-                                appRedirectActions.fetchError({ error: err, message: 'Failed to upload certificate' }),
-                            ),
+            deps.apiClients.certificates
+                .uploadAsync({ uploadCertificateRequestDto: transformCertificateUploadModelToDto(action.payload) })
+                .pipe(
+                    map(({ fingerprint }) => slice.actions.uploadCertificateSuccess({ fingerprint })),
+                    catchError((err) =>
+                        of(
+                            slice.actions.uploadCertificateFailure({ error: extractError(err, 'Failed to upload certificate') }),
+                            appRedirectActions.fetchError({ error: err, message: 'Failed to upload certificate' }),
                         ),
                     ),
                 ),
-
-                catchError((err) =>
-                    of(
-                        slice.actions.uploadCertificateFailure({ error: extractError(err, 'Failed to upload certificate') }),
-                        appRedirectActions.fetchError({ error: err, message: 'Failed to upload certificate' }),
-                    ),
-                ),
-            ),
         ),
     );
 };
