@@ -353,7 +353,7 @@ export default function ScepProfileDetail() {
         ];
     }, [scepProfile, ownerName, groupNames]);
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !scepProfile) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
 

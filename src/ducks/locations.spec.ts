@@ -50,6 +50,19 @@ describe('locations slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getLocationDetail keeps location when refetching the same uuid', () => {
+        const loaded = { ...initialState, location: { uuid: 'l-1' } as any };
+        const next = reducer(loaded, actions.getLocationDetail({ entityUuid: 'e-1', uuid: 'l-1' }));
+        expect(next.location?.uuid).toBe('l-1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getLocationDetail clears location when uuid differs', () => {
+        const loaded = { ...initialState, location: { uuid: 'l-1' } as any };
+        const next = reducer(loaded, actions.getLocationDetail({ entityUuid: 'e-1', uuid: 'l-2' }));
+        expect(next.location).toBeUndefined();
+    });
+
     test('addLocation / success / failure', () => {
         let next = reducer(initialState, actions.addLocation({ entityUuid: 'e-1', addLocationRequest: { name: 'L1' } as any }));
         expect(next.isCreating).toBe(true);

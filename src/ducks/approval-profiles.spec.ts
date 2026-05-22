@@ -54,6 +54,27 @@ describe('approval-profiles slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getApprovalProfile keeps detail when refetching the same uuid+version', () => {
+        const loaded = { ...initialState, profileApprovalDetail: { uuid: 'ap-1', version: 3 } as any };
+
+        const sameUuid = reducer(loaded, actions.getApprovalProfile({ uuid: 'ap-1' }));
+        expect(sameUuid.profileApprovalDetail?.uuid).toBe('ap-1');
+        expect(sameUuid.isFetchingDetail).toBe(true);
+
+        const sameVersion = reducer(loaded, actions.getApprovalProfile({ uuid: 'ap-1', version: 3 }));
+        expect(sameVersion.profileApprovalDetail?.uuid).toBe('ap-1');
+    });
+
+    test('getApprovalProfile clears detail when uuid or version differs', () => {
+        const loaded = { ...initialState, profileApprovalDetail: { uuid: 'ap-1', version: 3 } as any };
+
+        const differentUuid = reducer(loaded, actions.getApprovalProfile({ uuid: 'ap-2' }));
+        expect(differentUuid.profileApprovalDetail).toBeUndefined();
+
+        const differentVersion = reducer(loaded, actions.getApprovalProfile({ uuid: 'ap-1', version: 4 }));
+        expect(differentVersion.profileApprovalDetail).toBeUndefined();
+    });
+
     test('listApprovalProfiles lifecycle', () => {
         let next = reducer(
             { ...initialState, profileApprovalList: [{ uuid: 'old' } as any], totalItems: 7 },

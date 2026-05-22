@@ -64,7 +64,9 @@ export const slice = createSlice({
         },
 
         getGroupDetail: (state, action: PayloadAction<{ uuid: string }>) => {
-            state.certificateGroup = undefined;
+            if (state.certificateGroup?.uuid !== action.payload.uuid) {
+                state.certificateGroup = undefined;
+            }
             state.isFetchingDetail = true;
         },
 

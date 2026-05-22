@@ -104,7 +104,7 @@ export default function AuthorityDetail() {
         [authority],
     );
 
-    if (isFetching) {
+    if (isFetching && !authority) {
         return <DetailPageSkeleton layout="simple" buttonsCount={3} />;
     }
 

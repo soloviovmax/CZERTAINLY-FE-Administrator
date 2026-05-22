@@ -73,6 +73,33 @@ describe('users slice', () => {
         expect(next.users).toContainEqual(user);
     });
 
+    test('getDetail keeps user when refetching the same uuid', () => {
+        const loaded = {
+            ...initialState,
+            user: { uuid: 'u-1' } as any,
+            userRoles: [{ uuid: 'r-1' } as any],
+            userRolesListCheckedRows: ['r-1'],
+        };
+        const next = reducer(loaded, actions.getDetail({ uuid: 'u-1' }));
+        expect(next.user?.uuid).toBe('u-1');
+        expect(next.userRoles).toHaveLength(1);
+        expect(next.userRolesListCheckedRows).toEqual(['r-1']);
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getDetail clears user and roles when uuid differs', () => {
+        const loaded = {
+            ...initialState,
+            user: { uuid: 'u-1' } as any,
+            userRoles: [{ uuid: 'r-1' } as any],
+            userRolesListCheckedRows: ['r-1'],
+        };
+        const next = reducer(loaded, actions.getDetail({ uuid: 'u-2' }));
+        expect(next.user).toBeUndefined();
+        expect(next.userRoles).toBeUndefined();
+        expect(next.userRolesListCheckedRows).toEqual([]);
+    });
+
     test('create / success / failure', () => {
         let next = reducer(initialState, actions.create({ userAddRequest: { username: 'alice' } as any }));
         expect(next.isCreating).toBe(true);

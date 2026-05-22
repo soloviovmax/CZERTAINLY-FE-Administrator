@@ -119,6 +119,19 @@ describe('authorities slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getAuthorityDetail keeps authority when refetching the same uuid', () => {
+        const loaded = { ...initialState, authority: { uuid: 'a1' } as any };
+        const next = reducer(loaded, actions.getAuthorityDetail({ uuid: 'a1' }));
+        expect(next.authority?.uuid).toBe('a1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getAuthorityDetail clears authority when uuid differs', () => {
+        const loaded = { ...initialState, authority: { uuid: 'a1' } as any };
+        const next = reducer(loaded, actions.getAuthorityDetail({ uuid: 'a2' }));
+        expect(next.authority).toBeUndefined();
+    });
+
     test('createAuthority / success / failure', () => {
         let next = reducer(initialState, actions.createAuthority({} as any));
         expect(next.isCreating).toBe(true);

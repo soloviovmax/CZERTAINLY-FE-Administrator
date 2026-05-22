@@ -92,9 +92,11 @@ export const slice = createSlice({
         },
 
         getDetail: (state, action: PayloadAction<{ uuid: string }>) => {
-            state.user = undefined;
-            state.userRoles = undefined;
-            state.userRolesListCheckedRows = [];
+            if (state.user?.uuid !== action.payload.uuid) {
+                state.user = undefined;
+                state.userRoles = undefined;
+                state.userRolesListCheckedRows = [];
+            }
             state.isFetchingDetail = true;
         },
 
