@@ -515,7 +515,7 @@ describe('certificates slice', () => {
         let next = reducer(initialState, actions.uploadCertificate({} as any));
         expect(next.isUploading).toBe(true);
 
-        next = reducer(next, actions.uploadCertificateSuccess({ fingerprint: 'fp-new' }));
+        next = reducer(next, actions.uploadCertificateSuccess());
         expect(next.isUploading).toBe(false);
 
         next = reducer({ ...next, isUploading: true }, actions.uploadCertificateFailure({ error: 'err' }));

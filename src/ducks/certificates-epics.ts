@@ -992,14 +992,22 @@ const bulkDelete: AppEpic = (action$, state, deps) => {
     );
 };
 
-const uploadCertificate: AppEpic = (action$, state, deps) => {
+const uploadCertificate: AppEpic = (action$, state$, deps) => {
     return action$.pipe(
         filter(slice.actions.uploadCertificate.match),
         switchMap((action) =>
             deps.apiClients.certificates
                 .uploadAsync({ uploadCertificateRequestDto: transformCertificateUploadModelToDto(action.payload) })
                 .pipe(
-                    map(({ fingerprint }) => slice.actions.uploadCertificateSuccess({ fingerprint })),
+                    mergeMap(() =>
+                        of(
+                            slice.actions.uploadCertificateSuccess(),
+                            alertActions.success('Certificate upload triggered. It will appear in the list shortly.'),
+                            slice.actions.listCertificates({
+                                includeArchived: state$.value.certificates.isIncludeArchived,
+                            }),
+                        ),
+                    ),
                     catchError((err) =>
                         of(
                             slice.actions.uploadCertificateFailure({ error: extractError(err, 'Failed to upload certificate') }),
