@@ -220,7 +220,7 @@ export default function UserDetail() {
         [user],
     );
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !user) {
         return <DetailPageSkeleton layout="simple" buttonsCount={3} />;
     }
 

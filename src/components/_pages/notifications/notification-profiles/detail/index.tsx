@@ -249,7 +249,7 @@ export default function NotificationProfileDetail() {
         [notificationInstance],
     );
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !notificationProfile) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
 
@@ -262,28 +262,30 @@ export default function NotificationProfileDetail() {
                 ]}
             />
             <Widget widgetLockName={LockWidgetNameEnum.NotificationProfileDetails} busy={isFetchingDetail} noBorder>
-                <Container className="md:grid grid-cols-2">
-                    <Widget
-                        title="Notification Profile Details"
-                        widgetButtons={notificationProfileWidgetButtons}
-                        titleSize="large"
-                        refreshAction={getFreshData}
-                    >
-                        <CustomTable headers={headers} data={profileData} />
-                    </Widget>
-                    <Widget
-                        title="Notification Instance Details"
-                        busy={isFetchingDetail || isFetchingNotificationInstanceDetail}
-                        titleSize="large"
-                    >
-                        <CustomTable headers={headers} data={notificationInstanceData} />
-                    </Widget>
+                <Container>
+                    <Container className="md:grid grid-cols-2">
+                        <Widget
+                            title="Notification Profile Details"
+                            widgetButtons={notificationProfileWidgetButtons}
+                            titleSize="large"
+                            refreshAction={getFreshData}
+                        >
+                            <CustomTable headers={headers} data={profileData} />
+                        </Widget>
+                        <Widget
+                            title="Notification Instance Details"
+                            busy={isFetchingDetail || isFetchingNotificationInstanceDetail}
+                            titleSize="large"
+                        >
+                            <CustomTable headers={headers} data={notificationInstanceData} />
+                        </Widget>
+                    </Container>
+                    {Boolean(notificationProfile?.recipients?.length) && (
+                        <Widget title="Recipients" busy={isFetchingDetail || isFetchingNotificationInstanceDetail} titleSize="large">
+                            <CustomTable headers={recipientHeaders} data={recipientsData} />
+                        </Widget>
+                    )}
                 </Container>
-                {Boolean(notificationProfile?.recipients?.length) && (
-                    <Widget title="Recipients" busy={isFetchingDetail || isFetchingNotificationInstanceDetail} titleSize="large">
-                        <CustomTable headers={recipientHeaders} data={recipientsData} />
-                    </Widget>
-                )}
             </Widget>
 
             <Dialog

@@ -305,7 +305,7 @@ export default function AdministratorDetail() {
         ];
     }, [cmpProfile, ownerName, groupNames]);
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !cmpProfile) {
         return <DetailPageSkeleton layout="simple" buttonsCount={4} />;
     }
 

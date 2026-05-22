@@ -88,7 +88,9 @@ export const slice = createSlice({
         },
 
         getLocationDetail: (state, action: PayloadAction<{ entityUuid: string; uuid: string }>) => {
-            state.location = undefined;
+            if (state.location?.uuid !== action.payload.uuid) {
+                state.location = undefined;
+            }
             state.isFetchingDetail = true;
         },
 

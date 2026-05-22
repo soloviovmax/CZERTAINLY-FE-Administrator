@@ -60,7 +60,9 @@ export const slice = createSlice({
         },
 
         getNotificationProfileDetail: (state, action: PayloadAction<{ uuid: string; version: number }>) => {
-            state.notificationProfile = undefined;
+            if (state.notificationProfile?.uuid !== action.payload.uuid || state.notificationProfile?.version !== action.payload.version) {
+                state.notificationProfile = undefined;
+            }
             state.isFetchingDetail = true;
         },
 

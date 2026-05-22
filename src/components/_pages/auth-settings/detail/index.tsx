@@ -144,7 +144,7 @@ export default function OAuth2ProviderDetail() {
                 : [],
         [oauth2Provider],
     );
-    if (isFetchingProvider) {
+    if (isFetchingProvider && !oauth2Provider) {
         return <DetailPageSkeleton layout="simple" buttonsCount={1} />;
     }
 

@@ -114,7 +114,7 @@ export default function EntityDetail() {
         [entity],
     );
 
-    if (isFetching) {
+    if (isFetching && !entity) {
         return <DetailPageSkeleton layout="simple" buttonsCount={3} />;
     }
 

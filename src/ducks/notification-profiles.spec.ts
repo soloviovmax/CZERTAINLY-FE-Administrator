@@ -50,6 +50,24 @@ describe('notificationProfiles slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getNotificationProfileDetail keeps detail when refetching the same uuid+version', () => {
+        const loaded = { ...initialState, notificationProfile: { uuid: 'np-1', version: 2 } as any };
+
+        const next = reducer(loaded, actions.getNotificationProfileDetail({ uuid: 'np-1', version: 2 }));
+        expect(next.notificationProfile?.uuid).toBe('np-1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getNotificationProfileDetail clears detail when uuid or version differs', () => {
+        const loaded = { ...initialState, notificationProfile: { uuid: 'np-1', version: 2 } as any };
+
+        const differentUuid = reducer(loaded, actions.getNotificationProfileDetail({ uuid: 'np-2', version: 2 }));
+        expect(differentUuid.notificationProfile).toBeUndefined();
+
+        const differentVersion = reducer(loaded, actions.getNotificationProfileDetail({ uuid: 'np-1', version: 3 }));
+        expect(differentVersion.notificationProfile).toBeUndefined();
+    });
+
     test('createNotificationProfile / success / failure', () => {
         let next = reducer(initialState, actions.createNotificationProfile({ notificationProfileAddRequest: { name: 'P1' } as any }));
         expect(next.isCreating).toBe(true);

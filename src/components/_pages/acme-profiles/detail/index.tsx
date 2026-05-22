@@ -320,7 +320,7 @@ export default function AdministratorDetail() {
         ];
     }, [acmeProfile, ownerName, groupNames]);
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !acmeProfile) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
 

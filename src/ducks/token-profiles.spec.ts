@@ -82,6 +82,13 @@ describe('tokenProfiles slice', () => {
         expect(next.tokenProfile).toBeUndefined();
     });
 
+    test('getTokenProfileDetail keeps profile when refetching the same uuid', () => {
+        const state = { ...initialState, tokenProfile: { uuid: 'tp-1' } as any };
+        const next = reducer(state, actions.getTokenProfileDetail({ tokenInstanceUuid: 't-1', uuid: 'tp-1' }));
+        expect(next.tokenProfile?.uuid).toBe('tp-1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
     test('createTokenProfile / success / failure', () => {
         let next = reducer(
             initialState,

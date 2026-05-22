@@ -83,6 +83,19 @@ describe('entities slice', () => {
         expect(next.isFetchingDetail).toBe(false);
     });
 
+    test('getEntityDetail keeps entity when refetching the same uuid', () => {
+        const loaded = { ...initialState, entity: { uuid: 'e-1' } as any };
+        const next = reducer(loaded, actions.getEntityDetail({ uuid: 'e-1' }));
+        expect(next.entity?.uuid).toBe('e-1');
+        expect(next.isFetchingDetail).toBe(true);
+    });
+
+    test('getEntityDetail clears entity when uuid differs', () => {
+        const loaded = { ...initialState, entity: { uuid: 'e-1' } as any };
+        const next = reducer(loaded, actions.getEntityDetail({ uuid: 'e-2' }));
+        expect(next.entity).toBeUndefined();
+    });
+
     test('addEntity / success / failure', () => {
         let next = reducer(initialState, actions.addEntity({ connectorUuid: 'c-1', kind: 'ENTITY', name: 'E1', attributes: [] } as any));
         expect(next.isCreating).toBe(true);
