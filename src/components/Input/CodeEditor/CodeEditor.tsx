@@ -48,19 +48,36 @@ type History = {
     offset: number;
 };
 
-const KEYCODE_Y = 89;
-const KEYCODE_Z = 90;
-const KEYCODE_M = 77;
-const KEYCODE_PARENS = 57;
-const KEYCODE_BRACKETS = 219;
-const KEYCODE_QUOTE = 222;
-const KEYCODE_BACK_QUOTE = 192;
-
 const HISTORY_LIMIT = 100;
 const HISTORY_TIME_GAP = 3000;
 
-const isWindows = typeof window !== 'undefined' && 'navigator' in window && /Win/i.test(navigator.platform);
-const isMacLike = typeof window !== 'undefined' && 'navigator' in window && /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform);
+const platform = typeof globalThis !== 'undefined' && globalThis.navigator ? globalThis.navigator.platform : '';
+const isWindows = /Win/i.test(platform);
+const isMacLike = /(Mac|iPhone|iPod|iPad)/i.test(platform);
+
+const WRAP_KEY_CHARS: Record<string, { plain?: [string, string]; shift?: [string, string] }> = {
+    Digit9: { shift: ['(', ')'] },
+    BracketLeft: { plain: ['[', ']'], shift: ['{', '}'] },
+    Quote: { plain: ["'", "'"], shift: ['"', '"'] },
+    Backquote: { plain: ['`', '`'] },
+};
+
+function isUndoCombo(e: React.KeyboardEvent): boolean {
+    if (e.code !== 'KeyZ' || e.shiftKey || e.altKey) return false;
+    return isMacLike ? e.metaKey : e.ctrlKey;
+}
+
+function isRedoCombo(e: React.KeyboardEvent): boolean {
+    if (e.altKey) return false;
+    if (isMacLike) return e.metaKey && e.code === 'KeyZ' && e.shiftKey;
+    if (isWindows) return e.ctrlKey && e.code === 'KeyY';
+    return e.ctrlKey && e.code === 'KeyZ' && e.shiftKey;
+}
+
+function isToggleCaptureCombo(e: React.KeyboardEvent): boolean {
+    if (e.code !== 'KeyM' || !e.ctrlKey) return false;
+    return isMacLike ? e.shiftKey : true;
+}
 
 const textareaClassNameBase = 'npm__react-simple-code-editor__textarea';
 
@@ -231,13 +248,144 @@ const CodeEditor = React.forwardRef(function CodeEditor(props: Props, ref: React
         }
     };
 
+    const handleShiftTab = (currentValue: string, selectionStart: number, selectionEnd: number, tabCharacter: string) => {
+        const linesBeforeCaret = getLines(currentValue, selectionStart);
+        const startLine = linesBeforeCaret.length - 1;
+        const endLine = getLines(currentValue, selectionEnd).length - 1;
+        const nextValue = currentValue
+            .split('\n')
+            .map((line, i) => {
+                if (i >= startLine && i <= endLine && line.startsWith(tabCharacter)) {
+                    return line.substring(tabCharacter.length);
+                }
+                return line;
+            })
+            .join('\n');
+
+        if (currentValue === nextValue) return;
+
+        const startLineText = linesBeforeCaret[startLine];
+        const shouldShiftStart = startLineText?.startsWith(tabCharacter) ?? false;
+        applyEdits({
+            value: nextValue,
+            selectionStart: shouldShiftStart ? selectionStart - tabCharacter.length : selectionStart,
+            selectionEnd: selectionEnd - (currentValue.length - nextValue.length),
+        });
+    };
+
+    const handleTabWithSelection = (currentValue: string, selectionStart: number, selectionEnd: number, tabCharacter: string) => {
+        const linesBeforeCaret = getLines(currentValue, selectionStart);
+        const startLine = linesBeforeCaret.length - 1;
+        const endLine = getLines(currentValue, selectionEnd).length - 1;
+        const startLineText = linesBeforeCaret[startLine];
+
+        applyEdits({
+            value: currentValue
+                .split('\n')
+                .map((line, i) => (i >= startLine && i <= endLine ? tabCharacter + line : line))
+                .join('\n'),
+            selectionStart: startLineText && /\S/.test(startLineText) ? selectionStart + tabCharacter.length : selectionStart,
+            selectionEnd: selectionEnd + tabCharacter.length * (endLine - startLine + 1),
+        });
+    };
+
+    const handleTabAtCaret = (currentValue: string, selectionStart: number, selectionEnd: number, tabCharacter: string) => {
+        const updatedSelection = selectionStart + tabCharacter.length;
+        applyEdits({
+            value: currentValue.substring(0, selectionStart) + tabCharacter + currentValue.substring(selectionEnd),
+            selectionStart: updatedSelection,
+            selectionEnd: updatedSelection,
+        });
+    };
+
+    const handleTabKey = (
+        e: React.KeyboardEvent<HTMLTextAreaElement>,
+        currentValue: string,
+        selectionStart: number,
+        selectionEnd: number,
+    ) => {
+        e.preventDefault();
+        const tabCharacter = (insertSpaces ? ' ' : '\t').repeat(tabSize);
+
+        if (e.shiftKey) {
+            handleShiftTab(currentValue, selectionStart, selectionEnd, tabCharacter);
+        } else if (selectionStart === selectionEnd) {
+            handleTabAtCaret(currentValue, selectionStart, selectionEnd, tabCharacter);
+        } else {
+            handleTabWithSelection(currentValue, selectionStart, selectionEnd, tabCharacter);
+        }
+    };
+
+    const handleBackspaceKey = (
+        e: React.KeyboardEvent<HTMLTextAreaElement>,
+        currentValue: string,
+        selectionStart: number,
+        selectionEnd: number,
+    ) => {
+        if (selectionStart !== selectionEnd) return;
+        const tabCharacter = (insertSpaces ? ' ' : '\t').repeat(tabSize);
+        const textBeforeCaret = currentValue.substring(0, selectionStart);
+        if (!textBeforeCaret.endsWith(tabCharacter)) return;
+
+        e.preventDefault();
+        const updatedSelection = selectionStart - tabCharacter.length;
+        applyEdits({
+            value: currentValue.substring(0, selectionStart - tabCharacter.length) + currentValue.substring(selectionEnd),
+            selectionStart: updatedSelection,
+            selectionEnd: updatedSelection,
+        });
+    };
+
+    const handleEnterKey = (
+        e: React.KeyboardEvent<HTMLTextAreaElement>,
+        currentValue: string,
+        selectionStart: number,
+        selectionEnd: number,
+    ) => {
+        if (selectionStart !== selectionEnd) return;
+        const line = getLines(currentValue, selectionStart).pop();
+        const matches = line?.match(/^\s+/);
+        if (!matches?.[0]) return;
+
+        e.preventDefault();
+        const indent = '\n' + matches[0];
+        const updatedSelection = selectionStart + indent.length;
+        applyEdits({
+            value: currentValue.substring(0, selectionStart) + indent + currentValue.substring(selectionEnd),
+            selectionStart: updatedSelection,
+            selectionEnd: updatedSelection,
+        });
+    };
+
+    const handleWrapKey = (
+        e: React.KeyboardEvent<HTMLTextAreaElement>,
+        currentValue: string,
+        selectionStart: number,
+        selectionEnd: number,
+    ) => {
+        const mapping = WRAP_KEY_CHARS[e.code];
+        if (!mapping) return false;
+        const chars = e.shiftKey ? mapping.shift : mapping.plain;
+        if (!chars || selectionStart === selectionEnd) return false;
+
+        e.preventDefault();
+        applyEdits({
+            value:
+                currentValue.substring(0, selectionStart) +
+                chars[0] +
+                currentValue.substring(selectionStart, selectionEnd) +
+                chars[1] +
+                currentValue.substring(selectionEnd),
+            selectionStart,
+            selectionEnd: selectionEnd + 2,
+        });
+        return true;
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         if (onKeyDown) {
             onKeyDown(e);
-
-            if (e.defaultPrevented) {
-                return;
-            }
+            if (e.defaultPrevented) return;
         }
 
         if (e.key === 'Escape') {
@@ -246,147 +394,31 @@ const CodeEditor = React.forwardRef(function CodeEditor(props: Props, ref: React
 
         const { value: currentValue, selectionStart, selectionEnd } = e.currentTarget;
 
-        const tabCharacter = (insertSpaces ? ' ' : '\t').repeat(tabSize);
-
         if (e.key === 'Tab' && !ignoreTabKey && capture) {
+            handleTabKey(e, currentValue, selectionStart, selectionEnd);
+            return;
+        }
+        if (e.key === 'Backspace') {
+            handleBackspaceKey(e, currentValue, selectionStart, selectionEnd);
+            return;
+        }
+        if (e.key === 'Enter') {
+            handleEnterKey(e, currentValue, selectionStart, selectionEnd);
+            return;
+        }
+        if (handleWrapKey(e, currentValue, selectionStart, selectionEnd)) return;
+        if (isUndoCombo(e)) {
             e.preventDefault();
-
-            if (e.shiftKey) {
-                const linesBeforeCaret = getLines(currentValue, selectionStart);
-                const startLine = linesBeforeCaret.length - 1;
-                const endLine = getLines(currentValue, selectionEnd).length - 1;
-                const nextValue = currentValue
-                    .split('\n')
-                    .map((line, i) => {
-                        if (i >= startLine && i <= endLine && line.startsWith(tabCharacter)) {
-                            return line.substring(tabCharacter.length);
-                        }
-
-                        return line;
-                    })
-                    .join('\n');
-
-                if (currentValue !== nextValue) {
-                    const startLineText = linesBeforeCaret[startLine];
-
-                    applyEdits({
-                        value: nextValue,
-                        selectionStart: startLineText?.startsWith(tabCharacter) ? selectionStart - tabCharacter.length : selectionStart,
-                        selectionEnd: selectionEnd - (currentValue.length - nextValue.length),
-                    });
-                }
-            } else if (selectionStart !== selectionEnd) {
-                const linesBeforeCaret = getLines(currentValue, selectionStart);
-                const startLine = linesBeforeCaret.length - 1;
-                const endLine = getLines(currentValue, selectionEnd).length - 1;
-                const startLineText = linesBeforeCaret[startLine];
-
-                applyEdits({
-                    value: currentValue
-                        .split('\n')
-                        .map((line, i) => {
-                            if (i >= startLine && i <= endLine) {
-                                return tabCharacter + line;
-                            }
-
-                            return line;
-                        })
-                        .join('\n'),
-                    selectionStart: startLineText && /\S/.test(startLineText) ? selectionStart + tabCharacter.length : selectionStart,
-                    selectionEnd: selectionEnd + tabCharacter.length * (endLine - startLine + 1),
-                });
-            } else {
-                const updatedSelection = selectionStart + tabCharacter.length;
-
-                applyEdits({
-                    value: currentValue.substring(0, selectionStart) + tabCharacter + currentValue.substring(selectionEnd),
-                    selectionStart: updatedSelection,
-                    selectionEnd: updatedSelection,
-                });
-            }
-        } else if (e.key === 'Backspace') {
-            const hasSelection = selectionStart !== selectionEnd;
-            const textBeforeCaret = currentValue.substring(0, selectionStart);
-
-            if (textBeforeCaret.endsWith(tabCharacter) && !hasSelection) {
-                e.preventDefault();
-
-                const updatedSelection = selectionStart - tabCharacter.length;
-
-                applyEdits({
-                    value: currentValue.substring(0, selectionStart - tabCharacter.length) + currentValue.substring(selectionEnd),
-                    selectionStart: updatedSelection,
-                    selectionEnd: updatedSelection,
-                });
-            }
-        } else if (e.key === 'Enter') {
-            if (selectionStart === selectionEnd) {
-                const line = getLines(currentValue, selectionStart).pop();
-                const matches = line?.match(/^\s+/);
-
-                if (matches?.[0]) {
-                    e.preventDefault();
-
-                    const indent = '\n' + matches[0];
-                    const updatedSelection = selectionStart + indent.length;
-
-                    applyEdits({
-                        value: currentValue.substring(0, selectionStart) + indent + currentValue.substring(selectionEnd),
-                        selectionStart: updatedSelection,
-                        selectionEnd: updatedSelection,
-                    });
-                }
-            }
-        } else if (
-            e.keyCode === KEYCODE_PARENS ||
-            e.keyCode === KEYCODE_BRACKETS ||
-            e.keyCode === KEYCODE_QUOTE ||
-            e.keyCode === KEYCODE_BACK_QUOTE
-        ) {
-            let chars: [string, string] | undefined;
-
-            if (e.keyCode === KEYCODE_PARENS && e.shiftKey) {
-                chars = ['(', ')'];
-            } else if (e.keyCode === KEYCODE_BRACKETS) {
-                chars = e.shiftKey ? ['{', '}'] : ['[', ']'];
-            } else if (e.keyCode === KEYCODE_QUOTE) {
-                chars = e.shiftKey ? ['"', '"'] : ["'", "'"];
-            } else if (e.keyCode === KEYCODE_BACK_QUOTE && !e.shiftKey) {
-                chars = ['`', '`'];
-            }
-
-            if (selectionStart !== selectionEnd && chars) {
-                e.preventDefault();
-
-                applyEdits({
-                    value:
-                        currentValue.substring(0, selectionStart) +
-                        chars[0] +
-                        currentValue.substring(selectionStart, selectionEnd) +
-                        chars[1] +
-                        currentValue.substring(selectionEnd),
-                    selectionStart,
-                    selectionEnd: selectionEnd + 2,
-                });
-            }
-        } else if ((isMacLike ? e.metaKey && e.keyCode === KEYCODE_Z : e.ctrlKey && e.keyCode === KEYCODE_Z) && !e.shiftKey && !e.altKey) {
-            e.preventDefault();
-
             undoEdit();
-        } else if (
-            (isMacLike
-                ? e.metaKey && e.keyCode === KEYCODE_Z && e.shiftKey
-                : isWindows
-                  ? e.ctrlKey && e.keyCode === KEYCODE_Y
-                  : e.ctrlKey && e.keyCode === KEYCODE_Z && e.shiftKey) &&
-            !e.altKey
-        ) {
+            return;
+        }
+        if (isRedoCombo(e)) {
             e.preventDefault();
-
             redoEdit();
-        } else if (e.keyCode === KEYCODE_M && e.ctrlKey && (isMacLike ? e.shiftKey : true)) {
+            return;
+        }
+        if (isToggleCaptureCombo(e)) {
             e.preventDefault();
-
             setCapture((prev) => !prev);
         }
     };

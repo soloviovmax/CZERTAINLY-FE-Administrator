@@ -1,5 +1,23 @@
+import type { Locator } from '@playwright/test';
 import { test, expect } from '../../../../playwright/ct-test';
 import { Harness, SessionRefProbe } from './CodeEditorHarness';
+
+type HarnessProps = Parameters<typeof Harness>[0];
+
+async function mountWithCalls(mount: any, props: Partial<HarnessProps> = {}) {
+    const calls: string[] = [];
+    const component = await mount(<Harness {...props} onValueChange={(v) => calls.push(v)} />);
+    const ta = component.locator('textarea') as Locator;
+    return { component, calls, ta };
+}
+
+async function setSelection(ta: Locator, start: number, end: number) {
+    await ta.focus();
+    await ta.evaluate((el: HTMLTextAreaElement, range: { s: number; e: number }) => el.setSelectionRange(range.s, range.e), {
+        s: start,
+        e: end,
+    });
+}
 
 test.describe('CodeEditor', () => {
     test('renders textarea and pre (highlight as string)', async ({ mount }) => {
@@ -15,9 +33,8 @@ test.describe('CodeEditor', () => {
     });
 
     test('emits onValueChange on typing', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness onValueChange={(v) => calls.push(v)} />);
-        await component.locator('textarea').pressSequentially('hi');
+        const { ta, calls } = await mountWithCalls(mount);
+        await ta.pressSequentially('hi');
         expect(calls.at(-1)).toBe('hi');
     });
 
@@ -58,168 +75,94 @@ test.describe('CodeEditor', () => {
         await expect(component.locator('textarea')).toHaveAttribute('required', '');
     });
 
-    test('padding as number applies to all sides', async ({ mount }) => {
-        const component = await mount(<Harness padding={12} />);
-        const pre = component.locator('pre');
-        await expect(pre).toHaveCSS('padding-top', '12px');
-        await expect(pre).toHaveCSS('padding-right', '12px');
-        await expect(pre).toHaveCSS('padding-bottom', '12px');
-        await expect(pre).toHaveCSS('padding-left', '12px');
-    });
-
-    test('padding as object applies per side', async ({ mount }) => {
-        const component = await mount(<Harness padding={{ top: 1, right: 2, bottom: 3, left: 4 }} />);
-        const pre = component.locator('pre');
-        await expect(pre).toHaveCSS('padding-top', '1px');
-        await expect(pre).toHaveCSS('padding-right', '2px');
-        await expect(pre).toHaveCSS('padding-bottom', '3px');
-        await expect(pre).toHaveCSS('padding-left', '4px');
-    });
+    for (const [label, padding, expected] of [
+        ['number applies to all sides', 12, { top: '12px', right: '12px', bottom: '12px', left: '12px' }],
+        ['object applies per side', { top: 1, right: 2, bottom: 3, left: 4 }, { top: '1px', right: '2px', bottom: '3px', left: '4px' }],
+    ] as const) {
+        test(`padding as ${label}`, async ({ mount }) => {
+            const component = await mount(<Harness padding={padding} />);
+            const pre = component.locator('pre');
+            await expect(pre).toHaveCSS('padding-top', expected.top);
+            await expect(pre).toHaveCSS('padding-right', expected.right);
+            await expect(pre).toHaveCSS('padding-bottom', expected.bottom);
+            await expect(pre).toHaveCSS('padding-left', expected.left);
+        });
+    }
 
     test('Tab inserts two spaces by default', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="ab" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => {
-            el.setSelectionRange(2, 2);
-        });
+        const { ta, calls } = await mountWithCalls(mount, { initial: 'ab' });
+        await setSelection(ta, 2, 2);
         await ta.press('Tab');
         expect(calls.at(-1)).toBe('ab  ');
     });
 
     test('Tab with insertSpaces=false inserts a tab character', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="ab" insertSpaces={false} onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(2, 2));
+        const { ta, calls } = await mountWithCalls(mount, { initial: 'ab', insertSpaces: false });
+        await setSelection(ta, 2, 2);
         await ta.press('Tab');
         expect(calls.at(-1)).toBe('ab\t\t');
     });
 
     test('Tab with tabSize=4 inserts four spaces', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="" tabSize={4} onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
+        const { ta, calls } = await mountWithCalls(mount, { initial: '', tabSize: 4 });
         await ta.focus();
         await ta.press('Tab');
         expect(calls.at(-1)).toBe('    ');
     });
 
     test('Tab over multi-line selection indents each line', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial={'foo\nbar'} onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 7));
+        const { ta, calls } = await mountWithCalls(mount, { initial: 'foo\nbar' });
+        await setSelection(ta, 0, 7);
         await ta.press('Tab');
         expect(calls.at(-1)).toBe('  foo\n  bar');
     });
 
     test('Shift+Tab over multi-line selection unindents each line', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial={'  foo\n  bar'} onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 11));
+        const { ta, calls } = await mountWithCalls(mount, { initial: '  foo\n  bar' });
+        await setSelection(ta, 0, 11);
         await ta.press('Shift+Tab');
         expect(calls.at(-1)).toBe('foo\nbar');
     });
 
     test('ignoreTabKey lets focus leave on Tab', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="" ignoreTabKey onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
+        const { ta, calls } = await mountWithCalls(mount, { initial: '', ignoreTabKey: true });
         await ta.focus();
         await ta.press('Tab');
         expect(calls.length).toBe(0);
     });
 
     test('Backspace removes the tab character when caret follows it', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="ab  " onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(4, 4));
+        const { ta, calls } = await mountWithCalls(mount, { initial: 'ab  ' });
+        await setSelection(ta, 4, 4);
         await ta.press('Backspace');
         expect(calls.at(-1)).toBe('ab');
     });
 
     test('Enter preserves leading whitespace indentation', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="  line" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(6, 6));
+        const { ta, calls } = await mountWithCalls(mount, { initial: '  line' });
+        await setSelection(ta, 6, 6);
         await ta.press('Enter');
         expect(calls.at(-1)).toBe('  line\n  ');
     });
 
-    test('wraps selection with parentheses on Shift+9', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="abc" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 3));
-        await ta.press('Shift+9');
-        expect(calls.at(-1)).toBe('(abc)');
-    });
-
-    test('wraps selection with square brackets on [', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="abc" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 3));
-        await ta.press('BracketLeft');
-        expect(calls.at(-1)).toBe('[abc]');
-    });
-
-    test('wraps selection with curly braces on Shift+[', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="abc" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 3));
-        await ta.press('Shift+BracketLeft');
-        expect(calls.at(-1)).toBe('{abc}');
-    });
-
-    test('wraps selection with single quotes on Quote key', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="abc" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 3));
-        await ta.press('Quote');
-        expect(calls.at(-1)).toBe("'abc'");
-    });
-
-    test('wraps selection with double quotes on Shift+Quote', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="abc" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 3));
-        await ta.press('Shift+Quote');
-        expect(calls.at(-1)).toBe('"abc"');
-    });
-
-    test('wraps selection with backticks on Backquote', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="abc" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
-        await ta.focus();
-        await ta.evaluate((el: HTMLTextAreaElement) => el.setSelectionRange(0, 3));
-        await ta.press('Backquote');
-        expect(calls.at(-1)).toBe('`abc`');
-    });
+    for (const { name, key, expected } of [
+        { name: 'parentheses on Shift+9', key: 'Shift+9', expected: '(abc)' },
+        { name: 'square brackets on [', key: 'BracketLeft', expected: '[abc]' },
+        { name: 'curly braces on Shift+[', key: 'Shift+BracketLeft', expected: '{abc}' },
+        { name: 'single quotes on Quote', key: 'Quote', expected: "'abc'" },
+        { name: 'double quotes on Shift+Quote', key: 'Shift+Quote', expected: '"abc"' },
+        { name: 'backticks on Backquote', key: 'Backquote', expected: '`abc`' },
+    ]) {
+        test(`wraps selection with ${name}`, async ({ mount }) => {
+            const { ta, calls } = await mountWithCalls(mount, { initial: 'abc' });
+            await setSelection(ta, 0, 3);
+            await ta.press(key);
+            expect(calls.at(-1)).toBe(expected);
+        });
+    }
 
     test('does not wrap when there is no selection', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
+        const { ta, calls } = await mountWithCalls(mount, { initial: '' });
         await ta.focus();
         await ta.press('Shift+9');
         expect(calls.every((c) => !c.includes('('))).toBe(true);
@@ -254,13 +197,10 @@ test.describe('CodeEditor', () => {
     });
 
     test('Undo (Mod+Z) restores previous value after edits', async ({ mount }) => {
-        const calls: string[] = [];
-        const component = await mount(<Harness initial="" onValueChange={(v) => calls.push(v)} />);
-        const ta = component.locator('textarea');
+        const { ta, calls, component } = await mountWithCalls(mount, { initial: '' });
         await ta.focus();
         await ta.pressSequentially('hello', { delay: 5 });
-        const beforeUndo = await ta.inputValue();
-        expect(beforeUndo).toBe('hello');
+        expect(await ta.inputValue()).toBe('hello');
 
         const isMac = await component.page().evaluate(() => /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform));
         await ta.press(isMac ? 'Meta+KeyZ' : 'Control+KeyZ');
