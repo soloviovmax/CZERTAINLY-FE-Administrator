@@ -34,8 +34,9 @@ describe('settings slice', () => {
     });
 
     test('getEventsSettings / success / failure', () => {
-        let next = reducer(initialState, actions.getEventsSettings());
+        let next = reducer({ ...initialState, updateEventSettingsSucceeded: true } as any, actions.getEventsSettings());
         expect(next.isFetchingEventsSetting).toBe(true);
+        expect(next.updateEventSettingsSucceeded).toBe(false);
 
         next = reducer(next, actions.getEventsSettingsSuccess({ eventsMapping: {} } as any));
         expect(next.isFetchingEventsSetting).toBe(false);
@@ -46,17 +47,24 @@ describe('settings slice', () => {
     });
 
     test('updateEventSettings / success / failure', () => {
-        const base = { ...initialState, eventsSettings: { eventsMapping: { EVT_A: ['t1'] } } as any };
+        const base = {
+            ...initialState,
+            eventsSettings: { eventsMapping: { EVT_A: ['t1'] } } as any,
+            updateEventSettingsSucceeded: true,
+        };
 
         let next = reducer(base, actions.updateEventSettings({ eventSettings: { event: 'EVT_A', triggerUuids: ['t2'] } as any }));
         expect(next.isUpdatingEventsSetting).toBe(true);
+        expect(next.updateEventSettingsSucceeded).toBe(false);
 
         next = reducer(next, actions.updateEventSettingsSuccess({ eventSettings: { event: 'EVT_A', triggerUuids: ['t2'] } as any }));
         expect(next.isUpdatingEventsSetting).toBe(false);
         expect((next.eventsSettings as any)?.eventsMapping?.EVT_A).toEqual(['t2']);
+        expect(next.updateEventSettingsSucceeded).toBe(true);
 
         next = reducer({ ...next, isUpdatingEventsSetting: true }, actions.updateEventSettingsFailure({ error: 'err' }));
         expect(next.isUpdatingEventsSetting).toBe(false);
+        expect(next.updateEventSettingsSucceeded).toBe(false);
     });
 
     test('getLoggingSettings / success / failure', () => {
@@ -94,6 +102,7 @@ describe('settings selectors', () => {
             eventsSettings: { eventsMapping: {} },
             isFetchingEventsSetting: true,
             isUpdatingEventsSetting: true,
+            updateEventSettingsSucceeded: true,
             loggingSettings: { auditLogs: {} },
             isFetchingLoggingSetting: true,
             isUpdatingLoggingSetting: true,
@@ -106,6 +115,7 @@ describe('settings selectors', () => {
         expect(selectors.eventsSettings(state)).toEqual({ eventsMapping: {} });
         expect(selectors.isFetchingEventsSetting(state)).toBe(true);
         expect(selectors.isUpdatingEventsSetting(state)).toBe(true);
+        expect(selectors.updateEventSettingsSucceeded(state)).toBe(true);
         expect(selectors.loggingSettings(state)).toEqual({ auditLogs: {} });
         expect(selectors.isFetchingLoggingSetting(state)).toBe(true);
         expect(selectors.isUpdatingLoggingSetting(state)).toBe(true);

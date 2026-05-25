@@ -18,7 +18,7 @@ import ProgressButton from 'components/ProgressButton';
 import Select from 'components/Select';
 import { Edit } from 'lucide-react';
 import TriggerEditorWidget from 'components/TriggerEditorWidget';
-import { useAreDefaultValuesSame } from 'utils/common-hooks';
+import { useAreDefaultValuesSame, useRunOnSuccessfulFinish } from 'utils/common-hooks';
 import Container from 'components/Container';
 
 type Props = (
@@ -52,7 +52,10 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
     const isFetchingResourcesList = useSelector(resourceSelectors.isFetchingResourcesList);
     const isFetchingEventTriggersAssociation = useSelector(rulesSelectors.isFetchingEventTriggersAssociation);
     const isUpdatingEventTriggersAssociation = useSelector(rulesSelectors.isUpdatingEventTriggersAssociation);
+    const associateEventTriggersSucceeded = useSelector(rulesSelectors.associateEventTriggersSucceeded);
     const isFetchingEventsSetting = useSelector(settingsSelectors.isFetchingEventsSetting);
+    const isUpdatingEventsSetting = useSelector(settingsSelectors.isUpdatingEventsSetting);
+    const updateEventSettingsSucceeded = useSelector(settingsSelectors.updateEventSettingsSucceeded);
 
     const resourceEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.Resource));
     const resourceEventEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.ResourceEvent));
@@ -62,8 +65,18 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
 
     const isBusy = useMemo(
         () =>
-            isFetchingResourcesList || isFetchingEventTriggersAssociation || isUpdatingEventTriggersAssociation || isFetchingEventsSetting,
-        [isFetchingResourcesList, isFetchingEventTriggersAssociation, isUpdatingEventTriggersAssociation, isFetchingEventsSetting],
+            isFetchingResourcesList ||
+            isFetchingEventTriggersAssociation ||
+            isUpdatingEventTriggersAssociation ||
+            isFetchingEventsSetting ||
+            isUpdatingEventsSetting,
+        [
+            isFetchingResourcesList,
+            isFetchingEventTriggersAssociation,
+            isUpdatingEventTriggersAssociation,
+            isFetchingEventsSetting,
+            isUpdatingEventsSetting,
+        ],
     );
 
     const fetchEventAssociations = useCallback(() => {
@@ -139,9 +152,14 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                     }),
                 );
             }
-            onClose();
         },
-        [dispatch, onClose, mode, resource, resourceUuid, editedEvent],
+        [dispatch, mode, resource, resourceUuid, editedEvent],
+    );
+
+    useRunOnSuccessfulFinish(
+        mode === 'association' ? isFetchingEventTriggersAssociation : isUpdatingEventsSetting,
+        mode === 'association' ? associateEventTriggersSucceeded : updateEventSettingsSucceeded,
+        onClose,
     );
     const getResourceEventModel = useCallback(
         (event?: ResourceEvent | string | null) => {
@@ -401,6 +419,7 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
                                             render={({ field }) => (
                                                 <TriggerEditorWidget
                                                     resource={formValues.resource?.value as Resource}
+                                                    event={formValues.event?.value as ResourceEvent}
                                                     selectedTriggers={field.value ?? []}
                                                     onSelectedTriggersChange={(e) => {
                                                         field.onChange(e);
