@@ -73,6 +73,7 @@ export type State = {
     isFetchingTriggerHistorySummary: boolean;
     isFetchingEventTriggersAssociation: boolean;
     isUpdatingEventTriggersAssociation: boolean;
+    associateEventTriggersSucceeded: boolean;
     isFetchingActions: boolean;
     isDeletingAction: boolean;
     isBulkDeletingRules: boolean;
@@ -122,6 +123,7 @@ export const initialState: State = {
     isFetchingTriggerHistorySummary: false,
     isFetchingEventTriggersAssociation: false,
     isUpdatingEventTriggersAssociation: false,
+    associateEventTriggersSucceeded: false,
     isFetchingActions: false,
     isFetchingActionDetails: false,
     isDeletingAction: false,
@@ -569,6 +571,7 @@ export const slice = createSlice({
 
         getEventTriggersAssociations: (state, action: PayloadAction<{ resource: Resource; associationObjectUuid: string }>) => {
             state.isFetchingEventTriggersAssociation = true;
+            state.associateEventTriggersSucceeded = false;
         },
         getEventTriggersAssociationsSuccess: (state, action: PayloadAction<{ eventTriggerAssociation: EventTriggerAssociationModel }>) => {
             state.eventTriggerAssociation = action.payload.eventTriggerAssociation;
@@ -583,12 +586,14 @@ export const slice = createSlice({
             action: PayloadAction<{ triggerEventAssociationRequestModel: TriggerEventAssociationRequestModel }>,
         ) => {
             state.isFetchingEventTriggersAssociation = true;
+            state.associateEventTriggersSucceeded = false;
         },
         associateEventTriggersSuccess: (
             state,
             action: PayloadAction<{ triggerEventAssociationRequestModel: TriggerEventAssociationRequestModel }>,
         ) => {
             state.isFetchingEventTriggersAssociation = false;
+            state.associateEventTriggersSucceeded = true;
             const { event, triggerUuids } = action.payload.triggerEventAssociationRequestModel;
             if (state.eventTriggerAssociation) {
                 if (triggerUuids.length) {
@@ -603,6 +608,7 @@ export const slice = createSlice({
         },
         associateEventTriggersFailure: (state, action: PayloadAction<{ error: string | undefined }>) => {
             state.isFetchingEventTriggersAssociation = false;
+            state.associateEventTriggersSucceeded = false;
         },
     },
 });
@@ -637,6 +643,7 @@ const createRuleSucceeded = createSelector(state, (state) => state.createRuleSuc
 const isFetchingTriggerHistorySummary = createSelector(state, (state) => state.isFetchingTriggerHistorySummary);
 const isFetchingEventTriggersAssociation = createSelector(state, (state) => state.isFetchingEventTriggersAssociation);
 const isUpdatingEventTriggersAssociation = createSelector(state, (state) => state.isUpdatingEventTriggersAssociation);
+const associateEventTriggersSucceeded = createSelector(state, (state) => state.associateEventTriggersSucceeded);
 const isFetchingTriggerHistories = createSelector(state, (state) => state.isFetchingTriggerHistories);
 const isUpdatingRule = createSelector(state, (state) => state.isUpdatingRule);
 const isDeletingRule = createSelector(state, (state) => state.isDeletingRule);
@@ -714,6 +721,7 @@ export const selectors = {
     isFetchingTriggerHistorySummary,
     isFetchingEventTriggersAssociation,
     isUpdatingEventTriggersAssociation,
+    associateEventTriggersSucceeded,
     isFetchingActions,
     isDeletingAction,
     isBulkDeletingRules,

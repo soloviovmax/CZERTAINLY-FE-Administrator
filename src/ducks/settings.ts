@@ -15,6 +15,7 @@ export type State = {
     eventsSettings?: EventsSettingsDto;
     isFetchingEventsSetting: boolean;
     isUpdatingEventsSetting: boolean;
+    updateEventSettingsSucceeded: boolean;
 
     loggingSettings?: SettingsLoggingModel;
     isFetchingLoggingSetting: boolean;
@@ -26,6 +27,7 @@ export const initialState: State = {
     isUpdatingPlatform: false,
     isFetchingEventsSetting: false,
     isUpdatingEventsSetting: false,
+    updateEventSettingsSucceeded: false,
     isFetchingLoggingSetting: false,
     isUpdatingLoggingSetting: false,
 };
@@ -62,6 +64,7 @@ export const slice = createSlice({
 
         getEventsSettings: (state, action: PayloadAction<void>) => {
             state.isFetchingEventsSetting = true;
+            state.updateEventSettingsSucceeded = false;
         },
 
         getEventsSettingsSuccess: (state, action: PayloadAction<EventsSettingsDto>) => {
@@ -75,10 +78,12 @@ export const slice = createSlice({
 
         updateEventSettings: (state, action: PayloadAction<{ eventSettings: EventSettingsDto; redirect?: string }>) => {
             state.isUpdatingEventsSetting = true;
+            state.updateEventSettingsSucceeded = false;
         },
 
         updateEventSettingsSuccess: (state, action: PayloadAction<{ eventSettings: EventSettingsDto; redirect?: string }>) => {
             state.isUpdatingEventsSetting = false;
+            state.updateEventSettingsSucceeded = true;
             if (state.eventsSettings) {
                 state.eventsSettings = {
                     eventsMapping: {
@@ -91,6 +96,7 @@ export const slice = createSlice({
 
         updateEventSettingsFailure: (state, action: PayloadAction<{ error: string | undefined }>) => {
             state.isUpdatingEventsSetting = false;
+            state.updateEventSettingsSucceeded = false;
         },
 
         getLoggingSettings: (state, action: PayloadAction<void>) => {
@@ -130,6 +136,7 @@ const isUpdatingPlatform = createSelector(state, (state: State) => state.isUpdat
 const eventsSettings = createSelector(state, (state: State) => state.eventsSettings);
 const isFetchingEventsSetting = createSelector(state, (state: State) => state.isFetchingEventsSetting);
 const isUpdatingEventsSetting = createSelector(state, (state: State) => state.isUpdatingEventsSetting);
+const updateEventSettingsSucceeded = createSelector(state, (state: State) => state.updateEventSettingsSucceeded);
 
 const loggingSettings = createSelector(state, (state: State) => state.loggingSettings);
 const isFetchingLoggingSetting = createSelector(state, (state: State) => state.isFetchingLoggingSetting);
@@ -144,6 +151,7 @@ export const selectors = {
     eventsSettings,
     isFetchingEventsSetting,
     isUpdatingEventsSetting,
+    updateEventSettingsSucceeded,
 
     loggingSettings,
     isFetchingLoggingSetting,

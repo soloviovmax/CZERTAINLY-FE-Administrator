@@ -512,10 +512,11 @@ describe('rules slice', () => {
 
     test('getEventTriggersAssociations / getEventTriggersAssociationsSuccess / getEventTriggersAssociationsFailure', () => {
         let next = reducer(
-            initialState,
+            { ...initialState, associateEventTriggersSucceeded: true },
             actions.getEventTriggersAssociations({ resource: 'CERTIFICATE' as any, associationObjectUuid: 'obj-1' }),
         );
         expect(next.isFetchingEventTriggersAssociation).toBe(true);
+        expect(next.associateEventTriggersSucceeded).toBe(false);
 
         const assoc = { someEvent: ['t-1'] };
         next = reducer(next, actions.getEventTriggersAssociationsSuccess({ eventTriggerAssociation: assoc } as any));
@@ -534,10 +535,12 @@ describe('rules slice', () => {
             ...initialState,
             eventTriggerAssociation: { CERTIFICATE_DISCOVERED: ['t-old'] },
             isFetchingEventTriggersAssociation: false,
+            associateEventTriggersSucceeded: true,
         } as any;
 
         let next = reducer(withAssoc, actions.associateEventTriggers({ triggerEventAssociationRequestModel: {} } as any));
         expect(next.isFetchingEventTriggersAssociation).toBe(true);
+        expect(next.associateEventTriggersSucceeded).toBe(false);
 
         next = reducer(
             next,
@@ -547,9 +550,11 @@ describe('rules slice', () => {
         );
         expect(next.eventTriggerAssociation).toEqual({ CERTIFICATE_DISCOVERED: ['t-1', 't-2'] });
         expect(next.isFetchingEventTriggersAssociation).toBe(false);
+        expect(next.associateEventTriggersSucceeded).toBe(true);
 
         next = reducer({ ...next, isFetchingEventTriggersAssociation: true }, actions.associateEventTriggersFailure({ error: 'err' }));
         expect(next.isFetchingEventTriggersAssociation).toBe(false);
+        expect(next.associateEventTriggersSucceeded).toBe(false);
     });
 
     test('associateEventTriggersSuccess removes event key when triggerUuids is empty', () => {
@@ -630,6 +635,7 @@ describe('rules selectors', () => {
         isFetchingTriggerHistorySummary: true,
         isFetchingEventTriggersAssociation: true,
         isUpdatingEventTriggersAssociation: true,
+        associateEventTriggersSucceeded: true,
         isBulkDeletingRules: true,
         isBulkDeletingActions: true,
         isBulkDeletingConditions: true,
@@ -689,6 +695,7 @@ describe('rules selectors', () => {
         expect(selectors.isFetchingTriggerHistorySummary(state)).toBe(true);
         expect(selectors.isFetchingEventTriggersAssociation(state)).toBe(true);
         expect(selectors.isUpdatingEventTriggersAssociation(state)).toBe(true);
+        expect(selectors.associateEventTriggersSucceeded(state)).toBe(true);
         expect(selectors.isBulkDeletingRules(state)).toBe(true);
         expect(selectors.isBulkDeletingActions(state)).toBe(true);
         expect(selectors.isBulkDeletingConditions(state)).toBe(true);
