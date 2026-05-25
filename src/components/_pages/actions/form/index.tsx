@@ -43,9 +43,9 @@ const ActionsForm = ({ onCancel, onSuccess }: ActionsFormProps = {}) => {
 
     const executionsOptions = useMemo(() => {
         if (executions === undefined) return [];
-        return executions.map((execution) => {
-            return { value: execution.uuid, label: execution.name };
-        });
+        return executions
+            .map((execution) => ({ value: execution.uuid, label: execution.name }))
+            .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
     }, [executions]);
 
     const defaultValues: ActionFormValues = useMemo(() => {
