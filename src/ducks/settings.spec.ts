@@ -34,7 +34,7 @@ describe('settings slice', () => {
     });
 
     test('getEventsSettings / success / failure', () => {
-        let next = reducer({ ...initialState, updateEventSettingsSucceeded: true } as any, actions.getEventsSettings());
+        let next = reducer({ ...initialState, updateEventSettingsSucceeded: true }, actions.getEventsSettings());
         expect(next.isFetchingEventsSetting).toBe(true);
         expect(next.updateEventSettingsSucceeded).toBe(false);
 
