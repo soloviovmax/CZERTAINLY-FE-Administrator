@@ -488,6 +488,7 @@ const NotificationInstanceForm = ({ notificationInstanceId, onCancel, onSuccess 
 
                         <TabLayout
                             noBorder
+                            onlyActiveTabContent={false}
                             tabs={[
                                 {
                                     title: 'Connector Attributes',
