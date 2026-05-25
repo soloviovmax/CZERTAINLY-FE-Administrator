@@ -966,15 +966,22 @@ test.describe('CustomTable', () => {
         expect(calledWithPage).toBe(181);
     });
 
-    test('should not call onPageChanged when recalculated page equals current page', async ({ mount, page }) => {
+    test('should always call onPageChanged after page size change so consumers that reset page do not lose position', async ({
+        mount,
+        page,
+    }) => {
+        let calledWithPage: number | undefined;
         let pageChangeCalls = 0;
+        // Page 2 with size 10 → first visible item 11. New size 200 → ceil(11/200) = 1.
+        // Consumers like PagedList reset pageNumber to 1 inside onPageSizeChanged, so we must still
+        // emit onPageChanged to confirm the recalculated page even when it happens to equal 1.
         const paginationData = {
-            page: 1,
+            page: 2,
             totalItems: 50,
             pageSize: 10,
             loadedPageSize: 10,
             totalPages: 5,
-            itemsPerPageOptions: [10, 20, 50],
+            itemsPerPageOptions: [10, 200],
         };
 
         const component = await mount(
@@ -985,17 +992,19 @@ test.describe('CustomTable', () => {
                     hasPagination={true}
                     paginationData={paginationData}
                     onPageSizeChanged={() => {}}
-                    onPageChanged={() => {
+                    onPageChanged={(p) => {
                         pageChangeCalls += 1;
+                        calledWithPage = p;
                     }}
                 />,
             ),
         );
 
         await component.getByTestId('select-pageSize-trigger').click();
-        await page.getByRole('option', { name: '20', exact: true }).click();
+        await page.getByRole('option', { name: '200', exact: true }).click();
 
-        expect(pageChangeCalls).toBe(0);
+        expect(pageChangeCalls).toBe(1);
+        expect(calledWithPage).toBe(1);
     });
 
     test('should keep first visible item in view when page size changes in internal pagination', async ({ mount, page }) => {

@@ -483,9 +483,7 @@ function CustomTable({
                 onPageSizeChanged(num);
                 if (paginationData && onPageChanged) {
                     const nextPage = computeNextPage(paginationData.page, paginationData.pageSize, paginationData.totalItems);
-                    if (nextPage !== paginationData.page) {
-                        onPageChanged(nextPage);
-                    }
+                    onPageChanged(nextPage);
                 }
                 return;
             }
