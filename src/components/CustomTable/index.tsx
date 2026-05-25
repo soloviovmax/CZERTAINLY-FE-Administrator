@@ -470,14 +470,30 @@ function CustomTable({
         (value: string | number) => {
             if (disablePaginationControls) return;
             const num = typeof value === 'string' ? Number.parseInt(value, 10) : value;
+            if (!num || num <= 0) return;
+
+            // Keep the user on the page containing the first item they were just viewing.
+            const computeNextPage = (currentPage: number, currentPageSize: number, totalItems: number) => {
+                if (totalItems <= 0) return 1;
+                const firstVisibleItem = Math.min(Math.max((currentPage - 1) * currentPageSize + 1, 1), totalItems);
+                return Math.max(1, Math.ceil(firstVisibleItem / num));
+            };
+
             if (onPageSizeChanged) {
                 onPageSizeChanged(num);
+                if (paginationData && onPageChanged) {
+                    const nextPage = computeNextPage(paginationData.page, paginationData.pageSize, paginationData.totalItems);
+                    if (nextPage !== paginationData.page) {
+                        onPageChanged(nextPage);
+                    }
+                }
                 return;
             }
+            const nextInternalPage = computeNextPage(page, pageSize, tblData.length);
             setPageSize(num);
-            setPage(1);
+            setPage(nextInternalPage);
         },
-        [disablePaginationControls, onPageSizeChanged],
+        [disablePaginationControls, onPageSizeChanged, onPageChanged, paginationData, page, pageSize, tblData.length],
     );
 
     const checkAllChecked = useMemo(() => {
