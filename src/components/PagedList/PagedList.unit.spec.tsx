@@ -16,6 +16,9 @@ let mockState: any;
 vi.mock('react-redux', () => ({
     useDispatch: () => useDispatchMock(),
     useSelector: (selector: any) => useSelectorMock(selector),
+    useStore: () => ({
+        getState: () => mockState,
+    }),
 }));
 
 vi.mock('react-router', () => ({
@@ -209,6 +212,23 @@ describe('PagedList unit coverage', () => {
         );
         expect(dispatch).toHaveBeenCalledWith(
             expect.objectContaining({ type: 'pagings/setPagination', payload: { entity: EntityType.CBOM, pageSize: 50, pageNumber: 1 } }),
+        );
+    });
+
+    it('uses latest pageSize from store when page changes immediately after size change', async () => {
+        await renderPagedList();
+
+        const sizeButton = container.querySelector('[data-testid="table-size-change"]') as HTMLButtonElement;
+        const pageButton = container.querySelector('[data-testid="table-page-change"]') as HTMLButtonElement;
+
+        await act(async () => {
+            sizeButton.click();
+            mockState.pagings.pagings[0].paging.pageSize = 50;
+            pageButton.click();
+        });
+
+        expect(dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'pagings/setPagination', payload: { entity: EntityType.CBOM, pageSize: 50, pageNumber: 3 } }),
         );
     });
 
