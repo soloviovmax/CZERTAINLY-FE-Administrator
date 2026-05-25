@@ -1,6 +1,6 @@
 import { type EntityType, selectors as filterSelectors } from 'ducks/filters';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { useNavigate } from 'react-router';
 
 import type { ApiClients } from 'src/api';
@@ -62,6 +62,7 @@ function PagedList({
     extraFilterComponent,
 }: Readonly<Props>) {
     const dispatch = useDispatch();
+    const store = useStore();
     const navigate = useNavigate();
 
     const currentFilters = useSelector(filterSelectors.currentFilters(entity));
@@ -104,15 +105,16 @@ function PagedList({
 
     const onPageNumberChanged = useCallback(
         (nextPageNumber: number) => {
+            const latestPageSize = selectors.pageSize(entity)(store.getState());
             dispatch(
                 actions.setPagination({
                     entity,
-                    pageSize,
+                    pageSize: latestPageSize,
                     pageNumber: nextPageNumber,
                 }),
             );
         },
-        [dispatch, entity, pageSize],
+        [dispatch, entity, store],
     );
 
     const onDeleteConfirmed = useCallback(() => {
