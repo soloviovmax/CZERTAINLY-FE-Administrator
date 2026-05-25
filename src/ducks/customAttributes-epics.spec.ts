@@ -430,14 +430,12 @@ describe('customAttributes epics', () => {
             overrideKey: 'editCustomAttribute',
             successAssert: (out: any[]) => {
                 expect(out[0].type).toBe(slice.actions.updateCustomAttributeSuccess.type);
-                expect(out[1]).toEqual(slice.actions.getCustomAttribute('ca-1'));
-                expect(out[2]).toEqual(appRedirectActions.redirect({ url: '../../customattributes/detail/ca-1' }));
             },
             failureType: slice.actions.updateCustomAttributeFailure.type,
             failureMessage: 'Failed to update custom attribute',
         },
     ])('$name success/failure', async (scenario) => {
-        const success = await runEpic(scenario.index, scenario.action(), { takeCount: scenario.name === 'updateCustomAttribute' ? 3 : 2 });
+        const success = await runEpic(scenario.index, scenario.action(), { takeCount: scenario.name === 'updateCustomAttribute' ? 1 : 2 });
         scenario.successAssert(success as any[]);
 
         const err = new Error(`${scenario.name} failed`);

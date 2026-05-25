@@ -191,6 +191,7 @@ export default function FilterWidgetRuleAction({
 
     const onUnselectFiltersKeyDown = useCallback(
         (e: React.KeyboardEvent<HTMLDivElement>) => {
+            if ((e.target as HTMLElement).id !== 'unselectFilters') return;
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 unselectAllFilters();
