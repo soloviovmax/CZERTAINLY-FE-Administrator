@@ -26,8 +26,9 @@ const booleanIcon = (value: boolean) =>
         <X size={16} className="text-[var(--status-danger-color)]" />
     );
 
-const hasConditionFailure = (trigger: TriggerHistoryObjectTriggerSummaryDto) => trigger.records.some((r) => r.condition);
-const hasActionFailure = (trigger: TriggerHistoryObjectTriggerSummaryDto) => trigger.records.some((r) => r.execution);
+const allConditionsMatched = (trigger: TriggerHistoryObjectTriggerSummaryDto) => !trigger.records.some((r) => r.condition);
+const allActionsPerformed = (trigger: TriggerHistoryObjectTriggerSummaryDto) =>
+    allConditionsMatched(trigger) && !trigger.records.some((r) => r.execution);
 
 export default function EventFiringDetailsDialog({ isOpen, onClose, entry }: Readonly<Props>) {
     const [selectedDetails, setSelectedDetails] = useState<SelectedDetails | undefined>(undefined);
@@ -56,8 +57,8 @@ export default function EventFiringDetailsDialog({ isOpen, onClose, entry }: Rea
                     <Link key="trigger" to={`/triggers/detail/${trigger.triggerUuid}`}>
                         {trigger.triggerName}
                     </Link>,
-                    booleanIcon(!hasConditionFailure(trigger)),
-                    booleanIcon(!hasActionFailure(trigger)),
+                    booleanIcon(allConditionsMatched(trigger)),
+                    booleanIcon(allActionsPerformed(trigger)),
                     dateFormatter(trigger.triggeredAt),
                     trigger.message ?? '',
                     <Button
