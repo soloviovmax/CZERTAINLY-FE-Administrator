@@ -512,7 +512,7 @@ describe('rules slice', () => {
 
     test('getEventTriggersAssociations / getEventTriggersAssociationsSuccess / getEventTriggersAssociationsFailure', () => {
         let next = reducer(
-            { ...initialState, associateEventTriggersSucceeded: true } as any,
+            { ...initialState, associateEventTriggersSucceeded: true },
             actions.getEventTriggersAssociations({ resource: 'CERTIFICATE' as any, associationObjectUuid: 'obj-1' }),
         );
         expect(next.isFetchingEventTriggersAssociation).toBe(true);
