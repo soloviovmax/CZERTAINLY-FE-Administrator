@@ -46,8 +46,27 @@ const buildEntry = (): EventHistoryDto => ({
                     },
                 ],
             },
+            {
+                objectUuid: 'example.cz',
+                matched: true,
+                ignored: false,
+                triggers: [
+                    {
+                        triggerUuid: 't-1',
+                        triggerName: 'cert_status_trigger',
+                        triggeredAt: '2026-05-14T10:24:13Z',
+                        message: 'Execution failed',
+                        records: [
+                            {
+                                message: 'Action execution error',
+                                execution: { uuid: 'e-1', name: 'send_notification' } as any,
+                            },
+                        ],
+                    },
+                ],
+            },
         ],
-        totalItems: 2,
+        totalItems: 3,
         itemsPerPage: 10,
         pageNumber: 1,
         totalPages: 1,
@@ -82,6 +101,27 @@ test.describe('EventFiringDetailsDialog', () => {
         await yahooRow.getByRole('button').click();
         await expect(page.getByText('Evaluation details')).toBeVisible();
         await expect(page.getByText('common_name ends with ".cz"')).toBeVisible();
+    });
+
+    test('row with no failure records shows success icons for both Conditions and Actions', async ({ mount, page }) => {
+        await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
+        const row = page.getByRole('row').filter({ hasText: 'google.cz' });
+        await expect(row.locator('td').nth(2).locator('svg.lucide-check')).toBeVisible();
+        await expect(row.locator('td').nth(3).locator('svg.lucide-check')).toBeVisible();
+    });
+
+    test('row with condition failure shows failure icons for both Conditions and Actions (actions skipped)', async ({ mount, page }) => {
+        await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
+        const row = page.getByRole('row').filter({ hasText: 'yahoo.com' });
+        await expect(row.locator('td').nth(2).locator('svg.lucide-x')).toBeVisible();
+        await expect(row.locator('td').nth(3).locator('svg.lucide-x')).toBeVisible();
+    });
+
+    test('row with execution failure shows success for Conditions and failure for Actions', async ({ mount, page }) => {
+        await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
+        const row = page.getByRole('row').filter({ hasText: 'example.cz' });
+        await expect(row.locator('td').nth(2).locator('svg.lucide-check')).toBeVisible();
+        await expect(row.locator('td').nth(3).locator('svg.lucide-x')).toBeVisible();
     });
 
     test('Close button triggers onClose', async ({ mount, page }) => {
