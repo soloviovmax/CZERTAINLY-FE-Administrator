@@ -927,6 +927,94 @@ test.describe('CustomTable', () => {
         expect(checkedRows[0]).not.toBe(firstId);
     });
 
+    test('should recalculate current page via onPageChanged so user stays on the page of the first visible item when page size shrinks', async ({
+        mount,
+        page,
+    }) => {
+        let calledWithSize: number | undefined;
+        let calledWithPage: number | undefined;
+        const paginationData = {
+            page: 10,
+            totalItems: 2000,
+            pageSize: 200,
+            loadedPageSize: 200,
+            totalPages: 10,
+            itemsPerPageOptions: [10, 200],
+        };
+
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasPagination={true}
+                    paginationData={paginationData}
+                    onPageSizeChanged={(size) => {
+                        calledWithSize = size;
+                    }}
+                    onPageChanged={(p) => {
+                        calledWithPage = p;
+                    }}
+                />,
+            ),
+        );
+
+        await component.getByTestId('select-pageSize-trigger').click();
+        await page.getByRole('option', { name: '10', exact: true }).click();
+
+        expect(calledWithSize).toBe(10);
+        expect(calledWithPage).toBe(181);
+    });
+
+    test('should not call onPageChanged when recalculated page equals current page', async ({ mount, page }) => {
+        let pageChangeCalls = 0;
+        const paginationData = {
+            page: 1,
+            totalItems: 50,
+            pageSize: 10,
+            loadedPageSize: 10,
+            totalPages: 5,
+            itemsPerPageOptions: [10, 20, 50],
+        };
+
+        const component = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasPagination={true}
+                    paginationData={paginationData}
+                    onPageSizeChanged={() => {}}
+                    onPageChanged={() => {
+                        pageChangeCalls += 1;
+                    }}
+                />,
+            ),
+        );
+
+        await component.getByTestId('select-pageSize-trigger').click();
+        await page.getByRole('option', { name: '20', exact: true }).click();
+
+        expect(pageChangeCalls).toBe(0);
+    });
+
+    test('should keep first visible item in view when page size changes in internal pagination', async ({ mount, page }) => {
+        const manyRows = Array.from({ length: 50 }, (_, i) => ({
+            id: i + 1,
+            columns: [`Row ${i + 1}`, `b`, `c`],
+        }));
+        const component = await mount(withProviders(<CustomTable headers={mockHeaders} data={manyRows} hasPagination={true} />));
+
+        await component.getByTestId('pagination-next').click();
+        await component.getByTestId('pagination-next').click();
+        await expect(component.getByText(/Showing 21 to 30 of 50/)).toBeVisible();
+
+        await component.getByTestId('select-pageSize-trigger').click();
+        await page.getByRole('option', { name: '20', exact: true }).click();
+
+        await expect(component.getByText(/Showing 21 to 40 of 50/)).toBeVisible();
+    });
+
     test('should reset page to last page when current page exceeds total pages after data shrinks', async ({ mount }) => {
         const paginationKey = 'custom-table-pagination:/roles:name|email|status|no-checkboxes|no-details';
         const store = createMockStore({
