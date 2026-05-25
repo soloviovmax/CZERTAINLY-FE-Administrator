@@ -168,6 +168,16 @@ test.describe('FilterWidgetRuleAction', () => {
         await expect(page.getByRole('button', { name: 'Add', exact: true })).toBeEnabled();
     });
 
+    test('value input accepts spaces typed via keyboard', async ({ mount, page }) => {
+        await mount(<FilterWidgetRuleActionTestWrapper />);
+        await selectFieldSourceMeta(page);
+        await selectFieldOption(page, 'Status');
+        const input = page.getByPlaceholder('Enter filter value');
+        await input.focus();
+        await page.keyboard.type('hello world');
+        await expect(input).toHaveValue('hello world');
+    });
+
     test('Add creates a badge and calls onActionsUpdate', async ({ mount, page }) => {
         const actions = await mountWithActions(mount);
         await addStringAction(page, 'Status', 'active');
