@@ -47,12 +47,21 @@ export default function EventFiringDetailsDialog({ isOpen, onClose, entry }: Rea
 
     const data: TableDataRow[] = useMemo(() => {
         const objects: TriggerHistoryObjectSummaryDto[] = entry?.objectHistories.items ?? [];
+        const resourcePath = entry?.resource?.toLowerCase();
         return objects.flatMap((obj, objIdx) => {
             const objectLabel = obj.objectUuid ?? obj.referenceObjectUuid ?? '';
+            const objectLink =
+                objectLabel && resourcePath ? (
+                    <Link key="object" to={`/${resourcePath}/detail/${objectLabel}`}>
+                        {objectLabel}
+                    </Link>
+                ) : (
+                    objectLabel
+                );
             return obj.triggers.map((trigger, trIdx) => ({
                 id: `${objectLabel || objIdx}-${trigger.triggerUuid}-${trIdx}`,
                 columns: [
-                    objectLabel,
+                    objectLink,
                     <Link key="trigger" to={`/triggers/detail/${trigger.triggerUuid}`}>
                         {trigger.triggerName}
                     </Link>,

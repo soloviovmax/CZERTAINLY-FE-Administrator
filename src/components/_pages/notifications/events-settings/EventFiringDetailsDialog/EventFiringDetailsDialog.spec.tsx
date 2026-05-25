@@ -76,6 +76,13 @@ test.describe('EventFiringDetailsDialog', () => {
         await expect(link).toHaveAttribute('href', /\/triggers\/detail\/t-1$/);
     });
 
+    test('Object column is a link to the resource detail page', async ({ mount, page }) => {
+        await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
+        const link = page.getByRole('link', { name: 'google.cz' });
+        await expect(link).toBeVisible();
+        await expect(link).toHaveAttribute('href', /\/certificates\/detail\/google\.cz$/);
+    });
+
     test('clicking Details opens evaluation details dialog', async ({ mount, page }) => {
         await mount(withProviders(<EventFiringDetailsDialog isOpen={true} onClose={() => {}} entry={buildEntry()} />));
         const yahooRow = page.getByRole('row').filter({ hasText: 'yahoo.com' });
