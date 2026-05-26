@@ -257,21 +257,17 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
     }, [mode, eventTriggerAssociation, eventsSettings, getResourceEventModel, resourceEventEnum, resourceEnum, onEdit]);
 
     const eventOptions = useMemo(() => {
-        if (mode === 'association') {
-            return resourceEvents
-                .filter((event) => !eventTriggerAssociation?.[event.event]?.length)
-                .map((event) => ({
-                    value: event.event,
-                    label: getEnumLabel(resourceEventEnum, event.event),
-                }));
-        }
-        return allResourceEvents
-            .filter((event) => !eventsSettings?.eventsMapping?.[event.event]?.length)
+        const source = mode === 'association' ? resourceEvents : allResourceEvents;
+        const isUsed = (event: ResourceEvent) =>
+            mode === 'association' ? !!eventTriggerAssociation?.[event]?.length : !!eventsSettings?.eventsMapping?.[event]?.length;
+
+        return source
+            .filter((event) => !isUsed(event.event) || event.event === editedEvent)
             .map((event) => ({
                 value: event.event,
                 label: getEnumLabel(resourceEventEnum, event.event),
             }));
-    }, [mode, allResourceEvents, resourceEvents, eventTriggerAssociation, resourceEventEnum, eventsSettings]);
+    }, [mode, allResourceEvents, resourceEvents, eventTriggerAssociation, resourceEventEnum, eventsSettings, editedEvent]);
 
     const buttons: WidgetButtonProps[] = useMemo(
         () => [
