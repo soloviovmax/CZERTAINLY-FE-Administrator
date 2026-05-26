@@ -19,6 +19,12 @@ import type { ConditionItemRequestDto } from './';
  */
 export interface UpdateConditionRequestDto {
     /**
+     * Name of the condition
+     * @type {string}
+     * @memberof UpdateConditionRequestDto
+     */
+    name?: string;
+    /**
      * Description of the condition
      * @type {string}
      * @memberof UpdateConditionRequestDto

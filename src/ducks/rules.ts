@@ -534,6 +534,10 @@ export const slice = createSlice({
         },
 
         updateTriggerSuccess: (state, action: PayloadAction<{ trigger: TriggerDetailModel }>) => {
+            state.triggers = state.triggers.map((trigger) =>
+                trigger.uuid === action.payload.trigger.uuid ? action.payload.trigger : trigger,
+            );
+
             if (state.triggerDetails?.uuid === action.payload.trigger.uuid) {
                 state.triggerDetails = action.payload.trigger;
             }

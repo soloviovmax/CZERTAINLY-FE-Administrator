@@ -19,6 +19,12 @@ import type { Resource, ResourceEvent, TriggerType } from './';
  */
 export interface UpdateTriggerRequestDto {
     /**
+     * Name of the trigger
+     * @type {string}
+     * @memberof UpdateTriggerRequestDto
+     */
+    name?: string;
+    /**
      * Description of the trigger
      * @type {string}
      * @memberof UpdateTriggerRequestDto

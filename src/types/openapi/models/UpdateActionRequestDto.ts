@@ -17,6 +17,12 @@
  */
 export interface UpdateActionRequestDto {
     /**
+     * Name of the action
+     * @type {string}
+     * @memberof UpdateActionRequestDto
+     */
+    name?: string;
+    /**
      * Description of the action
      * @type {string}
      * @memberof UpdateActionRequestDto

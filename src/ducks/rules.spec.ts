@@ -472,6 +472,26 @@ describe('rules slice', () => {
         expect(next.isUpdatingTrigger).toBe(false);
     });
 
+    test('updateTriggerSuccess patches the triggers list entry with matching uuid', () => {
+        const withList = {
+            ...initialState,
+            triggers: [
+                { uuid: 't-1', name: 'old' },
+                { uuid: 't-2', name: 'untouched' },
+            ],
+        } as any;
+
+        const next = reducer(
+            { ...withList, isUpdatingTrigger: true },
+            actions.updateTriggerSuccess({ trigger: { uuid: 't-1', name: 'new' } } as any),
+        );
+
+        expect(next.triggers).toEqual([
+            { uuid: 't-1', name: 'new' },
+            { uuid: 't-2', name: 'untouched' },
+        ]);
+    });
+
     test('updateTriggerSuccess does not update triggerDetails when uuid differs', () => {
         const withTrigger = {
             ...initialState,

@@ -19,6 +19,12 @@ import type { ExecutionItemRequestDto } from './';
  */
 export interface UpdateExecutionRequestDto {
     /**
+     * Name of the execution
+     * @type {string}
+     * @memberof UpdateExecutionRequestDto
+     */
+    name?: string;
+    /**
      * Description of the execution
      * @type {string}
      * @memberof UpdateExecutionRequestDto

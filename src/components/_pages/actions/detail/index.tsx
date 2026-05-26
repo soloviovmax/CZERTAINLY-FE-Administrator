@@ -4,7 +4,9 @@ import Dialog from 'components/Dialog';
 import ConditionsExecutionsList from 'components/ExecutionConditionItemsList';
 import Breadcrumb from 'components/Breadcrumb';
 import Widget from 'components/Widget';
-import { propertyValueActionsHeaders, createDeleteButton } from 'utils/automationDetailUtils';
+import EditNameDescriptionDialog from 'components/EditNameDescriptionDialog';
+import { propertyValueActionsHeaders } from 'utils/automationDetailUtils';
+import { getEditAndDeleteWidgetButtons } from 'utils/widget';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,9 +15,7 @@ import { Link, useParams } from 'react-router';
 import { PlatformEnum, Resource } from 'types/openapi';
 import Button from 'components/Button';
 import Container from 'components/Container';
-import TextInput from 'components/TextInput';
-import { Check, X, Trash2 } from 'lucide-react';
-import EditIcon from 'components/icons/EditIcon';
+import { Trash2 } from 'lucide-react';
 import DetailPageSkeleton from 'components/DetailPageSkeleton';
 
 interface SelectChangeValue {
@@ -33,13 +33,7 @@ const RuleDetails = () => {
     const executions = useSelector(rulesSelectors.executions);
 
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const [updateDescriptionEditEnable, setUpdateDescriptionEditEnable] = useState<boolean>(false);
-    const [updatedDescription, setUpdatedDescription] = useState('');
-
-    useEffect(() => {
-        if (!actionDetails?.description || actionDetails.uuid !== id) return;
-        setUpdatedDescription(actionDetails.description);
-    }, [actionDetails, id]);
+    const [isEditOpen, setIsEditOpen] = useState(false);
 
     const getFreshDetails = useCallback(() => {
         if (!id) return;
@@ -71,23 +65,25 @@ const RuleDetails = () => {
         setConfirmDelete(false);
     }, [dispatch, id]);
 
-    const onUpdateDescriptionConfirmed = useCallback(() => {
-        if (!id || !updateDescriptionEditEnable) return;
-        if (updatedDescription !== actionDetails?.description) {
+    const onEditSubmit = useCallback(
+        ({ name, description }: { name: string; description: string }) => {
+            if (!id) return;
             dispatch(
                 rulesActions.updateAction({
                     actionUuid: id,
                     action: {
-                        description: updatedDescription,
+                        name,
+                        description,
                         executionsUuids: actionDetails?.executions?.length
                             ? actionDetails?.executions.map((execution) => execution.uuid)
                             : [],
                     },
                 }),
             );
-        }
-        setUpdateDescriptionEditEnable(false);
-    }, [dispatch, id, actionDetails, updatedDescription, updateDescriptionEditEnable]);
+            setIsEditOpen(false);
+        },
+        [dispatch, id, actionDetails],
+    );
 
     const onUpdateExecutionsConfirmed = useCallback(
         (newValues: SelectChangeValue[]) => {
@@ -131,7 +127,7 @@ const RuleDetails = () => {
         [dispatch, id, actionDetails?.executions, actionDetails?.description],
     );
 
-    const buttons = useMemo(() => createDeleteButton(() => setConfirmDelete(true)), []);
+    const buttons = useMemo(() => getEditAndDeleteWidgetButtons(() => setIsEditOpen(true), setConfirmDelete), []);
     const tableHeader = propertyValueActionsHeaders;
 
     const conditionGroupsDetailData: TableDataRow[] = useMemo(
@@ -151,74 +147,12 @@ const RuleDetails = () => {
                           id: 'resource',
                           columns: ['Resource', getEnumLabel(resourceTypeEnum, actionDetails.resource), ''],
                       },
-
                       {
                           id: 'description',
-                          columns: [
-                              'Description',
-                              updateDescriptionEditEnable ? (
-                                  <TextInput
-                                      value={updatedDescription}
-                                      onChange={(value) => setUpdatedDescription(value)}
-                                      placeholder="Enter Description"
-                                  />
-                              ) : (
-                                  actionDetails.description || ''
-                              ),
-                              <div key="description-actions" className="flex items-center gap-2">
-                                  {updateDescriptionEditEnable ? (
-                                      <>
-                                          <Button
-                                              variant="transparent"
-                                              color="primary"
-                                              title="Update Description"
-                                              onClick={onUpdateDescriptionConfirmed}
-                                              disabled={
-                                                  isUpdatingAction ||
-                                                  updatedDescription === actionDetails.description ||
-                                                  updatedDescription === ''
-                                              }
-                                          >
-                                              <Check size={16} />
-                                          </Button>
-                                          <Button
-                                              variant="transparent"
-                                              color="danger"
-                                              title="Cancel"
-                                              disabled={isUpdatingAction}
-                                              onClick={() => {
-                                                  setUpdateDescriptionEditEnable(false);
-                                                  setUpdatedDescription(actionDetails?.description || '');
-                                              }}
-                                          >
-                                              <X size={16} />
-                                          </Button>
-                                      </>
-                                  ) : (
-                                      <Button
-                                          variant="transparent"
-                                          color="secondary"
-                                          title="Update Description"
-                                          onClick={() => {
-                                              setUpdateDescriptionEditEnable(true);
-                                          }}
-                                      >
-                                          <EditIcon size={16} />
-                                      </Button>
-                                  )}
-                              </div>,
-                          ],
+                          columns: ['Description', actionDetails.description || '', ''],
                       },
                   ],
-        [
-            actionDetails,
-            resourceTypeEnum,
-            onUpdateDescriptionConfirmed,
-            updateDescriptionEditEnable,
-            isUpdatingAction,
-            updatedDescription,
-            isFetchingActionDetails,
-        ],
+        [actionDetails, resourceTypeEnum, isFetchingActionDetails],
     );
 
     const executionDataHeaders = useMemo(
@@ -345,6 +279,15 @@ const RuleDetails = () => {
                 </div>
 
                 {renderActionExecutions}
+                <EditNameDescriptionDialog
+                    isOpen={isEditOpen}
+                    caption="Edit Action"
+                    name={actionDetails?.name || ''}
+                    description={actionDetails?.description || ''}
+                    isUpdating={isUpdatingAction}
+                    onClose={() => setIsEditOpen(false)}
+                    onSubmit={onEditSubmit}
+                />
                 <Dialog
                     isOpen={confirmDelete}
                     caption={`Delete an Action`}

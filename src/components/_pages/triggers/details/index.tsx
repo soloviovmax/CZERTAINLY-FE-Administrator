@@ -1,11 +1,13 @@
 import DetailPageSkeleton from 'components/DetailPageSkeleton';
-import CustomTable, { type TableDataRow } from 'components/CustomTable';
+import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
+import EditNameDescriptionDialog from 'components/EditNameDescriptionDialog';
 import FlowChart from 'components/FlowChart';
 import TabLayout from 'components/Layout/TabLayout';
 import Switch from 'components/Switch';
 import Widget from 'components/Widget';
-import { propertyValueActionsHeaders, createDeleteButton } from 'utils/automationDetailUtils';
+import { propertyValueActionsHeaders } from 'utils/automationDetailUtils';
+import { getEditAndDeleteWidgetButtons } from 'utils/widget';
 import { actions as alertActions } from 'ducks/alerts';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
@@ -14,12 +16,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router';
 import Button from 'components/Button';
-import TextInput from 'components/TextInput';
 import { PlatformEnum, Resource } from 'types/openapi';
 import { DeviceType, useDeviceType } from 'utils/common-hooks';
 import Breadcrumb from 'components/Breadcrumb';
-import { Check, X, Trash2 } from 'lucide-react';
-import EditIcon from 'components/icons/EditIcon';
+import { Trash2 } from 'lucide-react';
 
 interface SelectChangeValue {
     value: string;
@@ -37,8 +37,7 @@ const TriggerDetails = () => {
     const rules = useSelector(rulesSelectors.rules);
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmIgnoreTrigger, setConfirmIgnoreTrigger] = useState(false);
-    const [updateDescriptionEditEnable, setUpdateDescriptionEditEnable] = useState<boolean>(false);
-    const [updatedDescription, setUpdatedDescription] = useState('');
+    const [isEditOpen, setIsEditOpen] = useState(false);
     const triggerTypeEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.TriggerType));
     const deviceType = useDeviceType();
     const resourceEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.Resource));
@@ -52,11 +51,6 @@ const TriggerDetails = () => {
         };
     }, [deviceType]);
     const { nodes, edges } = useTransformTriggerObjectToNodesAndEdges(triggerDetails, rules, actions);
-
-    useEffect(() => {
-        if (!triggerDetails?.description || triggerDetails.uuid !== id) return;
-        setUpdatedDescription(triggerDetails.description);
-    }, [triggerDetails, id]);
 
     const getFreshDetails = useCallback(() => {
         if (!id) return;
@@ -117,15 +111,15 @@ const TriggerDetails = () => {
         setConfirmIgnoreTrigger(false);
     }, [dispatch, triggerDetails]);
 
-    const onUpdateDescriptionConfirmed = useCallback(() => {
-        if (!id || !triggerDetails || !updateDescriptionEditEnable) return;
-
-        if (updatedDescription !== triggerDetails.description) {
+    const onEditSubmit = useCallback(
+        ({ name, description }: { name: string; description: string }) => {
+            if (!id || !triggerDetails) return;
             dispatch(
                 rulesActions.updateTrigger({
                     triggerUuid: id,
                     trigger: {
-                        description: updatedDescription,
+                        name,
+                        description,
                         ignoreTrigger: triggerDetails.ignoreTrigger,
                         resource: triggerDetails.resource,
                         type: triggerDetails.type,
@@ -135,9 +129,10 @@ const TriggerDetails = () => {
                     },
                 }),
             );
-        }
-        setUpdateDescriptionEditEnable(false);
-    }, [dispatch, id, triggerDetails, updatedDescription, updateDescriptionEditEnable]);
+            setIsEditOpen(false);
+        },
+        [dispatch, id, triggerDetails],
+    );
 
     const onUpdateActionsConfirmed = useCallback(
         (newValues: SelectChangeValue[]) => {
@@ -239,7 +234,7 @@ const TriggerDetails = () => {
         [dispatch, id, triggerDetails],
     );
 
-    const buttons = useMemo(() => createDeleteButton(() => setConfirmDelete(true)), []);
+    const buttons = useMemo(() => getEditAndDeleteWidgetButtons(() => setIsEditOpen(true), setConfirmDelete), []);
     const triggerDetailHeader = propertyValueActionsHeaders;
 
     const triggerDetailsData: TableDataRow[] = useMemo(
@@ -287,76 +282,11 @@ const TriggerDetails = () => {
                       },
                       {
                           id: 'description',
-                          columns: [
-                              'Description',
-                              updateDescriptionEditEnable ? (
-                                  <TextInput
-                                      key="desc-input"
-                                      value={updatedDescription}
-                                      onChange={(value) => setUpdatedDescription(value)}
-                                      placeholder="Enter Description"
-                                  />
-                              ) : (
-                                  (triggerDetails.description ?? '')
-                              ),
-                              <div key="desc-actions">
-                                  {updateDescriptionEditEnable ? (
-                                      <div className="flex gap-2">
-                                          <Button
-                                              variant="transparent"
-                                              color="secondary"
-                                              title="Update Description"
-                                              onClick={onUpdateDescriptionConfirmed}
-                                              disabled={
-                                                  isUpdatingTrigger ||
-                                                  updatedDescription === triggerDetails.description ||
-                                                  updatedDescription === ''
-                                              }
-                                          >
-                                              <Check size={16} />
-                                          </Button>
-                                          <Button
-                                              variant="transparent"
-                                              color="danger"
-                                              title="Cancel"
-                                              disabled={isUpdatingTrigger}
-                                              onClick={() => {
-                                                  setUpdateDescriptionEditEnable(false);
-                                                  setUpdatedDescription(triggerDetails?.description || '');
-                                              }}
-                                          >
-                                              <X size={16} />
-                                          </Button>
-                                      </div>
-                                  ) : (
-                                      <Button
-                                          variant="transparent"
-                                          color="secondary"
-                                          title="Update Description"
-                                          onClick={() => {
-                                              setUpdateDescriptionEditEnable(true);
-                                          }}
-                                      >
-                                          <EditIcon size={16} />
-                                      </Button>
-                                  )}
-                              </div>,
-                          ],
+                          columns: ['Description', triggerDetails.description ?? '', ''],
                       },
                   ]
                 : [],
-        [
-            triggerTypeEnum,
-            triggerDetails,
-            resourceTypeEnum,
-            onUpdateDescriptionConfirmed,
-            updateDescriptionEditEnable,
-            isUpdatingTrigger,
-            updatedDescription,
-            eventNameEnum,
-            dispatch,
-            isFetchingTriggerDetail,
-        ],
+        [triggerTypeEnum, triggerDetails, resourceTypeEnum, eventNameEnum, dispatch, isFetchingTriggerDetail],
     );
 
     const actionsDataHeader = useMemo(
@@ -434,7 +364,7 @@ const TriggerDetails = () => {
     const rulesData: TableDataRow[] = useMemo(
         () =>
             triggerDetails?.rules.length
-                ? triggerDetails?.rules.map((rule, i) => {
+                ? triggerDetails?.rules.map((rule) => {
                       return {
                           id: rule.uuid,
                           columns: [
@@ -563,6 +493,16 @@ const TriggerDetails = () => {
                         ),
                     },
                 ]}
+            />
+
+            <EditNameDescriptionDialog
+                isOpen={isEditOpen}
+                caption="Edit Trigger"
+                name={triggerDetails?.name || ''}
+                description={triggerDetails?.description || ''}
+                isUpdating={isUpdatingTrigger}
+                onClose={() => setIsEditOpen(false)}
+                onSubmit={onEditSubmit}
             />
 
             <Dialog

@@ -4,18 +4,16 @@ import CustomTable, { type TableDataRow } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import Breadcrumb from 'components/Breadcrumb';
 import Widget from 'components/Widget';
-import { propertyValueActionsHeaders, createDeleteButton } from 'utils/automationDetailUtils';
+import EditNameDescriptionDialog from 'components/EditNameDescriptionDialog';
+import { propertyValueActionsHeaders } from 'utils/automationDetailUtils';
+import { getEditAndDeleteWidgetButtons } from 'utils/widget';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
-import Button from 'components/Button';
 import Container from 'components/Container';
-import TextInput from 'components/TextInput';
 import { PlatformEnum, Resource } from 'types/openapi';
-import { Check, X } from 'lucide-react';
-import EditIcon from 'components/icons/EditIcon';
 
 const ConditionDetails = () => {
     const { id } = useParams();
@@ -27,15 +25,9 @@ const ConditionDetails = () => {
     const isUpdatingGroupDetails = useSelector(rulesSelectors.isUpdatingCondition);
 
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const [updateDescriptionEditEnable, setUpdateDescriptionEditEnable] = useState<boolean>(false);
-    const [updatedDescription, setUpdatedDescription] = useState('');
+    const [isEditOpen, setIsEditOpen] = useState(false);
 
     const isBusy = useMemo(() => isFetchingConditionGroup || isUpdatingGroupDetails, [isFetchingConditionGroup, isUpdatingGroupDetails]);
-
-    useEffect(() => {
-        if (!conditionDetails?.description || conditionDetails.uuid !== id) return;
-        setUpdatedDescription(conditionDetails.description);
-    }, [conditionDetails, id]);
 
     const getFreshDetails = useCallback(() => {
         if (!id) return;
@@ -52,23 +44,25 @@ const ConditionDetails = () => {
         setConfirmDelete(false);
     }, [dispatch, id]);
 
-    const onUpdateDescriptionConfirmed = useCallback(() => {
-        if (!id || !updateDescriptionEditEnable) return;
-        if (updatedDescription !== conditionDetails?.description) {
+    const onEditSubmit = useCallback(
+        ({ name, description }: { name: string; description: string }) => {
+            if (!id) return;
             dispatch(
                 rulesActions.updateCondition({
                     conditionUuid: id,
                     condition: {
-                        description: updatedDescription,
+                        name,
+                        description,
                         items: conditionDetails?.items || [],
                     },
                 }),
             );
-        }
-        setUpdateDescriptionEditEnable(false);
-    }, [dispatch, id, conditionDetails, updatedDescription, updateDescriptionEditEnable]);
+            setIsEditOpen(false);
+        },
+        [dispatch, id, conditionDetails],
+    );
 
-    const buttons = useMemo(() => createDeleteButton(() => setConfirmDelete(true)), []);
+    const buttons = useMemo(() => getEditAndDeleteWidgetButtons(() => setIsEditOpen(true), setConfirmDelete), []);
     const tableHeader = propertyValueActionsHeaders;
 
     const conditionGroupsDetailData: TableDataRow[] = useMemo(
@@ -94,75 +88,10 @@ const ConditionDetails = () => {
                       },
                       {
                           id: 'description',
-                          columns: [
-                              'Description',
-                              updateDescriptionEditEnable ? (
-                                  <TextInput
-                                      key="desc-input"
-                                      onChange={(value) => setUpdatedDescription(value)}
-                                      value={updatedDescription}
-                                      placeholder="Enter Description"
-                                  />
-                              ) : (
-                                  conditionDetails.description || ''
-                              ),
-                              <div key="desc-actions">
-                                  {updateDescriptionEditEnable ? (
-                                      <div className="flex gap-2">
-                                          <Button
-                                              variant="transparent"
-                                              color="secondary"
-                                              title="Update Description"
-                                              onClick={onUpdateDescriptionConfirmed}
-                                              disabled={
-                                                  isUpdatingGroupDetails ||
-                                                  updatedDescription === conditionDetails.description ||
-                                                  updatedDescription === ''
-                                              }
-                                          >
-                                              <Check size={16} />
-                                          </Button>
-                                          <Button
-                                              variant="transparent"
-                                              color="danger"
-                                              title="Cancel"
-                                              onClick={() => {
-                                                  setUpdateDescriptionEditEnable(false);
-                                                  setUpdatedDescription(conditionDetails?.description || '');
-                                              }}
-                                              disabled={isUpdatingGroupDetails}
-                                          >
-                                              <X size={16} />
-                                          </Button>
-                                      </div>
-                                  ) : (
-                                      <Button
-                                          variant="transparent"
-                                          color="secondary"
-                                          title="Update Description"
-                                          onClick={() => {
-                                              setUpdateDescriptionEditEnable(true);
-                                          }}
-                                          disabled={isUpdatingGroupDetails}
-                                      >
-                                          <EditIcon size={16} />
-                                      </Button>
-                                  )}
-                              </div>,
-                          ],
+                          columns: ['Description', conditionDetails.description || '', ''],
                       },
                   ],
-        [
-            conditionDetails,
-            conditionTypeEnum,
-            resourceTypeEnum,
-            setUpdateDescriptionEditEnable,
-            updateDescriptionEditEnable,
-            onUpdateDescriptionConfirmed,
-            isUpdatingGroupDetails,
-            updatedDescription,
-            isFetchingConditionGroup,
-        ],
+        [conditionDetails, conditionTypeEnum, resourceTypeEnum, isFetchingConditionGroup],
     );
 
     if (isFetchingConditionGroup && !conditionDetails) {
@@ -195,6 +124,15 @@ const ConditionDetails = () => {
                     <ConditionAndSetFieldExecutionItemsViewer resource={conditionDetails.resource} formType="conditionItems" />
                 )}
             </div>
+            <EditNameDescriptionDialog
+                isOpen={isEditOpen}
+                caption="Edit Condition"
+                name={conditionDetails?.name || ''}
+                description={conditionDetails?.description || ''}
+                isUpdating={isUpdatingGroupDetails}
+                onClose={() => setIsEditOpen(false)}
+                onSubmit={onEditSubmit}
+            />
             <Dialog
                 isOpen={confirmDelete}
                 caption={`Delete a Condition`}
