@@ -10,6 +10,7 @@ import Select from 'components/Select';
 import Button from 'components/Button';
 import Label from 'components/Label';
 import TextInput from 'components/TextInput';
+import DatePicker from 'components/DatePicker';
 import Badge from 'components/Badge';
 import type { Observable } from 'rxjs';
 import type { SearchFieldListModel } from 'types/certificate';
@@ -41,6 +42,10 @@ function formatBadgeDataValue(v: any, field: any, platformEnums: Record<string, 
                 : getFormattedDateTime(labelStr as string);
         }
         return v.label ?? String(v);
+    }
+    if (Array.isArray(field?.value)) {
+        const matched = field.value.find((fv: any) => fv?.uuid === v || fv?.value === v || fv?.reference === v);
+        if (matched) return matched.name ?? matched.label ?? matched.data ?? String(v);
     }
     if (field?.attributeContentType === AttributeContentType.Date) {
         return getFormattedDate(v as string);
@@ -657,18 +662,30 @@ export default function FilterWidgetRuleAction({
     const renderBooleanOrObjectValueField =
         currentField?.type === FilterFieldType.Boolean ? renderBooleanValueSelect : renderObjectValueSelector;
 
-    const renderValueField = isTextInputField ? (
+    const resolvedInputType = (() => {
+        const typeFromFieldType = currentField?.type ? getFormTypeFromFilterFieldType(currentField?.type) : 'text';
+        return currentField?.attributeContentType && checkIfFieldAttributeTypeIsDate(currentField)
+            ? getFormTypeFromAttributeContentType(currentField?.attributeContentType)
+            : typeFromFieldType;
+    })();
+
+    const renderDateOrDatetimePicker = (
+        <DatePicker
+            id="valueSelect"
+            value={(() => {
+                const raw = filterValue !== undefined && typeof filterValue !== 'object' ? String(filterValue) : '';
+                return raw ? raw.replace(' ', 'T') : '';
+            })()}
+            onChange={(value) => setFilterValue(structuredClone(value))}
+            disabled={!filterField}
+            timePicker={resolvedInputType === 'datetime-local'}
+        />
+    );
+
+    const renderTextInputField = (
         <TextInput
             id="valueSelect"
-            type={(() => {
-                const typeFromFieldType = currentField?.type ? getFormTypeFromFilterFieldType(currentField?.type) : 'text';
-                const rawType =
-                    currentField?.attributeContentType && checkIfFieldAttributeTypeIsDate(currentField)
-                        ? getFormTypeFromAttributeContentType(currentField?.attributeContentType)
-                        : typeFromFieldType;
-
-                return supportedInputTypes.has(rawType) ? (rawType as any) : 'text';
-            })()}
+            type={supportedInputTypes.has(resolvedInputType) ? (resolvedInputType as any) : 'text'}
             value={filterValue !== undefined && typeof filterValue !== 'object' ? String(filterValue) : ''}
             onChange={(value) => {
                 setFilterValue(structuredClone(value));
@@ -676,9 +693,11 @@ export default function FilterWidgetRuleAction({
             placeholder="Enter filter value"
             disabled={!filterField}
         />
-    ) : (
-        renderBooleanOrObjectValueField
     );
+
+    const isDateOrDatetime = resolvedInputType === 'date' || resolvedInputType === 'datetime-local';
+    const renderTextOrDateField = isDateOrDatetime ? renderDateOrDatetimePicker : renderTextInputField;
+    const renderValueField = isTextInputField ? renderTextOrDateField : renderBooleanOrObjectValueField;
 
     return (
         <Widget title={title} busy={isFetchingAvailableFilters} titleSize="large">
