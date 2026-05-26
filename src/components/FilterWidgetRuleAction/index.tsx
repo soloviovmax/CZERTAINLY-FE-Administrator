@@ -682,24 +682,22 @@ export default function FilterWidgetRuleAction({
         />
     );
 
-    const renderValueField = isTextInputField ? (
-        resolvedInputType === 'date' || resolvedInputType === 'datetime-local' ? (
-            renderDateOrDatetimePicker
-        ) : (
-            <TextInput
-                id="valueSelect"
-                type={supportedInputTypes.has(resolvedInputType) ? (resolvedInputType as any) : 'text'}
-                value={filterValue !== undefined && typeof filterValue !== 'object' ? String(filterValue) : ''}
-                onChange={(value) => {
-                    setFilterValue(structuredClone(value));
-                }}
-                placeholder="Enter filter value"
-                disabled={!filterField}
-            />
-        )
-    ) : (
-        renderBooleanOrObjectValueField
+    const renderTextInputField = (
+        <TextInput
+            id="valueSelect"
+            type={supportedInputTypes.has(resolvedInputType) ? (resolvedInputType as any) : 'text'}
+            value={filterValue !== undefined && typeof filterValue !== 'object' ? String(filterValue) : ''}
+            onChange={(value) => {
+                setFilterValue(structuredClone(value));
+            }}
+            placeholder="Enter filter value"
+            disabled={!filterField}
+        />
     );
+
+    const isDateOrDatetime = resolvedInputType === 'date' || resolvedInputType === 'datetime-local';
+    const renderTextOrDateField = isDateOrDatetime ? renderDateOrDatetimePicker : renderTextInputField;
+    const renderValueField = isTextInputField ? renderTextOrDateField : renderBooleanOrObjectValueField;
 
     return (
         <Widget title={title} busy={isFetchingAvailableFilters} titleSize="large">

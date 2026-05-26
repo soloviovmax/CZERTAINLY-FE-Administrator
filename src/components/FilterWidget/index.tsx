@@ -39,6 +39,8 @@ import Badge from 'components/Badge';
 import { validateDuration, validatePostgresPosixRegex } from 'utils/validators';
 import Label from 'components/Label';
 
+type ScalarFilterValue = string | number | null | undefined;
+
 const deepCopy = <T,>(value: T): T => (value == null ? value : structuredClone(value));
 
 function mapFilterToRequestDto(f: SearchFilterModel): SearchFilterRequestDto {
@@ -470,7 +472,7 @@ export default function FilterWidget({
                     <TextInput
                         id="valueSelect"
                         type="text"
-                        value={(filterValue as string | number | null | undefined)?.toString() ?? ''}
+                        value={(filterValue as ScalarFilterValue)?.toString() ?? ''}
                         onChange={(value) => {
                             setFilterValue(deepCopy(value));
                         }}
@@ -492,7 +494,7 @@ export default function FilterWidget({
             }
             const isDisabled = !filterField || !filterCondition || noValue[filterCondition.value];
             if (inputType === 'date' || inputType === 'datetime-local') {
-                const stringValue = (filterValue as string | number | null | undefined)?.toString() ?? '';
+                const stringValue = (filterValue as ScalarFilterValue)?.toString() ?? '';
                 return (
                     <DatePicker
                         id="valueSelect"
@@ -508,7 +510,7 @@ export default function FilterWidget({
                     <TextInput
                         id="valueSelect"
                         type={inputType}
-                        value={(filterValue as string | number | null | undefined)?.toString() ?? ''}
+                        value={(filterValue as ScalarFilterValue)?.toString() ?? ''}
                         onChange={(value: string) => {
                             setFilterValue(deepCopy(value));
 
