@@ -49,7 +49,7 @@ export const validateAlphaNumericWithoutAccents = () => {
 
 export const validateAlphaNumericWithSpecialChars = () => {
     return validatePattern(
-        /^[a-zA-Z0-9À-ž]+([ '-/_][a-zA-Z0-9À-ž]+)*$/,
+        /^[a-zA-Z0-9À-ž'\-/_]+( [a-zA-Z0-9À-ž'\-/_]+)*$/,
         'Value can only contain numbers or letters eventually separated by a space, dash, apostrophe or slash and underscore',
     );
 };
