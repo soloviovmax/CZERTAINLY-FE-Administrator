@@ -45,9 +45,11 @@ const ExecutionsItemsList = ({
             </div>
         </div>
     ) : (
-        <div key={executionUuid} className="flex gap-2 items-center">
-            <h6 className="text-gray-500">{`${executionName}`}</h6>
-            {renderExecutionItems(executionItems, executionType, availableFilters, platformEnums, searchGroupEnum, 'badge')}
+        <div key={executionUuid} className="flex gap-2 items-start">
+            <h6 className="text-gray-500 whitespace-nowrap">{`${executionName}`}</h6>
+            <div className="flex flex-wrap gap-2">
+                {renderExecutionItems(executionItems, executionType, availableFilters, platformEnums, searchGroupEnum, 'badge')}
+            </div>
         </div>
     );
 };
