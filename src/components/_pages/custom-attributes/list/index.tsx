@@ -151,7 +151,7 @@ export default function CustomAttributesList() {
                     <Link key={customAttribute.uuid} to={`./detail/${customAttribute.uuid}`}>
                         {customAttribute.name}
                     </Link>,
-                    (customAttribute as { label?: string }).label ?? '',
+                    customAttribute.label ?? '',
                     customAttribute.version || '',
                     <StatusBadge key="enabled" enabled={customAttribute.enabled} />,
                     getEnumLabel(attributeContentTypeEnum, customAttribute.contentType),

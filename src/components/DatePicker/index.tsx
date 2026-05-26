@@ -151,8 +151,11 @@ function DatePicker({ value, onChange, onBlur, disabled, id, invalid, error, cla
     }, [isOpen, onBlur]);
 
     useEffect(() => {
-        // Block Radix Dialog's focus trap (document focusin/focusout in bubble phase)
-        // from stealing focus when the portaled dropdown is opened inside a modal.
+        // Radix Dialog's modal focus trap is a bubble-phase document listener that
+        // yanks focus back inside the dialog. Intercepting in capture phase here lets
+        // us cancel propagation before that bubble listener runs, but only for focus
+        // events touching the portaled dropdown — other capture-phase listeners on
+        // document still fire normally.
         if (!isOpen) return;
         const handler = (event: FocusEvent) => {
             const dropdown = dropdownRef.current;
@@ -160,7 +163,7 @@ function DatePicker({ value, onChange, onBlur, disabled, id, invalid, error, cla
             const target = event.target as Node | null;
             const relatedTarget = event.relatedTarget as Node | null;
             if ((target && dropdown.contains(target)) || (relatedTarget && dropdown.contains(relatedTarget))) {
-                event.stopImmediatePropagation();
+                event.stopPropagation();
             }
         };
         document.addEventListener('focusin', handler, true);

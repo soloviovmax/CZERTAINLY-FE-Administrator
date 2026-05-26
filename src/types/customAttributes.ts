@@ -1,13 +1,21 @@
 import type { BaseAttributeContentModel } from './attributes';
-import type { CustomAttributeCreateRequestDto, CustomAttributeDefinitionDetailDto, CustomAttributeUpdateRequestDto } from './openapi';
+import type {
+    CustomAttributeCreateRequestDto,
+    CustomAttributeDefinitionDetailDto,
+    CustomAttributeDefinitionDto,
+    CustomAttributeUpdateRequestDto,
+} from './openapi';
 
 export type {
     CustomAttributeDefinitionDto as CustomAttributeResponseDto,
-    CustomAttributeDefinitionDto as CustomAttributeResponseModel,
     CustomAttributeDefinitionDetailDto as CustomAttributeDetailResponseDto,
     CustomAttributeCreateRequestDto,
     CustomAttributeUpdateRequestDto,
 } from './openapi';
+
+// OpenAPI list DTO omits `label`, but the backend returns it. Drop this override
+// once the spec is regenerated.
+export type CustomAttributeResponseModel = CustomAttributeDefinitionDto & { label?: string };
 
 export type CustomAttributeDetailResponseModel = Omit<CustomAttributeDefinitionDetailDto, 'content'> & {
     content?: Array<BaseAttributeContentModel>;
