@@ -150,6 +150,27 @@ function DatePicker({ value, onChange, onBlur, disabled, id, invalid, error, cla
         };
     }, [isOpen, onBlur]);
 
+    useEffect(() => {
+        // Block Radix Dialog's focus trap (document focusin/focusout in bubble phase)
+        // from stealing focus when the portaled dropdown is opened inside a modal.
+        if (!isOpen) return;
+        const handler = (event: FocusEvent) => {
+            const dropdown = dropdownRef.current;
+            if (!dropdown) return;
+            const target = event.target as Node | null;
+            const relatedTarget = event.relatedTarget as Node | null;
+            if ((target && dropdown.contains(target)) || (relatedTarget && dropdown.contains(relatedTarget))) {
+                event.stopImmediatePropagation();
+            }
+        };
+        document.addEventListener('focusin', handler, true);
+        document.addEventListener('focusout', handler, true);
+        return () => {
+            document.removeEventListener('focusin', handler, true);
+            document.removeEventListener('focusout', handler, true);
+        };
+    }, [isOpen]);
+
     const getDaysInMonth = (month: number, year: number) => {
         return new Date(year, month + 1, 0).getDate();
     };
@@ -304,6 +325,7 @@ function DatePicker({ value, onChange, onBlur, disabled, id, invalid, error, cla
                         style={{
                             top: `${dropdownPosition.top}px`,
                             left: `${dropdownPosition.left}px`,
+                            pointerEvents: 'auto',
                         }}
                     >
                         <div className="p-3 space-y-0.5">
