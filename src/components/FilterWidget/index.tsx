@@ -9,6 +9,7 @@ import { type EntityType, actions, selectors } from 'ducks/filters';
 import { useDispatch, useSelector } from 'react-redux';
 import Select, { type SingleValue, type MultiValue, type OptionValue } from 'components/Select';
 import TextInput from 'components/TextInput';
+import DatePicker from 'components/DatePicker';
 import type { Observable } from 'rxjs';
 import type { SearchFieldListModel, SearchFilterModel } from 'types/certificate';
 import {
@@ -489,6 +490,19 @@ export default function FilterWidget({
             } else if (currentField?.type) {
                 inputType = getFormTypeFromFilterFieldType(currentField.type);
             }
+            const isDisabled = !filterField || !filterCondition || noValue[filterCondition.value];
+            if (inputType === 'date' || inputType === 'datetime-local') {
+                const stringValue = (filterValue as string | number | null | undefined)?.toString() ?? '';
+                return (
+                    <DatePicker
+                        id="valueSelect"
+                        value={stringValue ? stringValue.replace(' ', 'T') : ''}
+                        onChange={(value) => setFilterValue(deepCopy(value))}
+                        disabled={isDisabled}
+                        timePicker={inputType === 'datetime-local'}
+                    />
+                );
+            }
             return (
                 <>
                     <TextInput
@@ -506,7 +520,7 @@ export default function FilterWidget({
                             }
                         }}
                         placeholder={isRegex ? 'Enter regex value' : 'Enter filter value'}
-                        disabled={!filterField || !filterCondition || noValue[filterCondition.value]}
+                        disabled={isDisabled}
                         invalid={isRegex && !!regexError}
                     />
                     {isRegex && regexError && <p className="mt-1 text-sm text-red-600">{regexError}</p>}

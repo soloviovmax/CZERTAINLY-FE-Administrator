@@ -10,6 +10,7 @@ import Select from 'components/Select';
 import Button from 'components/Button';
 import Label from 'components/Label';
 import TextInput from 'components/TextInput';
+import DatePicker from 'components/DatePicker';
 import Badge from 'components/Badge';
 import type { Observable } from 'rxjs';
 import type { SearchFieldListModel } from 'types/certificate';
@@ -661,25 +662,41 @@ export default function FilterWidgetRuleAction({
     const renderBooleanOrObjectValueField =
         currentField?.type === FilterFieldType.Boolean ? renderBooleanValueSelect : renderObjectValueSelector;
 
-    const renderValueField = isTextInputField ? (
-        <TextInput
-            id="valueSelect"
-            type={(() => {
-                const typeFromFieldType = currentField?.type ? getFormTypeFromFilterFieldType(currentField?.type) : 'text';
-                const rawType =
-                    currentField?.attributeContentType && checkIfFieldAttributeTypeIsDate(currentField)
-                        ? getFormTypeFromAttributeContentType(currentField?.attributeContentType)
-                        : typeFromFieldType;
+    const resolvedInputType = (() => {
+        const typeFromFieldType = currentField?.type ? getFormTypeFromFilterFieldType(currentField?.type) : 'text';
+        return currentField?.attributeContentType && checkIfFieldAttributeTypeIsDate(currentField)
+            ? getFormTypeFromAttributeContentType(currentField?.attributeContentType)
+            : typeFromFieldType;
+    })();
 
-                return supportedInputTypes.has(rawType) ? (rawType as any) : 'text';
+    const renderDateOrDatetimePicker = (
+        <DatePicker
+            id="valueSelect"
+            value={(() => {
+                const raw = filterValue !== undefined && typeof filterValue !== 'object' ? String(filterValue) : '';
+                return raw ? raw.replace(' ', 'T') : '';
             })()}
-            value={filterValue !== undefined && typeof filterValue !== 'object' ? String(filterValue) : ''}
-            onChange={(value) => {
-                setFilterValue(structuredClone(value));
-            }}
-            placeholder="Enter filter value"
+            onChange={(value) => setFilterValue(structuredClone(value))}
             disabled={!filterField}
+            timePicker={resolvedInputType === 'datetime-local'}
         />
+    );
+
+    const renderValueField = isTextInputField ? (
+        resolvedInputType === 'date' || resolvedInputType === 'datetime-local' ? (
+            renderDateOrDatetimePicker
+        ) : (
+            <TextInput
+                id="valueSelect"
+                type={supportedInputTypes.has(resolvedInputType) ? (resolvedInputType as any) : 'text'}
+                value={filterValue !== undefined && typeof filterValue !== 'object' ? String(filterValue) : ''}
+                onChange={(value) => {
+                    setFilterValue(structuredClone(value));
+                }}
+                placeholder="Enter filter value"
+                disabled={!filterField}
+            />
+        )
     ) : (
         renderBooleanOrObjectValueField
     );
