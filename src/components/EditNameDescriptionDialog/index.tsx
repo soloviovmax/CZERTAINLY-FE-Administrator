@@ -94,7 +94,7 @@ const EditNameDescriptionDialog = ({ isOpen, caption, name, description, isUpdat
                             <ProgressButton
                                 title="Save"
                                 inProgress={isUpdating}
-                                disabled={isUpdating || !isValid || areDefaultValuesSame(formValues as Record<string, unknown>)}
+                                disabled={isUpdating || !isValid || areDefaultValuesSame(formValues)}
                                 type="submit"
                             />
                         </Container>
