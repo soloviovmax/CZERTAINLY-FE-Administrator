@@ -322,8 +322,16 @@ describe('validators', () => {
             expect(validateAlphaNumericWithSpecialChars()('Žluťoučký kůň')).toBeUndefined();
         });
 
+        test('should accept apostrophe-wrapped words', () => {
+            expect(validateAlphaNumericWithSpecialChars()(`'asdasd'`)).toBeUndefined();
+            expect(validateAlphaNumericWithSpecialChars()(`sadasd asdasd 'asdasd'`)).toBeUndefined();
+        });
+
         test('should reject invalid format', () => {
             expect(validateAlphaNumericWithSpecialChars()('invalid@char')).toBeTruthy();
+            expect(validateAlphaNumericWithSpecialChars()('-abc')).toBeTruthy();
+            expect(validateAlphaNumericWithSpecialChars()('abc_')).toBeTruthy();
+            expect(validateAlphaNumericWithSpecialChars()('abc__def')).toBeTruthy();
         });
     });
 
