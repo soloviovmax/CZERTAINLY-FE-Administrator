@@ -101,7 +101,13 @@ export default function CustomAttributesList() {
                 content: 'Name',
                 sortable: true,
                 sort: 'asc',
-                width: '40%',
+                width: '25%',
+            },
+            {
+                id: 'label',
+                content: 'Label',
+                sortable: true,
+                width: '20%',
             },
             {
                 id: 'version',
@@ -131,7 +137,7 @@ export default function CustomAttributesList() {
                 id: 'resources',
                 content: 'Resources',
                 sortable: false,
-                width: '30%',
+                width: '20%',
             },
         ],
         [],
@@ -145,6 +151,7 @@ export default function CustomAttributesList() {
                     <Link key={customAttribute.uuid} to={`./detail/${customAttribute.uuid}`}>
                         {customAttribute.name}
                     </Link>,
+                    (customAttribute as { label?: string }).label ?? '',
                     customAttribute.version || '',
                     <StatusBadge key="enabled" enabled={customAttribute.enabled} />,
                     getEnumLabel(attributeContentTypeEnum, customAttribute.contentType),
