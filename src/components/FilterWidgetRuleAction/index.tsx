@@ -42,6 +42,10 @@ function formatBadgeDataValue(v: any, field: any, platformEnums: Record<string, 
         }
         return v.label ?? String(v);
     }
+    if (Array.isArray(field?.value)) {
+        const matched = field.value.find((fv: any) => fv?.uuid === v || fv?.value === v || fv?.reference === v);
+        if (matched) return matched.name ?? matched.label ?? matched.data ?? String(v);
+    }
     if (field?.attributeContentType === AttributeContentType.Date) {
         return getFormattedDate(v as string);
     }
