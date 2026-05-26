@@ -17,6 +17,12 @@
  */
 export interface UpdateRuleRequestDto {
     /**
+     * Name of the Rule
+     * @type {string}
+     * @memberof UpdateRuleRequestDto
+     */
+    name?: string;
+    /**
      * Description of the Rule
      * @type {string}
      * @memberof UpdateRuleRequestDto
