@@ -90,6 +90,7 @@ const TriggerList = () => {
                 align: 'left',
                 id: 'ignoreTrigger',
                 width: '15%',
+                sortable: true,
             },
             {
                 content: 'Trigger Type',
