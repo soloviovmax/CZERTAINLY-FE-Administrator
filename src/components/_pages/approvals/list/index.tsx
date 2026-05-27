@@ -210,6 +210,7 @@ export default function ApprovalsList() {
     return (
         <>
             <TabLayout
+                tabUrlParam="tab"
                 tabs={[
                     {
                         title: 'My Approvals',

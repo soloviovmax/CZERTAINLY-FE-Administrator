@@ -69,6 +69,7 @@ export default function PlatformSettingsDetail() {
                 refreshAction={getFreshPlatformSettings}
             >
                 <TabLayout
+                    tabUrlParam="tab"
                     noBorder
                     isLoading={isFetchingPlatform}
                     tabs={[

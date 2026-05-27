@@ -527,6 +527,7 @@ const LoggingSetting = () => {
                 widgetLockName={LockWidgetNameEnum.LoggingSettings}
             >
                 <TabLayout
+                    tabUrlParam="tab"
                     noBorder
                     tabs={[
                         {

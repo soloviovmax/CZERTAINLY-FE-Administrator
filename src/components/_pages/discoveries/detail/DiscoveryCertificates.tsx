@@ -158,6 +158,7 @@ export default function DiscoveryCertificates({ id, triggerHistorySummary }: Pro
     return (
         <Widget title="Discovered Certificates" titleSize="large" busy={isFetchingDiscoveryCertificates}>
             <TabLayout
+                tabUrlParam="discoveredCerts"
                 tabs={[
                     { title: 'All', onClick: () => setNewlyDiscovered(undefined), content: pagedTable },
                     { title: 'New', onClick: () => setNewlyDiscovered(true), content: pagedTable },

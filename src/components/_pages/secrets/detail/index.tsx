@@ -573,6 +573,7 @@ function SecretDetail() {
             <Widget widgetLockName={LockWidgetNameEnum.SecretDetailsWidget} busy={isFetchingDetail || isDeleting || isUpdating} noBorder>
                 <div className="space-y-4">
                     <TabLayout
+                        tabUrlParam="tab"
                         tabs={[
                             {
                                 title: 'Details',

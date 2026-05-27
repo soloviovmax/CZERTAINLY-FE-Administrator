@@ -194,6 +194,7 @@ const AuthenticationSettings = () => {
     return (
         <Container>
             <TabLayout
+                tabUrlParam="tab"
                 tabs={[
                     {
                         title: 'Authentication Providers',
