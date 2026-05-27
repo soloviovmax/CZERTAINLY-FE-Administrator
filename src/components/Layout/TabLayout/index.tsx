@@ -1,5 +1,5 @@
 import Tabs from 'components/Tabs';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router';
 import Widget from 'components/Widget';
 import TabLayoutSkeleton from './TabLayoutSkeleton';
@@ -26,7 +26,8 @@ function toSlug(title: string | React.ReactNode, fallbackIndex: number) {
         .toLowerCase()
         .trim()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
     return slug || String(fallbackIndex);
 }
 
@@ -49,7 +50,8 @@ export default function TabLayout({
 
     const [internalTab, setInternalTab] = useState(selectedTab ?? 0);
 
-    const currentTab = tabUrlParam ? (urlIndex >= 0 ? urlIndex : 0) : (selectedTab ?? internalTab);
+    const urlDrivenTab = Math.max(urlIndex, 0);
+    const currentTab = tabUrlParam ? urlDrivenTab : (selectedTab ?? internalTab);
 
     useEffect(() => {
         if (tabUrlParam) return;
@@ -66,9 +68,20 @@ export default function TabLayout({
         onTabChange?.(currentTab);
     }, [currentTab, tabUrlParam]);
 
+    const lastNavTabRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        lastNavTabRef.current = currentTab;
+    }, [currentTab]);
+
     const handleTabChange = useCallback(
         (tab: number) => {
             if (tabUrlParam) {
+                // Tabs fires onTabChange twice per click (RadixTabs.Root onValueChange +
+                // RadixTabs.Trigger onClick, kept for keyboard + headless CI reliability).
+                // Dedup so we don't push the same URL onto history twice.
+                if (lastNavTabRef.current === tab) return;
+                lastNavTabRef.current = tab;
                 const next = new URLSearchParams(searchParams);
                 if (tab === 0) {
                     next.delete(tabUrlParam);
