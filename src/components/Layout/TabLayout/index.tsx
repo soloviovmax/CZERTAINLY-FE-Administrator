@@ -24,10 +24,9 @@ function toSlug(title: string | React.ReactNode, fallbackIndex: number) {
     if (typeof title !== 'string') return String(fallbackIndex);
     const slug = title
         .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
+        .split(/[^a-z0-9]+/)
+        .filter(Boolean)
+        .join('-');
     return slug || String(fallbackIndex);
 }
 
