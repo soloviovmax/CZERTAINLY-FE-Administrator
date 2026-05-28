@@ -30,6 +30,8 @@ export type FilterWidgetRuleActionTestWrapperProps = {
     title?: string;
     entity?: EntityType;
     availableFilters?: SearchFieldListModel[];
+    sourceEntity?: EntityType;
+    sourceAvailableFilters?: SearchFieldListModel[];
     onActionsUpdate?: (actions: ExecutionItemModel[]) => void;
     ExecutionsList?: ExecutionItemModel[];
     disableBadgeRemove?: boolean;
@@ -41,6 +43,8 @@ export function FilterWidgetRuleActionTestWrapper({
     title = 'Filter rule actions',
     entity = EntityType.CERTIFICATE,
     availableFilters = defaultMockAvailableFilters,
+    sourceEntity,
+    sourceAvailableFilters,
     onActionsUpdate,
     ExecutionsList,
     disableBadgeRemove,
@@ -48,31 +52,44 @@ export function FilterWidgetRuleActionTestWrapper({
     platformEnumsOverride,
 }: Readonly<FilterWidgetRuleActionTestWrapperProps>) {
     const getAvailableFiltersApi = useMemo(() => () => of(availableFilters), [availableFilters]);
+    const getSourceAvailableFiltersApi = useMemo(
+        () => (sourceAvailableFilters ? () => of(sourceAvailableFilters) : undefined),
+        [sourceAvailableFilters],
+    );
 
-    const preloadedState = useMemo(
-        () => ({
+    const preloadedState = useMemo(() => {
+        const filters: { entity: EntityType; filter: any }[] = [
+            {
+                entity,
+                filter: {
+                    availableFilters,
+                    currentFilters: [],
+                    preservedFilters: [],
+                    isFetchingFilters: false,
+                },
+            },
+        ];
+        if (sourceEntity !== undefined && sourceAvailableFilters) {
+            filters.push({
+                entity: sourceEntity,
+                filter: {
+                    availableFilters: sourceAvailableFilters,
+                    currentFilters: [],
+                    preservedFilters: [],
+                    isFetchingFilters: false,
+                },
+            });
+        }
+        return {
             enums: {
                 platformEnums: {
                     ...defaultEnumsPreload.enums.platformEnums,
                     ...platformEnumsOverride,
                 },
             },
-            filters: {
-                filters: [
-                    {
-                        entity,
-                        filter: {
-                            availableFilters,
-                            currentFilters: [],
-                            preservedFilters: [],
-                            isFetchingFilters: false,
-                        },
-                    },
-                ],
-            },
-        }),
-        [entity, availableFilters, platformEnumsOverride],
-    );
+            filters: { filters },
+        };
+    }, [entity, availableFilters, sourceEntity, sourceAvailableFilters, platformEnumsOverride]);
 
     const store = useMemo(() => createMockStore(preloadedState), [preloadedState]);
 
@@ -81,7 +98,9 @@ export function FilterWidgetRuleActionTestWrapper({
             <FilterWidgetRuleAction
                 title={title}
                 entity={entity}
+                sourceEntity={sourceEntity}
                 getAvailableFiltersApi={getAvailableFiltersApi}
+                getSourceAvailableFiltersApi={getSourceAvailableFiltersApi}
                 onActionsUpdate={onActionsUpdate}
                 ExecutionsList={ExecutionsList}
                 disableBadgeRemove={disableBadgeRemove}

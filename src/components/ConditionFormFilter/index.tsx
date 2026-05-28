@@ -38,13 +38,21 @@ const ConditionFormFilter = ({ resource, formType }: ConditionGroupFormFilterPro
         [resource, formType],
     );
 
+    const getSourceAvailableFiltersApi = useCallback(
+        (apiClients: ApiClients) => apiClients.resources.listResourceRuleFilterFields({ resource }),
+        [resource],
+    );
+
     const renderFilterWidget = useMemo(() => {
         return formType === 'executionItem' ? (
             <div>
                 <FilterWidgetRuleAction
+                    key={resource}
                     entity={EntityType.ACTIONS}
+                    sourceEntity={EntityType.ACTIONS_SOURCE}
                     title="Execution Items"
                     getAvailableFiltersApi={getAvailableFiltersApi}
+                    getSourceAvailableFiltersApi={getSourceAvailableFiltersApi}
                     onActionsUpdate={(currentActions) => {
                         actionGroupForm.setValue('items', currentActions);
                     }}
@@ -64,7 +72,7 @@ const ConditionFormFilter = ({ resource, formType }: ConditionGroupFormFilterPro
                 />
             </div>
         );
-    }, [form, formType, actionGroupForm, getAvailableFiltersApi]);
+    }, [form, formType, actionGroupForm, getAvailableFiltersApi, getSourceAvailableFiltersApi, resource]);
 
     return <div data-testid="condition-form-filter">{renderFilterWidget}</div>;
 };

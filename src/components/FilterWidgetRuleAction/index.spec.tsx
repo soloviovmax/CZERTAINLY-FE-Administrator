@@ -21,8 +21,10 @@ import {
     tagsFieldTwoValuesDef,
     updatedAtFieldDef,
 } from './FilterWidgetRuleActionTestData';
-import { FilterFieldSource } from 'types/openapi';
+import { AttributeContentType, FilterFieldSource } from 'types/openapi';
+import type { SearchFieldListModel } from 'types/certificate';
 import type { ExecutionItemModel } from 'types/rules';
+import { EntityType } from 'ducks/filters';
 
 /** Open group select and choose option by label (e.g. 'Meta'). */
 async function selectFieldSource(page: import('@playwright/test').Page, optionLabel: string) {
@@ -639,5 +641,188 @@ test.describe('FilterWidgetRuleAction', () => {
     test('badge with object data shows name property', async ({ mount, page }) => {
         await mountWithExecution(mount, { source: FilterFieldSource.Meta, fieldIdentifier: 'kind', data: { name: 'Kind One' } });
         await expect(page.getByText('Kind One')).toBeVisible();
+    });
+
+    test.describe('Static / Mapped mode', () => {
+        const buildTargetField = (id: string, label: string, type: string, contentType?: AttributeContentType) => ({
+            fieldIdentifier: id,
+            fieldLabel: label,
+            type,
+            ...(contentType ? { attributeContentType: contentType } : {}),
+            conditions: [],
+        });
+
+        const customTargetFilters: SearchFieldListModel[] = [
+            {
+                filterFieldSource: FilterFieldSource.Custom,
+                searchFieldData: [
+                    buildTargetField('targetStr|STRING', 'TargetStr', 'string', AttributeContentType.String),
+                    buildTargetField('targetDate|DATE', 'TargetDate', 'date', AttributeContentType.Date),
+                ],
+            } as any,
+        ];
+
+        const sourceFilters: SearchFieldListModel[] = [
+            {
+                filterFieldSource: FilterFieldSource.Data,
+                searchFieldData: [
+                    buildTargetField('sourceStr|STRING', 'SourceStr', 'string', AttributeContentType.String),
+                    buildTargetField('sourceDate|DATE', 'SourceDate', 'date', AttributeContentType.Date),
+                ],
+            } as any,
+            {
+                filterFieldSource: FilterFieldSource.Property,
+                searchFieldData: [buildTargetField('propStr', 'PropStr', 'string')],
+            } as any,
+        ];
+
+        const baseMappedProps = {
+            availableFilters: customTargetFilters,
+            sourceEntity: EntityType.ACTIONS_SOURCE,
+            sourceAvailableFilters: sourceFilters,
+        };
+
+        const filtersWithMetaAndCustom: SearchFieldListModel[] = [
+            ...customTargetFilters,
+            ...makeSearchFieldList(FilterFieldSource.Meta, [{ fieldIdentifier: 'metaField', fieldLabel: 'MetaField', type: 'string' }]),
+        ];
+
+        const mappedItem = (overrides: Partial<ExecutionItemModel> = {}): ExecutionItemModel =>
+            ({
+                fieldSource: FilterFieldSource.Custom,
+                fieldIdentifier: 'targetStr|STRING',
+                sourceFieldSource: FilterFieldSource.Data,
+                sourceFieldIdentifier: 'sourceStr|STRING',
+                ...overrides,
+            }) as ExecutionItemModel;
+
+        async function selectTargetAndEnterMapped(page: import('@playwright/test').Page, targetFieldLabel = 'TargetStr') {
+            await selectFieldSource(page, 'Custom');
+            await selectFieldOption(page, targetFieldLabel);
+            await page.getByLabel('Mapped from attribute').click();
+        }
+
+        async function pickSourceFieldSource(page: import('@playwright/test').Page, optionLabel: string) {
+            await page.getByTestId('select-sourceGroup-trigger').click();
+            await page.getByRole('option', { name: optionLabel, exact: true }).click();
+        }
+
+        async function pickSourceField(page: import('@playwright/test').Page, optionLabel: string) {
+            await page.getByTestId('select-sourceField-trigger').click();
+            await page.getByRole('option', { name: optionLabel, exact: true }).click();
+        }
+
+        test('radio is hidden when sourceEntity is not provided', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper availableFilters={customTargetFilters} />);
+            await expect(page.getByLabel('Static value')).not.toBeVisible();
+            await expect(page.getByLabel('Mapped from attribute')).not.toBeVisible();
+        });
+
+        test('radio appears only when target Field Source is CUSTOM', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} availableFilters={filtersWithMetaAndCustom} />);
+
+            await expect(page.getByLabel('Mapped from attribute')).not.toBeVisible();
+
+            await selectFieldSource(page, 'Meta');
+            await expect(page.getByLabel('Mapped from attribute')).not.toBeVisible();
+
+            await selectFieldSource(page, 'Custom');
+            await expect(page.getByLabel('Static value')).toBeVisible();
+            await expect(page.getByLabel('Mapped from attribute')).toBeVisible();
+        });
+
+        test('switching to Mapped replaces Value with Source Field Source and Source Field selects', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} />);
+            await selectTargetAndEnterMapped(page);
+
+            await expect(page.getByPlaceholder('Enter filter value')).not.toBeVisible();
+            await expect(page.getByTestId('select-sourceGroup')).toBeVisible();
+            await expect(page.getByTestId('select-sourceField')).toBeVisible();
+        });
+
+        test('source Field Source dropdown filters out PROPERTY', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} />);
+            await selectTargetAndEnterMapped(page);
+
+            await page.getByTestId('select-sourceGroup-trigger').click();
+            await expect(page.getByRole('option', { name: 'Data', exact: true })).toBeVisible();
+            await expect(page.getByRole('option', { name: 'Property', exact: true })).not.toBeVisible();
+        });
+
+        test('source Field options are restricted to target content type', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} />);
+            // Target is DATE → only sourceDate must appear
+            await selectTargetAndEnterMapped(page, 'TargetDate');
+            await pickSourceFieldSource(page, 'Data');
+
+            await page.getByTestId('select-sourceField-trigger').click();
+            await expect(page.getByRole('option', { name: 'SourceDate', exact: true })).toBeVisible();
+            await expect(page.getByRole('option', { name: 'SourceStr', exact: true })).not.toBeVisible();
+        });
+
+        test('Add disabled until both source fields picked', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} />);
+            const addBtn = page.getByRole('button', { name: 'Add', exact: true });
+
+            await selectTargetAndEnterMapped(page);
+            await expect(addBtn).toBeDisabled();
+
+            await pickSourceFieldSource(page, 'Data');
+            await expect(addBtn).toBeDisabled();
+
+            await pickSourceField(page, 'SourceStr');
+            await expect(addBtn).toBeEnabled();
+        });
+
+        test('Add emits ExecutionItem with source fields and without data', async ({ mount, page }) => {
+            const capture = await mountWithActions(mount, baseMappedProps);
+
+            await selectTargetAndEnterMapped(page);
+            await pickSourceFieldSource(page, 'Data');
+            await pickSourceField(page, 'SourceStr');
+            await page.getByRole('button', { name: 'Add', exact: true }).click();
+
+            expect(capture.current).toHaveLength(1);
+            const item = firstAction(capture.current);
+            expect(item).toMatchObject({
+                fieldSource: 'custom',
+                fieldIdentifier: 'targetStr|STRING',
+                sourceFieldSource: 'data',
+                sourceFieldIdentifier: 'sourceStr|STRING',
+            });
+            expect(item.data).toBeUndefined();
+        });
+
+        test('existing mapped execution hydrates radio into Mapped and populates source selects', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} ExecutionsList={[mappedItem()]} />);
+
+            await page.getByText("'TargetStr'").click();
+            await expect(page.getByRole('button', { name: 'Update', exact: true })).toBeVisible();
+            await expect(page.getByLabel('Mapped from attribute')).toBeChecked();
+            await expect(page.getByTestId('select-sourceGroup-input')).toHaveValue('data');
+            await expect(page.getByTestId('select-sourceField-input')).toHaveValue('sourceStr|STRING');
+        });
+
+        test('badge for mapped item renders source attribute reference, not literal value', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} ExecutionsList={[mappedItem()]} />);
+
+            const badge = page.getByTestId('badge').first();
+            await expect(badge).toContainText("'TargetStr'");
+            await expect(badge).toContainText("'SourceStr'");
+            await expect(badge).toContainText('Data');
+        });
+
+        test('switching target away from CUSTOM resets mapped mode back to static', async ({ mount, page }) => {
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} availableFilters={filtersWithMetaAndCustom} />);
+
+            await selectTargetAndEnterMapped(page);
+            await expect(page.getByTestId('select-sourceGroup')).toBeVisible();
+
+            await page.getByTestId('select-group-clear').click();
+            await selectFieldSource(page, 'Meta');
+
+            await expect(page.getByLabel('Mapped from attribute')).not.toBeVisible();
+            await expect(page.getByPlaceholder('Enter filter value')).toBeVisible();
+        });
     });
 });

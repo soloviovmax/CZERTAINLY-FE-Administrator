@@ -6,8 +6,10 @@ import type { ExecutionItemModel } from 'types/rules';
 import { AttributeContentType, ExecutionType, FilterFieldSource, FilterFieldType } from 'types/openapi';
 
 const searchGroupEnum = {
-    [FilterFieldSource.Meta]: { label: 'Meta' },
+    [FilterFieldSource.Meta]: { label: 'Meta attribute' },
     [FilterFieldSource.Property]: { label: 'Property' },
+    [FilterFieldSource.Custom]: { label: 'Custom attribute' },
+    [FilterFieldSource.Data]: { label: 'Data attribute' },
 } as any;
 
 const entityMap: Record<string, string> = {
@@ -196,5 +198,112 @@ describe('execution-badges', () => {
 
         const html = renderItems(items, ExecutionType.SetField, availableFilters, stateEnumPlatformEnums, searchGroupEnum, 'badge');
         expect(html).toContain("'unknown'");
+    });
+
+    describe('mapped source attribute', () => {
+        const mappedAvailableFilters: SearchFieldListModel[] = [
+            {
+                filterFieldSource: FilterFieldSource.Custom,
+                searchFieldData: [
+                    {
+                        fieldIdentifier: 'targetAttr|STRING',
+                        fieldLabel: 'TargetAttr',
+                        type: FilterFieldType.String,
+                        attributeContentType: AttributeContentType.String,
+                    },
+                ],
+            } as any,
+            {
+                filterFieldSource: FilterFieldSource.Data,
+                searchFieldData: [
+                    {
+                        fieldIdentifier: 'sourceAttr|STRING',
+                        fieldLabel: 'SourceAttr',
+                        type: FilterFieldType.String,
+                        attributeContentType: AttributeContentType.String,
+                    },
+                ],
+            } as any,
+        ];
+
+        it('renders source attribute reference instead of literal value', () => {
+            const items: ExecutionItemModel[] = [
+                {
+                    fieldSource: FilterFieldSource.Custom,
+                    fieldIdentifier: 'targetAttr|STRING',
+                    sourceFieldSource: FilterFieldSource.Data,
+                    sourceFieldIdentifier: 'sourceAttr|STRING',
+                },
+            ];
+
+            const html = renderItems(items, ExecutionType.SetField, mappedAvailableFilters, {}, searchGroupEnum, 'badge');
+
+            expect(html).toContain('Custom attribute');
+            expect(html).toContain("'TargetAttr'");
+            expect(html).toContain('to');
+            expect(html).toContain('Data attribute');
+            expect(html).toContain("'SourceAttr'");
+            // No quoted literal value
+            expect(html).not.toContain("'undefined'");
+        });
+
+        it('does not duplicate the word "attribute" in the source label', () => {
+            const items: ExecutionItemModel[] = [
+                {
+                    fieldSource: FilterFieldSource.Custom,
+                    fieldIdentifier: 'targetAttr|STRING',
+                    sourceFieldSource: FilterFieldSource.Data,
+                    sourceFieldIdentifier: 'sourceAttr|STRING',
+                },
+            ];
+
+            const html = renderItems(items, ExecutionType.SetField, mappedAvailableFilters, {}, searchGroupEnum, 'badge');
+            expect(html).not.toMatch(/attribute\s+attribute/);
+        });
+
+        it('falls back to raw source field identifier when not resolved', () => {
+            const items: ExecutionItemModel[] = [
+                {
+                    fieldSource: FilterFieldSource.Custom,
+                    fieldIdentifier: 'targetAttr|STRING',
+                    sourceFieldSource: FilterFieldSource.Data,
+                    sourceFieldIdentifier: 'unknownSource|STRING',
+                },
+            ];
+
+            const html = renderItems(items, ExecutionType.SetField, mappedAvailableFilters, {}, searchGroupEnum, 'badge');
+            expect(html).toContain("'unknownSource|STRING'");
+        });
+
+        it('prefers source mapping over data when both are present', () => {
+            const items: ExecutionItemModel[] = [
+                {
+                    fieldSource: FilterFieldSource.Custom,
+                    fieldIdentifier: 'targetAttr|STRING',
+                    sourceFieldSource: FilterFieldSource.Data,
+                    sourceFieldIdentifier: 'sourceAttr|STRING',
+                    data: 'leftover',
+                },
+            ];
+
+            const html = renderItems(items, ExecutionType.SetField, mappedAvailableFilters, {}, searchGroupEnum, 'badge');
+            expect(html).not.toContain("'leftover'");
+            expect(html).toContain("'SourceAttr'");
+        });
+
+        it('renders small variant for mapped item', () => {
+            const items: ExecutionItemModel[] = [
+                {
+                    fieldSource: FilterFieldSource.Custom,
+                    fieldIdentifier: 'targetAttr|STRING',
+                    sourceFieldSource: FilterFieldSource.Data,
+                    sourceFieldIdentifier: 'sourceAttr|STRING',
+                },
+            ];
+
+            const html = renderItems(items, ExecutionType.SetField, mappedAvailableFilters, {}, searchGroupEnum, 'small');
+            expect(html).toContain('class="mt-2 mr-1"');
+            expect(html).toContain("'SourceAttr'");
+        });
     });
 });
