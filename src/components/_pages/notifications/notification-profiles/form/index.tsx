@@ -199,6 +199,7 @@ export default function NotificationProfileForm({
     const isNotificationInstanceRequired =
         type === RecipientType.Default ||
         type === RecipientType.None ||
+        type === RecipientType.Mapped ||
         ((type === RecipientType.User || type === RecipientType.Role || type === RecipientType.Group) && !formValues.internalNotification);
 
     return (
@@ -283,7 +284,9 @@ export default function NotificationProfileForm({
                                     checked={field.value}
                                     onChange={field.onChange}
                                     label="Send internal notifications"
-                                    disabled={type === RecipientType.Default || type === RecipientType.None}
+                                    disabled={
+                                        type === RecipientType.Default || type === RecipientType.None || type === RecipientType.Mapped
+                                    }
                                 />
                             )}
                         />
@@ -448,6 +451,7 @@ function RecipientTypeFields() {
                                     switch (value) {
                                         case RecipientType.None:
                                         case RecipientType.Default:
+                                        case RecipientType.Mapped:
                                             setValue('internalNotification', false);
                                             break;
                                     }
