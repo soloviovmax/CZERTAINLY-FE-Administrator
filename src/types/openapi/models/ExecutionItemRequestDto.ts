@@ -37,8 +37,21 @@ export interface ExecutionItemRequestDto {
      */
     notificationProfileUuid?: string;
     /**
+     * Static data of the execution item. Must be null when sourceFieldSource or sourceFieldIdentifier is set
      * @type {any}
      * @memberof ExecutionItemRequestDto
      */
     data?: any | null;
+    /**
+     * Source field source for mapping (META, DATA, or CUSTOM). When set, value is read from this source instead of static data. Must be provided together with sourceFieldIdentifier; neither field is valid on its own.
+     * @type {FilterFieldSource}
+     * @memberof ExecutionItemRequestDto
+     */
+    sourceFieldSource?: FilterFieldSource;
+    /**
+     * Source field identifier for mapping (format: name|ContentType). Must be provided together with sourceFieldSource; neither field is valid on its own.
+     * @type {string}
+     * @memberof ExecutionItemRequestDto
+     */
+    sourceFieldIdentifier?: string;
 }
