@@ -139,6 +139,32 @@ function firstAction(actions: unknown[]): Record<string, any> {
     return (actions as Record<string, any>[])[0];
 }
 
+async function selectTargetAndEnterMapped(page: import('@playwright/test').Page, targetFieldLabel = 'TargetStr') {
+    await selectFieldSource(page, 'Custom');
+    await selectFieldOption(page, targetFieldLabel);
+    await page.getByLabel('Mapped from attribute').click();
+}
+
+async function pickSourceFieldSource(page: import('@playwright/test').Page, optionLabel: string) {
+    await page.getByTestId('select-sourceGroup-trigger').click();
+    await page.getByRole('option', { name: optionLabel, exact: true }).click();
+}
+
+async function pickSourceField(page: import('@playwright/test').Page, optionLabel: string) {
+    await page.getByTestId('select-sourceField-trigger').click();
+    await page.getByRole('option', { name: optionLabel, exact: true }).click();
+}
+
+function buildMappedItem(overrides: Partial<ExecutionItemModel> = {}): ExecutionItemModel {
+    return {
+        fieldSource: FilterFieldSource.Custom,
+        fieldIdentifier: 'targetStr|STRING',
+        sourceFieldSource: FilterFieldSource.Data,
+        sourceFieldIdentifier: 'sourceStr|STRING',
+        ...overrides,
+    };
+}
+
 test.describe('FilterWidgetRuleAction', () => {
     test('renders Widget with title and Field Source / Field / Value controls', async ({ mount, page }) => {
         await mount(<FilterWidgetRuleActionTestWrapper title="Rule actions" />);
@@ -687,31 +713,6 @@ test.describe('FilterWidgetRuleAction', () => {
             ...makeSearchFieldList(FilterFieldSource.Meta, [{ fieldIdentifier: 'metaField', fieldLabel: 'MetaField', type: 'string' }]),
         ];
 
-        const mappedItem = (overrides: Partial<ExecutionItemModel> = {}): ExecutionItemModel =>
-            ({
-                fieldSource: FilterFieldSource.Custom,
-                fieldIdentifier: 'targetStr|STRING',
-                sourceFieldSource: FilterFieldSource.Data,
-                sourceFieldIdentifier: 'sourceStr|STRING',
-                ...overrides,
-            }) as ExecutionItemModel;
-
-        async function selectTargetAndEnterMapped(page: import('@playwright/test').Page, targetFieldLabel = 'TargetStr') {
-            await selectFieldSource(page, 'Custom');
-            await selectFieldOption(page, targetFieldLabel);
-            await page.getByLabel('Mapped from attribute').click();
-        }
-
-        async function pickSourceFieldSource(page: import('@playwright/test').Page, optionLabel: string) {
-            await page.getByTestId('select-sourceGroup-trigger').click();
-            await page.getByRole('option', { name: optionLabel, exact: true }).click();
-        }
-
-        async function pickSourceField(page: import('@playwright/test').Page, optionLabel: string) {
-            await page.getByTestId('select-sourceField-trigger').click();
-            await page.getByRole('option', { name: optionLabel, exact: true }).click();
-        }
-
         test('radio is hidden when sourceEntity is not provided', async ({ mount, page }) => {
             await mount(<FilterWidgetRuleActionTestWrapper availableFilters={customTargetFilters} />);
             await expect(page.getByLabel('Static value')).not.toBeVisible();
@@ -794,7 +795,7 @@ test.describe('FilterWidgetRuleAction', () => {
         });
 
         test('existing mapped execution hydrates radio into Mapped and populates source selects', async ({ mount, page }) => {
-            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} ExecutionsList={[mappedItem()]} />);
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} ExecutionsList={[buildMappedItem()]} />);
 
             await page.getByText("'TargetStr'").click();
             await expect(page.getByRole('button', { name: 'Update', exact: true })).toBeVisible();
@@ -804,7 +805,7 @@ test.describe('FilterWidgetRuleAction', () => {
         });
 
         test('badge for mapped item renders source attribute reference, not literal value', async ({ mount, page }) => {
-            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} ExecutionsList={[mappedItem()]} />);
+            await mount(<FilterWidgetRuleActionTestWrapper {...baseMappedProps} ExecutionsList={[buildMappedItem()]} />);
 
             const badge = page.getByTestId('badge').first();
             await expect(badge).toContainText("'TargetStr'");

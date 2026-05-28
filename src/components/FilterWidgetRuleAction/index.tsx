@@ -180,7 +180,7 @@ export default function FilterWidgetRuleAction({
     >(undefined);
 
     const sourceFiltersSelector = useMemo(
-        () => (sourceEntity !== undefined ? selectors.availableFilters(sourceEntity) : emptySourceFiltersSelector),
+        () => (sourceEntity === undefined ? emptySourceFiltersSelector : selectors.availableFilters(sourceEntity)),
         [sourceEntity],
     );
     const sourceAvailableFiltersRaw = useSelector(sourceFiltersSelector);
@@ -830,7 +830,7 @@ export default function FilterWidgetRuleAction({
                                     setSourceFilterField(undefined);
                                 }}
                             />
-                            Static value
+                            <span>Static value</span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
                             <input
@@ -842,7 +842,7 @@ export default function FilterWidgetRuleAction({
                                     setFilterValue(undefined);
                                 }}
                             />
-                            Mapped from attribute
+                            <span>Mapped from attribute</span>
                         </label>
                     </div>
                 )}

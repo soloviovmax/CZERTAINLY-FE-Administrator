@@ -95,7 +95,8 @@ export const renderExecutionItems = (
             : undefined;
         const sourceLabel = isMapped ? (sourceField?.fieldLabel ?? item.sourceFieldIdentifier) : '';
         const value = isMapped ? '' : getSetFieldValue(item, field, platformEnums);
-        const key = `${i}-${label}-${isMapped ? `mapped:${item.sourceFieldSource}:${item.sourceFieldIdentifier}` : value}`;
+        const keySuffix = isMapped ? `mapped:${item.sourceFieldSource}:${item.sourceFieldIdentifier}` : value;
+        const key = `${i}-${label}-${keySuffix}`;
 
         const tail = isMapped ? (
             <i>
