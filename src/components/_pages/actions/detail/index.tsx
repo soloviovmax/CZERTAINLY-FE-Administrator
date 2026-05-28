@@ -224,6 +224,9 @@ const RuleDetails = () => {
                         settable: true,
                     })
                 }
+                getSourceAvailableFiltersApi={(apiClients: ApiClients) =>
+                    apiClients.resources.listResourceRuleFilterFields({ resource: actionDetails.resource })
+                }
             />
         ) : (
             <></>

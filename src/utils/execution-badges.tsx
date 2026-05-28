@@ -55,6 +55,7 @@ export const renderExecutionItems = (
     platformEnums: Record<string, Record<string, { label: string }>>,
     searchGroupEnum: Record<string, EnumItemDto>,
     variant: RenderVariant = 'badge',
+    sourceAvailableFilters: SearchFieldListModel[] = availableFilters,
 ) => {
     if (executionType === ExecutionType.SendNotification) {
         return executionItems.map((item, i) => {
@@ -88,7 +89,7 @@ export const renderExecutionItems = (
         const label = field ? field.fieldLabel : item.fieldIdentifier;
         const isMapped = !!item.sourceFieldSource && !!item.sourceFieldIdentifier;
         const sourceField = isMapped
-            ? availableFilters
+            ? sourceAvailableFilters
                   .find((a) => a.filterFieldSource === item.sourceFieldSource)
                   ?.searchFieldData?.find((s) => s.fieldIdentifier === item.sourceFieldIdentifier)
             : undefined;

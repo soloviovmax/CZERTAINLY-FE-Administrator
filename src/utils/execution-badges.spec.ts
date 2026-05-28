@@ -201,7 +201,7 @@ describe('execution-badges', () => {
     });
 
     describe('mapped source attribute', () => {
-        const mappedAvailableFilters: SearchFieldListModel[] = [
+        const targetOnlyFilters: SearchFieldListModel[] = [
             {
                 filterFieldSource: FilterFieldSource.Custom,
                 searchFieldData: [
@@ -213,6 +213,8 @@ describe('execution-badges', () => {
                     },
                 ],
             } as any,
+        ];
+        const sourceOnlyFilters: SearchFieldListModel[] = [
             {
                 filterFieldSource: FilterFieldSource.Data,
                 searchFieldData: [
@@ -225,6 +227,7 @@ describe('execution-badges', () => {
                 ],
             } as any,
         ];
+        const mappedAvailableFilters: SearchFieldListModel[] = [...targetOnlyFilters, ...sourceOnlyFilters];
 
         it('renders source attribute reference instead of literal value', () => {
             const items: ExecutionItemModel[] = [
@@ -304,6 +307,36 @@ describe('execution-badges', () => {
             const html = renderItems(items, ExecutionType.SetField, mappedAvailableFilters, {}, searchGroupEnum, 'small');
             expect(html).toContain('class="mt-2 mr-1"');
             expect(html).toContain("'SourceAttr'");
+        });
+
+        it('resolves source label from sourceAvailableFilters when target list lacks the source field', () => {
+            const items: ExecutionItemModel[] = [
+                {
+                    fieldSource: FilterFieldSource.Custom,
+                    fieldIdentifier: 'targetAttr|STRING',
+                    sourceFieldSource: FilterFieldSource.Data,
+                    sourceFieldIdentifier: 'sourceAttr|STRING',
+                },
+            ];
+
+            // availableFilters has only target; sourceAvailableFilters provides the source label.
+            const html = renderItems(items, ExecutionType.SetField, targetOnlyFilters, {}, searchGroupEnum, 'badge', sourceOnlyFilters);
+            expect(html).toContain("'SourceAttr'");
+            expect(html).not.toContain("'sourceAttr|STRING'");
+        });
+
+        it('falls back to raw identifier when source label is missing in both lists', () => {
+            const items: ExecutionItemModel[] = [
+                {
+                    fieldSource: FilterFieldSource.Custom,
+                    fieldIdentifier: 'targetAttr|STRING',
+                    sourceFieldSource: FilterFieldSource.Data,
+                    sourceFieldIdentifier: 'orphan|STRING',
+                },
+            ];
+
+            const html = renderItems(items, ExecutionType.SetField, targetOnlyFilters, {}, searchGroupEnum, 'badge', sourceOnlyFilters);
+            expect(html).toContain("'orphan|STRING'");
         });
     });
 });
