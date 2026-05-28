@@ -211,6 +211,9 @@ export default function FilterWidgetRuleAction({
     }, [dispatch, sourceEntity, getSourceAvailableFiltersApi]);
 
     useEffect(() => {
+        // Reset editor state whenever the entity context shifts. In current callers `sourceEntity`
+        // is a constant alongside `entity`, but keep it in the deps so any future caller that
+        // swaps `sourceEntity` independently does not leak prior source selections.
         setFilterValue(undefined);
         setFilterField(undefined);
         setFieldSource(undefined);
@@ -218,7 +221,7 @@ export default function FilterWidgetRuleAction({
         setSourceFieldSource(undefined);
         setSourceFilterField(undefined);
         setSelectedFilter(-1);
-    }, [entity]);
+    }, [entity, sourceEntity]);
 
     useEffect(() => {
         if (fieldSource !== FilterFieldSource.Custom && valueMode === 'mapped') {

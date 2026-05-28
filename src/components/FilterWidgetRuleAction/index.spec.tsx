@@ -825,5 +825,30 @@ test.describe('FilterWidgetRuleAction', () => {
             await expect(page.getByLabel('Mapped from attribute')).not.toBeVisible();
             await expect(page.getByPlaceholder('Enter filter value')).toBeVisible();
         });
+
+        test('round-trip: saved mapped item switched back to static drops source fields on Update', async ({ mount, page }) => {
+            const capture = await mountWithActions(mount, { ...baseMappedProps, ExecutionsList: [buildMappedItem()] });
+
+            // Enter edit mode for the saved mapped item.
+            await page.getByText("'TargetStr'").click();
+            await expect(page.getByRole('button', { name: 'Update', exact: true })).toBeVisible();
+            await expect(page.getByLabel('Mapped from attribute')).toBeChecked();
+
+            // Switch back to Static and supply a literal value.
+            await page.getByLabel('Static value').click();
+            await expect(page.getByPlaceholder('Enter filter value')).toBeVisible();
+            await fillFilterValue(page, 'literal-value');
+            await page.getByRole('button', { name: 'Update', exact: true }).click();
+
+            expect(capture.current).toHaveLength(1);
+            const item = firstAction(capture.current);
+            expect(item).toMatchObject({
+                fieldSource: 'custom',
+                fieldIdentifier: 'targetStr|STRING',
+                data: 'literal-value',
+            });
+            expect(item.sourceFieldSource).toBeUndefined();
+            expect(item.sourceFieldIdentifier).toBeUndefined();
+        });
     });
 });
