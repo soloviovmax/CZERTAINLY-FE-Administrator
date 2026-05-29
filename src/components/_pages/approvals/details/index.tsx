@@ -304,6 +304,7 @@ export default function ApprovalDetails() {
             />
             <Container>
                 <TabLayout
+                    tabUrlParam="tab"
                     tabs={[
                         {
                             title: 'Details',

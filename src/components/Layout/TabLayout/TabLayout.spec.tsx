@@ -68,4 +68,78 @@ test.describe('TabLayout', () => {
         await expect(page.getByTestId('tab-layout')).toBeVisible();
         await expect(page.getByText('Content')).toBeVisible();
     });
+
+    test.describe('tabUrlParam', () => {
+        const urlTabs = [
+            { title: 'Details', content: <div data-testid="details-content">Details</div> },
+            { title: 'Related Certificates', content: <div data-testid="related-content">Related</div> },
+            { title: 'Flow', content: <div data-testid="flow-content">Flow</div> },
+        ];
+
+        test('activates tab matching slug from URL on mount', async ({ mount }) => {
+            const component = await mount(<TabLayoutWithStore tabUrlParam="tab" initialEntries={['/?tab=flow']} tabs={urlTabs} />);
+            await expect(component.getByTestId('flow-content')).toBeVisible();
+            await expect(component.getByTestId('details-content')).not.toBeVisible();
+        });
+
+        test('falls back to first tab when URL slug is unknown', async ({ mount }) => {
+            const component = await mount(<TabLayoutWithStore tabUrlParam="tab" initialEntries={['/?tab=nonexistent']} tabs={urlTabs} />);
+            await expect(component.getByTestId('details-content')).toBeVisible();
+        });
+
+        test('writes kebab-case slug to URL on tab click', async ({ mount }) => {
+            const component = await mount(<TabLayoutWithStore tabUrlParam="tab" tabs={urlTabs} />);
+            await component.getByRole('tab', { name: 'Related Certificates' }).click();
+            await expect(component.getByTestId('location-probe')).toHaveAttribute('data-search', '?tab=related-certificates');
+            await expect(component.getByTestId('related-content')).toBeVisible();
+        });
+
+        test('removes URL param when first tab is reselected', async ({ mount }) => {
+            const component = await mount(<TabLayoutWithStore tabUrlParam="tab" initialEntries={['/?tab=flow']} tabs={urlTabs} />);
+            await component.getByRole('tab', { name: 'Details' }).click();
+            await expect(component.getByTestId('location-probe')).toHaveAttribute('data-search', '');
+        });
+
+        test('fires tab onClick when activated via URL', async ({ mount }) => {
+            let flowActivations = 0;
+            const tabsWithOnClick = [
+                { title: 'Details', content: <div data-testid="details-content">Details</div> },
+                {
+                    title: 'Flow',
+                    onClick: () => {
+                        flowActivations += 1;
+                    },
+                    content: <div data-testid="flow-content">Flow</div>,
+                },
+            ];
+            await mount(<TabLayoutWithStore tabUrlParam="tab" initialEntries={['/?tab=flow']} tabs={tabsWithOnClick} />);
+            await expect.poll(() => flowActivations).toBe(1);
+        });
+
+        test('fires tab onClick exactly once on user click', async ({ mount }) => {
+            let flowActivations = 0;
+            const tabsWithOnClick = [
+                { title: 'Details', content: <div data-testid="details-content">Details</div> },
+                {
+                    title: 'Flow',
+                    onClick: () => {
+                        flowActivations += 1;
+                    },
+                    content: <div data-testid="flow-content">Flow</div>,
+                },
+            ];
+            const component = await mount(<TabLayoutWithStore tabUrlParam="tab" tabs={tabsWithOnClick} />);
+            await component.getByRole('tab', { name: 'Flow' }).click();
+            await expect(component.getByTestId('flow-content')).toBeVisible();
+            await expect.poll(() => flowActivations).toBe(1);
+        });
+
+        test('preserves unrelated query params on tab change', async ({ mount }) => {
+            const component = await mount(<TabLayoutWithStore tabUrlParam="tab" initialEntries={['/?foo=bar']} tabs={urlTabs} />);
+            await component.getByRole('tab', { name: 'Flow' }).click();
+            const search = await component.getByTestId('location-probe').getAttribute('data-search');
+            expect(search).toContain('foo=bar');
+            expect(search).toContain('tab=flow');
+        });
+    });
 });

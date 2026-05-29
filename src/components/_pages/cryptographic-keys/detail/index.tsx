@@ -383,6 +383,7 @@ export default function CryptographicKeyDetail() {
             <Breadcrumb items={breadcrumbItems} />
             <Widget widgetLockName={LockWidgetNameEnum.keyDetails} busy={isBusy} noBorder>
                 <TabLayout
+                    tabUrlParam="tab"
                     tabs={[
                         {
                             title: 'Details',

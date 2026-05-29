@@ -687,6 +687,7 @@ export default function LocationDetail() {
             <Widget widgetLockName={LockWidgetNameEnum.LocationDetails} busy={isBusy} noBorder>
                 <Container>
                     <TabLayout
+                        tabUrlParam="tab"
                         tabs={[
                             {
                                 title: 'Details',

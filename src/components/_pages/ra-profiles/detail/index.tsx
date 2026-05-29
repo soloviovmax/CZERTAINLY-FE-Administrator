@@ -881,6 +881,7 @@ export default function RaProfileDetail() {
                     />
                     <Widget widgetLockName={LockWidgetNameEnum.RaProfileDetails} busy={isBusy} noBorder>
                         <TabLayout
+                            tabUrlParam="tab"
                             tabs={[
                                 {
                                     title: 'Details',

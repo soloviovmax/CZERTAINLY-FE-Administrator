@@ -248,6 +248,7 @@ export default function DiscoveryDetail() {
             />
             <Widget widgetLockName={LockWidgetNameEnum.DiscoveryDetails} busy={isBusy} noBorder>
                 <TabLayout
+                    tabUrlParam="tab"
                     tabs={[
                         {
                             title: 'Details',

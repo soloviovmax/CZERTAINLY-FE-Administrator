@@ -113,6 +113,7 @@ export default function GroupDetail() {
             <Widget widgetLockName={LockWidgetNameEnum.GroupDetails} busy={isFetchingDetail} noBorder>
                 <Container>
                     <TabLayout
+                        tabUrlParam="tab"
                         tabs={[
                             {
                                 title: 'Details',

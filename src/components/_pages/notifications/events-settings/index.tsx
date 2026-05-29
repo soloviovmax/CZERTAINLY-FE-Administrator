@@ -18,6 +18,7 @@ const EventsSettings = () => {
 
     return (
         <TabLayout
+            tabUrlParam="tab"
             tabs={[
                 {
                     title: 'Events',

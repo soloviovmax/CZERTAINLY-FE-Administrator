@@ -404,6 +404,7 @@ const TriggerDetails = () => {
                 ]}
             />
             <TabLayout
+                tabUrlParam="tab"
                 tabs={[
                     {
                         title: 'Trigger Details',

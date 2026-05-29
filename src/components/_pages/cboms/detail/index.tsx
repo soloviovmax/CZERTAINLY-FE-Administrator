@@ -703,6 +703,7 @@ export default function CbomDetail() {
             <Spinner active={isFetching} />
 
             <TabLayout
+                tabUrlParam="tab"
                 selectedTab={activeTab}
                 onTabChange={handleDetailTabChange}
                 tabs={[

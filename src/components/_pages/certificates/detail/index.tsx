@@ -1152,6 +1152,7 @@ export default function CertificateDetail() {
             />
             <Widget widgetLockName={LockWidgetNameEnum.CertificateDetailsWidget} busy={isBusy} noBorder>
                 <TabLayout
+                    tabUrlParam="tab"
                     tabs={[
                         {
                             title: 'Details',
