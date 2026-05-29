@@ -2,7 +2,7 @@ import AttributeEditor from 'components/Attributes/AttributeEditor';
 import TabLayout from 'components/Layout/TabLayout';
 import ProgressButton from 'components/ProgressButton';
 import Widget from 'components/Widget';
-import { selectors as customAttributesSelectors } from 'ducks/customAttributes';
+import { selectors as customAttributesSelectors, actions as customAttributesActions } from 'ducks/customAttributes';
 import { actions as connectorActions } from 'ducks/connectors';
 import { selectors as notificationSelectors, actions as notificationsActions } from 'ducks/notifications';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -92,6 +92,10 @@ const NotificationInstanceForm = ({ notificationInstanceId, onCancel, onSuccess 
         if (notificationProviderAttributesDescriptors) return;
         dispatch(notificationsActions.listNotificationProviders());
     }, [notificationProviderAttributesDescriptors, dispatch]);
+
+    useEffect(() => {
+        dispatch(customAttributesActions.listCustomAttributes({}));
+    }, [dispatch]);
 
     const getContentTypeOptions = useCallback(
         (contentType: AttributeContentType) => {
@@ -498,31 +502,34 @@ const NotificationInstanceForm = ({ notificationInstanceId, onCancel, onSuccess 
                                     title: 'Attribute Mappings',
                                     content: mappingAttributes?.length ? (
                                         <Widget>
-                                            {mappingAttributes.map((mappingAttribute, i) => (
-                                                <div key={mappingAttribute.uuid} className="mb-4">
-                                                    <Select
-                                                        id={`attributeMappings[${i}].${mappingAttribute.name}`}
-                                                        options={getContentTypeOptions(mappingAttribute.contentType)}
-                                                        value={selectedCustomAttributes?.[i]?.value}
-                                                        onChange={(value) => {
-                                                            const option = getContentTypeOptions(mappingAttribute.contentType).find(
-                                                                (opt) => opt.value === value,
-                                                            );
-                                                            if (option) {
-                                                                handleMappingAttributeChange(
-                                                                    option,
-                                                                    i,
-                                                                    mappingAttribute.uuid,
-                                                                    mappingAttribute.name,
+                                            {mappingAttributes.map((mappingAttribute, i) => {
+                                                const displayLabel = mappingAttribute.properties?.label ?? mappingAttribute.name;
+                                                return (
+                                                    <div key={mappingAttribute.uuid} className="mb-4">
+                                                        <Select
+                                                            id={`attributeMappings[${i}].${mappingAttribute.name}`}
+                                                            options={getContentTypeOptions(mappingAttribute.contentType)}
+                                                            value={selectedCustomAttributes?.[i]?.value}
+                                                            onChange={(value) => {
+                                                                const option = getContentTypeOptions(mappingAttribute.contentType).find(
+                                                                    (opt) => opt.value === value,
                                                                 );
-                                                            }
-                                                        }}
-                                                        placeholder={`Select Custom Attribute for ${mappingAttribute.name}`}
-                                                        label={`${mappingAttribute.name} (${mappingAttribute.contentType})`}
-                                                    />
-                                                    <p className="mt-1 text-sm text-gray-500">{mappingAttribute?.description}</p>
-                                                </div>
-                                            ))}
+                                                                if (option) {
+                                                                    handleMappingAttributeChange(
+                                                                        option,
+                                                                        i,
+                                                                        mappingAttribute.uuid,
+                                                                        mappingAttribute.name,
+                                                                    );
+                                                                }
+                                                            }}
+                                                            placeholder={`Select Custom Attribute for ${displayLabel}`}
+                                                            label={`${displayLabel} (${mappingAttribute.contentType})`}
+                                                        />
+                                                        <p className="mt-1 text-sm text-gray-500">{mappingAttribute?.description}</p>
+                                                    </div>
+                                                );
+                                            })}
                                         </Widget>
                                     ) : (
                                         <></>
