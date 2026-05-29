@@ -47,4 +47,16 @@ export interface ExecutionItemDto {
      * @memberof ExecutionItemDto
      */
     data?: any | null;
+    /**
+     * Source field source for attribute mapping (META, DATA, or CUSTOM)
+     * @type {FilterFieldSource}
+     * @memberof ExecutionItemDto
+     */
+    sourceFieldSource?: FilterFieldSource;
+    /**
+     * Source field identifier for attribute mapping (format: name|ContentType)
+     * @type {string}
+     * @memberof ExecutionItemDto
+     */
+    sourceFieldIdentifier?: string;
 }

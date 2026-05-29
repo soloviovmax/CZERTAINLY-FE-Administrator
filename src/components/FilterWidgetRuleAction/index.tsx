@@ -14,7 +14,7 @@ import DatePicker from 'components/DatePicker';
 import Badge from 'components/Badge';
 import type { Observable } from 'rxjs';
 import type { SearchFieldListModel } from 'types/certificate';
-import { AttributeContentType, type FilterFieldSource, FilterFieldType, PlatformEnum } from 'types/openapi';
+import { AttributeContentType, FilterFieldSource, FilterFieldType, PlatformEnum } from 'types/openapi';
 import type { ExecutionItemModel, ExecutionItemRequestModel } from 'types/rules';
 import { getFormTypeFromAttributeContentType, getFormTypeFromFilterFieldType } from 'utils/common-utils';
 import {
@@ -95,7 +95,18 @@ function isFilterValueEmpty(value: unknown): boolean {
     return value === undefined || value === null || value === '' || (Array.isArray(value) && !value.length);
 }
 
+const EMPTY_SOURCE_FILTERS: SearchFieldListModel[] = [];
+const emptySourceFiltersSelector = () => EMPTY_SOURCE_FILTERS;
+
 function mapActionToExecutionItem(a: ExecutionItemRequestModel, availableFilters: SearchFieldListModel[]): ExecutionItemModel {
+    if (a.sourceFieldSource && a.sourceFieldIdentifier) {
+        return {
+            fieldSource: a.fieldSource,
+            fieldIdentifier: a.fieldIdentifier,
+            sourceFieldSource: a.sourceFieldSource,
+            sourceFieldIdentifier: a.sourceFieldIdentifier,
+        };
+    }
     const fieldOfAction = findFieldDef(availableFilters, a.fieldSource, a.fieldIdentifier);
     const isDateField = fieldOfAction && checkIfFieldAttributeTypeIsDate(fieldOfAction);
     const formatData = (v: any) => {
@@ -120,19 +131,25 @@ function mapActionToExecutionItem(a: ExecutionItemRequestModel, availableFilters
 type Props = {
     title: string;
     entity: EntityType;
+    sourceEntity?: EntityType;
     getAvailableFiltersApi: (apiClients: ApiClients) => Observable<Array<SearchFieldListModel>>;
+    getSourceAvailableFiltersApi?: (apiClients: ApiClients) => Observable<Array<SearchFieldListModel>>;
     onActionsUpdate?: (actionRuleRequests: ExecutionItemModel[]) => void;
     ExecutionsList?: ExecutionItemModel[];
     disableBadgeRemove?: boolean;
     busyBadges?: boolean;
 };
 
+type ValueMode = 'static' | 'mapped';
+
 export default function FilterWidgetRuleAction({
     ExecutionsList,
     onActionsUpdate,
     title,
     entity,
+    sourceEntity,
     getAvailableFiltersApi,
+    getSourceAvailableFiltersApi,
     disableBadgeRemove,
     busyBadges,
 }: Readonly<Props>) {
@@ -162,6 +179,20 @@ export default function FilterWidgetRuleAction({
         | undefined
     >(undefined);
 
+    const sourceFiltersSelector = useMemo(
+        () => (sourceEntity === undefined ? emptySourceFiltersSelector : selectors.availableFilters(sourceEntity)),
+        [sourceEntity],
+    );
+    const sourceAvailableFiltersRaw = useSelector(sourceFiltersSelector);
+    const sourceAvailableFilters = useMemo<SearchFieldListModel[]>(
+        () => (sourceAvailableFiltersRaw ?? []).filter((f) => f.filterFieldSource !== FilterFieldSource.Property),
+        [sourceAvailableFiltersRaw],
+    );
+
+    const [valueMode, setValueMode] = useState<ValueMode>('static');
+    const [sourceFieldSource, setSourceFieldSource] = useState<FilterFieldSource | undefined>(undefined);
+    const [sourceFilterField, setSourceFilterField] = useState<string | undefined>(undefined);
+
     const booleanOptions = useMemo(
         () => [
             { label: 'True', value: true },
@@ -175,11 +206,30 @@ export default function FilterWidgetRuleAction({
     }, [dispatch, entity, getAvailableFiltersApi]);
 
     useEffect(() => {
+        if (sourceEntity === undefined || !getSourceAvailableFiltersApi) return;
+        dispatch(filterActions.getAvailableFilters({ entity: sourceEntity, getAvailableFiltersApi: getSourceAvailableFiltersApi }));
+    }, [dispatch, sourceEntity, getSourceAvailableFiltersApi]);
+
+    useEffect(() => {
+        // Reset editor state whenever the entity context shifts. In current callers `sourceEntity`
+        // is a constant alongside `entity`, but keep it in the deps so any future caller that
+        // swaps `sourceEntity` independently does not leak prior source selections.
         setFilterValue(undefined);
         setFilterField(undefined);
         setFieldSource(undefined);
+        setValueMode('static');
+        setSourceFieldSource(undefined);
+        setSourceFilterField(undefined);
         setSelectedFilter(-1);
-    }, [entity]);
+    }, [entity, sourceEntity]);
+
+    useEffect(() => {
+        if (fieldSource !== FilterFieldSource.Custom && valueMode === 'mapped') {
+            setValueMode('static');
+            setSourceFieldSource(undefined);
+            setSourceFilterField(undefined);
+        }
+    }, [fieldSource, valueMode]);
 
     const unselectAllFilters = useCallback(() => {
         setSelectedFilter(-1);
@@ -211,7 +261,33 @@ export default function FilterWidgetRuleAction({
         setFieldSource(undefined);
         setFilterField(undefined);
         setFilterValue(undefined);
+        setValueMode('static');
+        setSourceFieldSource(undefined);
+        setSourceFilterField(undefined);
     }, []);
+
+    const targetContentType = useMemo(
+        () => findFieldDef(availableFilters, fieldSource, filterField)?.attributeContentType,
+        [availableFilters, fieldSource, filterField],
+    );
+
+    // Source content type must match target's; backend rejects mismatches.
+    const sourceCurrentFields = useMemo(() => {
+        const fields = findSearchFieldData(sourceAvailableFilters, sourceFieldSource);
+        if (!fields) return fields;
+        if (!targetContentType) return fields;
+        return fields.filter((f) => f.attributeContentType === targetContentType);
+    }, [sourceAvailableFilters, sourceFieldSource, targetContentType]);
+
+    // Skip when filters not loaded yet so hydration from a saved mapped item isn't wiped.
+    useEffect(() => {
+        if (!sourceFilterField) return;
+        if (sourceAvailableFilters.length === 0) return;
+        if (sourceCurrentFields === undefined) return;
+        if (!sourceCurrentFields.some((f) => f.fieldIdentifier === sourceFilterField)) {
+            setSourceFilterField(undefined);
+        }
+    }, [sourceAvailableFilters, sourceCurrentFields, sourceFilterField]);
 
     const notifyActionsUpdate = useCallback(
         (next: ExecutionItemRequestModel[]) => {
@@ -335,23 +411,35 @@ export default function FilterWidgetRuleAction({
     );
 
     const onUpdateClick = useCallback(() => {
-        if (!fieldSource || !filterField || isFilterValueEmpty(filterValue)) return;
+        if (!fieldSource || !filterField) return;
 
-        let executionData: any;
-        if (typeof filterValue === 'string' || typeof filterValue === 'number' || typeof filterValue === 'boolean') {
-            executionData = filterValue;
-        } else if (Array.isArray(filterValue)) {
-            executionData = filterValue.map((v) => (v as { value: unknown }).value);
-        } else if (Object.hasOwn(filterValue as object, 'value')) {
-            executionData = (filterValue as { value: unknown }).value;
+        let newExecution: ExecutionItemRequestModel;
+        if (valueMode === 'mapped') {
+            if (fieldSource !== FilterFieldSource.Custom || !sourceFieldSource || !sourceFilterField) return;
+            newExecution = {
+                fieldSource,
+                fieldIdentifier: filterField,
+                sourceFieldSource,
+                sourceFieldIdentifier: sourceFilterField,
+            };
         } else {
-            executionData = filterValue;
+            if (isFilterValueEmpty(filterValue)) return;
+            let executionData: any;
+            if (typeof filterValue === 'string' || typeof filterValue === 'number' || typeof filterValue === 'boolean') {
+                executionData = filterValue;
+            } else if (Array.isArray(filterValue)) {
+                executionData = filterValue.map((v) => (v as { value: unknown }).value);
+            } else if (Object.hasOwn(filterValue as object, 'value')) {
+                executionData = (filterValue as { value: unknown }).value;
+            } else {
+                executionData = filterValue;
+            }
+            newExecution = {
+                fieldSource,
+                fieldIdentifier: filterField,
+                data: executionData,
+            };
         }
-        const newExecution: ExecutionItemRequestModel = {
-            fieldSource,
-            fieldIdentifier: filterField,
-            data: executionData,
-        };
         clearFilterInputs();
 
         const updatedActions =
@@ -359,7 +447,18 @@ export default function FilterWidgetRuleAction({
         setActions(updatedActions);
         notifyActionsUpdate(updatedActions);
         setSelectedFilter(-1);
-    }, [fieldSource, filterField, filterValue, actions, selectedFilter, clearFilterInputs, notifyActionsUpdate]);
+    }, [
+        fieldSource,
+        filterField,
+        filterValue,
+        valueMode,
+        sourceFieldSource,
+        sourceFilterField,
+        actions,
+        selectedFilter,
+        clearFilterInputs,
+        notifyActionsUpdate,
+    ]);
 
     useEffect(() => {
         if (selectedFilter === -1) {
@@ -448,6 +547,17 @@ export default function FilterWidgetRuleAction({
 
         setFieldSource(field);
         setFilterField(fieldIdentifier);
+
+        if (selectedAction.sourceFieldSource && selectedAction.sourceFieldIdentifier) {
+            setValueMode('mapped');
+            setSourceFieldSource(selectedAction.sourceFieldSource);
+            setSourceFilterField(selectedAction.sourceFieldIdentifier);
+            setFilterValue(undefined);
+            return;
+        }
+        setValueMode('static');
+        setSourceFieldSource(undefined);
+        setSourceFilterField(undefined);
 
         const currentActionDataRaw = selectedAction.data;
         if (currentActionDataRaw === undefined) {
@@ -601,11 +711,11 @@ export default function FilterWidgetRuleAction({
     );
 
     const renderBadgeContent = useCallback(
-        (itemNumber: number, value: string, label?: string, fieldSource?: string) => (
+        (itemNumber: number, value: string, label?: string, fieldSource?: string, isMapped?: boolean) => (
             <React.Fragment key={itemNumber}>
                 <b>{fieldSource && getEnumLabel(searchGroupEnum, fieldSource)}&nbsp;</b>'{label}
                 '&nbsp;to&nbsp;
-                {value}
+                {isMapped ? <i>{value}</i> : value}
                 {!disableBadgeRemove && (
                     <span
                         onClick={(event) => {
@@ -630,10 +740,13 @@ export default function FilterWidgetRuleAction({
         [onRemoveFilterClick, searchGroupEnum, disableBadgeRemove],
     );
 
-    const isUpdateButtonDisabled = useMemo(
-        () => !filterField || !fieldSource || isFilterValueEmpty(filterValue),
-        [filterField, fieldSource, filterValue],
-    );
+    const isUpdateButtonDisabled = useMemo(() => {
+        if (!filterField || !fieldSource) return true;
+        if (valueMode === 'mapped') {
+            return fieldSource !== FilterFieldSource.Custom || !sourceFieldSource || !sourceFilterField;
+        }
+        return isFilterValueEmpty(filterValue);
+    }, [filterField, fieldSource, filterValue, valueMode, sourceFieldSource, sourceFilterField]);
 
     const renderBooleanValueSelect = (
         <Select
@@ -699,11 +812,45 @@ export default function FilterWidgetRuleAction({
     const renderTextOrDateField = isDateOrDatetime ? renderDateOrDatetimePicker : renderTextInputField;
     const renderValueField = isTextInputField ? renderTextOrDateField : renderBooleanOrObjectValueField;
 
+    const mappingSupported = sourceEntity !== undefined;
+    const isMappingTargetCustom = fieldSource === FilterFieldSource.Custom;
+    const isMappedMode = mappingSupported && valueMode === 'mapped';
+    const gridColsClass = isMappedMode ? 'grid-cols-5' : 'grid-cols-4';
+
     return (
         <Widget title={title} busy={isFetchingAvailableFilters} titleSize="large">
             <div id="unselectFilters" role="button" tabIndex={0} onClick={onUnselectFiltersClick} onKeyDown={onUnselectFiltersKeyDown}>
+                {mappingSupported && isMappingTargetCustom && (
+                    <div className="flex flex-row gap-4 mb-3 text-sm">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="valueMode"
+                                checked={valueMode === 'static'}
+                                onChange={() => {
+                                    setValueMode('static');
+                                    setSourceFieldSource(undefined);
+                                    setSourceFilterField(undefined);
+                                }}
+                            />
+                            <span>Static value</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="valueMode"
+                                checked={valueMode === 'mapped'}
+                                onChange={() => {
+                                    setValueMode('mapped');
+                                    setFilterValue(undefined);
+                                }}
+                            />
+                            <span>Mapped from attribute</span>
+                        </label>
+                    </div>
+                )}
                 <div className="flex flex-row gap-2 mb-4 items-end">
-                    <div className="grid grid-cols-4 gap-2 w-full">
+                    <div className={`grid ${gridColsClass} gap-2 w-full`}>
                         <Select
                             id="group"
                             options={availableFilters.map((f) => ({
@@ -733,10 +880,39 @@ export default function FilterWidgetRuleAction({
                             label="Field"
                         />
 
-                        <div>
-                            <Label htmlFor="valueSelect">Value</Label>
-                            {renderValueField}
-                        </div>
+                        {isMappedMode ? (
+                            <>
+                                <Select
+                                    id="sourceGroup"
+                                    options={sourceAvailableFilters.map((f) => ({
+                                        label: getEnumLabel(searchGroupEnum, f.filterFieldSource),
+                                        value: f.filterFieldSource,
+                                    }))}
+                                    onChange={(value) => {
+                                        setSourceFieldSource((value as FilterFieldSource) || undefined);
+                                        setSourceFilterField(undefined);
+                                    }}
+                                    value={sourceFieldSource || ''}
+                                    isClearable
+                                    isDisabled={!filterField}
+                                    label="Source Field Source"
+                                />
+                                <Select
+                                    id="sourceField"
+                                    options={sourceCurrentFields?.map((f) => ({ label: f.fieldLabel, value: f.fieldIdentifier }))}
+                                    onChange={(value) => setSourceFilterField((value as string) || undefined)}
+                                    value={sourceFilterField || ''}
+                                    isDisabled={!sourceFieldSource}
+                                    isClearable
+                                    label="Source Field"
+                                />
+                            </>
+                        ) : (
+                            <div>
+                                <Label htmlFor="valueSelect">Value</Label>
+                                {renderValueField}
+                            </div>
+                        )}
 
                         <div className="flex items-end">
                             <Button color="primary" className="py-3 min-w-[62px]" onClick={onUpdateClick} disabled={isUpdateButtonDisabled}>
@@ -750,21 +926,31 @@ export default function FilterWidgetRuleAction({
                     {actions.map((f, i) => {
                         const field = findFieldDef(availableFilters, f.fieldSource, f.fieldIdentifier);
                         const label = field ? field.fieldLabel : f.fieldIdentifier;
-                        const nonArrayValue = f.data ? `'${formatBadgeDataValue(f.data, field, platformEnums)}'` : '';
-                        const arrayOrScalarValue = Array.isArray(f.data)
-                            ? f.data.map((v) => `'${formatBadgeDataValue(v, field, platformEnums)}'`).join(', ')
-                            : nonArrayValue;
-                        const value =
-                            field?.type === FilterFieldType.Boolean
-                                ? `'${booleanOptions.find((b) => !!f.data === b.value)?.label}'`
-                                : arrayOrScalarValue;
+                        const isMapped = !!f.sourceFieldSource && !!f.sourceFieldIdentifier;
+                        let value: string;
+                        if (isMapped) {
+                            const sourceField = findFieldDef(sourceAvailableFilters, f.sourceFieldSource, f.sourceFieldIdentifier);
+                            const sourceLabel = sourceField?.fieldLabel ?? f.sourceFieldIdentifier;
+                            value = `${getEnumLabel(searchGroupEnum, f.sourceFieldSource!)} '${sourceLabel}'`;
+                        } else {
+                            const nonArrayValue = f.data ? `'${formatBadgeDataValue(f.data, field, platformEnums)}'` : '';
+                            const arrayOrScalarValue = Array.isArray(f.data)
+                                ? f.data.map((v) => `'${formatBadgeDataValue(v, field, platformEnums)}'`).join(', ')
+                                : nonArrayValue;
+                            value =
+                                field?.type === FilterFieldType.Boolean
+                                    ? `'${booleanOptions.find((b) => !!f.data === b.value)?.label}'`
+                                    : arrayOrScalarValue;
+                        }
                         return (
                             <Badge
                                 key={`${i}-${f.fieldSource}-${f.fieldIdentifier}`}
                                 onClick={() => toggleFilter(i)}
                                 color={selectedFilter === i ? 'primary' : 'secondary'}
                             >
-                                {!isFetchingAvailableFilters && !busyBadges && <>{renderBadgeContent(i, value, label, f.fieldSource)}</>}
+                                {!isFetchingAvailableFilters && !busyBadges && (
+                                    <>{renderBadgeContent(i, value, label, f.fieldSource, isMapped)}</>
+                                )}
                             </Badge>
                         );
                     })}

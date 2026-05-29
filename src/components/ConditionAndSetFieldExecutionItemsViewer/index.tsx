@@ -111,6 +111,7 @@ const ConditionAndSetFieldExecutionItemsViewer = ({ resource, formType }: Condit
                 {
                     <FilterWidgetRuleAction
                         entity={EntityType.ACTIONS}
+                        sourceEntity={EntityType.ACTIONS_SOURCE}
                         title="Execution Items"
                         busyBadges={isBusy}
                         disableBadgeRemove={disableBadgeRemove}
@@ -119,6 +120,9 @@ const ConditionAndSetFieldExecutionItemsViewer = ({ resource, formType }: Condit
                                 resource,
                                 settable: true,
                             })
+                        }
+                        getSourceAvailableFiltersApi={(apiClients: ApiClients) =>
+                            apiClients.resources.listResourceRuleFilterFields({ resource })
                         }
                         ExecutionsList={executionDetails.items}
                         onActionsUpdate={(currentExecutionItems) => {

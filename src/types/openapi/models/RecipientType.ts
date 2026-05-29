@@ -23,4 +23,5 @@ export enum RecipientType {
     Group = 'group',
     Role = 'role',
     Owner = 'owner',
+    Mapped = 'mapped',
 }

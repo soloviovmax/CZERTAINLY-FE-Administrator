@@ -55,6 +55,7 @@ export const renderExecutionItems = (
     platformEnums: Record<string, Record<string, { label: string }>>,
     searchGroupEnum: Record<string, EnumItemDto>,
     variant: RenderVariant = 'badge',
+    sourceAvailableFilters: SearchFieldListModel[] = availableFilters,
 ) => {
     if (executionType === ExecutionType.SendNotification) {
         return executionItems.map((item, i) => {
@@ -86,8 +87,24 @@ export const renderExecutionItems = (
             ?.searchFieldData?.find((s) => s.fieldIdentifier === item.fieldIdentifier);
 
         const label = field ? field.fieldLabel : item.fieldIdentifier;
-        const value = getSetFieldValue(item, field, platformEnums);
-        const key = `${i}-${label}-${value}`;
+        const isMapped = !!item.sourceFieldSource && !!item.sourceFieldIdentifier;
+        const sourceField = isMapped
+            ? sourceAvailableFilters
+                  .find((a) => a.filterFieldSource === item.sourceFieldSource)
+                  ?.searchFieldData?.find((s) => s.fieldIdentifier === item.sourceFieldIdentifier)
+            : undefined;
+        const sourceLabel = isMapped ? (sourceField?.fieldLabel ?? item.sourceFieldIdentifier) : '';
+        const value = isMapped ? '' : getSetFieldValue(item, field, platformEnums);
+        const keySuffix = isMapped ? `mapped:${item.sourceFieldSource}:${item.sourceFieldIdentifier}` : value;
+        const key = `${i}-${label}-${keySuffix}`;
+
+        const tail = isMapped ? (
+            <i>
+                {getEnumLabel(searchGroupEnum, item.sourceFieldSource!)}&nbsp;'{sourceLabel}'
+            </i>
+        ) : (
+            <>{value}</>
+        );
 
         if (variant === 'badge') {
             return (
@@ -95,7 +112,7 @@ export const renderExecutionItems = (
                     <>
                         {item?.fieldSource && getEnumLabel(searchGroupEnum, item.fieldSource)}&nbsp;'{label}
                         '&nbsp;to&nbsp;
-                        {value}
+                        {tail}
                     </>
                 </Badge>
             );
@@ -105,7 +122,7 @@ export const renderExecutionItems = (
                 <span>
                     {item?.fieldSource && getEnumLabel(searchGroupEnum, item.fieldSource)}&nbsp;'{label}
                     '&nbsp;to&nbsp;
-                    {value}
+                    {tail}
                 </span>
             </div>
         );

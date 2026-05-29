@@ -17,6 +17,7 @@ interface ConditionsExecutionsListProps {
     ruleConditions?: ConditionModel[];
     actionExecutions?: ExecutionModel[];
     getAvailableFiltersApi: (apiClients: ApiClients) => Observable<Array<SearchFieldListModel>>;
+    getSourceAvailableFiltersApi?: (apiClients: ApiClients) => Observable<Array<SearchFieldListModel>>;
     listType: ListType;
 }
 
@@ -24,6 +25,7 @@ const ConditionsExecutionsList = ({
     ruleConditions,
     actionExecutions,
     getAvailableFiltersApi,
+    getSourceAvailableFiltersApi,
     listType,
 }: ConditionsExecutionsListProps) => {
     const isFetchingAvailableFiltersConditions = useSelector(selectors.isFetchingFilters(EntityType.CONDITIONS));
@@ -36,6 +38,16 @@ const ConditionsExecutionsList = ({
             dispatch(filterActions.getAvailableFilters({ entity: EntityType.CONDITIONS, getAvailableFiltersApi }));
         else dispatch(filterActions.getAvailableFilters({ entity: EntityType.ACTIONS, getAvailableFiltersApi }));
     }, [dispatch, getAvailableFiltersApi, listType]);
+
+    useEffect(() => {
+        if (listType !== 'executionItems' || !getSourceAvailableFiltersApi) return;
+        dispatch(
+            filterActions.getAvailableFilters({
+                entity: EntityType.ACTIONS_SOURCE,
+                getAvailableFiltersApi: getSourceAvailableFiltersApi,
+            }),
+        );
+    }, [dispatch, getSourceAvailableFiltersApi, listType]);
 
     const isBusy = useMemo(
         () =>

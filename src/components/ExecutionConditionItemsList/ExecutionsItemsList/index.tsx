@@ -25,6 +25,7 @@ const ExecutionsItemsList = ({
 }: ExecutionsItemsListProps) => {
     const searchGroupEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.FilterFieldSource));
     const availableFilters = useSelector(selectors.availableFilters(EntityType.ACTIONS));
+    const sourceAvailableFilters = useSelector(selectors.availableFilters(EntityType.ACTIONS_SOURCE));
     const platformEnums = useSelector(enumSelectors.platformEnums);
 
     const isFetchingConditionDetails = useSelector(rulesSelectors.isFetchingConditionDetails);
@@ -41,14 +42,30 @@ const ExecutionsItemsList = ({
         <div className="flex gap-2 items-center">
             <h6 className="text-gray-500">{`${executionName}'s Execution Items`}</h6>
             <div className="flex flex-wrap">
-                {renderExecutionItems(executionItems, executionType, availableFilters, platformEnums, searchGroupEnum, 'small')}
+                {renderExecutionItems(
+                    executionItems,
+                    executionType,
+                    availableFilters,
+                    platformEnums,
+                    searchGroupEnum,
+                    'small',
+                    sourceAvailableFilters,
+                )}
             </div>
         </div>
     ) : (
         <div key={executionUuid} className="flex gap-2 items-start">
             <h6 className="text-gray-500 whitespace-nowrap">{`${executionName}`}</h6>
             <div className="flex flex-wrap gap-2">
-                {renderExecutionItems(executionItems, executionType, availableFilters, platformEnums, searchGroupEnum, 'badge')}
+                {renderExecutionItems(
+                    executionItems,
+                    executionType,
+                    availableFilters,
+                    platformEnums,
+                    searchGroupEnum,
+                    'badge',
+                    sourceAvailableFilters,
+                )}
             </div>
         </div>
     );
