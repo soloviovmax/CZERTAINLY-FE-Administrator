@@ -408,11 +408,10 @@ describe('certificates slice', () => {
         expect(next.isBulkUpdatingGroup).toBe(false);
     });
 
-    test('bulkUpdateRaProfile / success / failure update raProfile in list and detail', () => {
+    test('bulkUpdateRaProfile / success / failure toggle loading flag without mutating certificates', () => {
         let next = reducer(initialState, actions.bulkUpdateRaProfile({ authorityUuid: 'auth-1', raProfileRequest: {} as any }));
         expect(next.isBulkUpdatingRaProfile).toBe(true);
 
-        const raProfile = { uuid: 'ra-1', name: 'RA' } as any;
         const stateWithCerts = {
             ...initialState,
             isBulkUpdatingRaProfile: true,
@@ -422,11 +421,12 @@ describe('certificates slice', () => {
             ] as any,
             certificateDetail: { uuid: 'cert-1', raProfile: undefined } as any,
         };
-        next = reducer(stateWithCerts, actions.bulkUpdateRaProfileSuccess({ uuids: ['cert-1', 'cert-2'], raProfile }));
+        next = reducer(stateWithCerts, actions.bulkUpdateRaProfileSuccess({ uuids: ['cert-1', 'cert-2'] }));
         expect(next.isBulkUpdatingRaProfile).toBe(false);
-        expect(next.certificates[0].raProfile).toEqual(raProfile);
-        expect(next.certificates[1].raProfile).toEqual(raProfile);
-        expect(next.certificateDetail?.raProfile).toEqual(raProfile);
+        // Certificates are not mutated on success — the list refetch is the source of truth.
+        expect(next.certificates[0].raProfile).toBeUndefined();
+        expect(next.certificates[1].raProfile).toBeUndefined();
+        expect(next.certificateDetail?.raProfile).toBeUndefined();
 
         next = reducer({ ...next, isBulkUpdatingRaProfile: true }, actions.bulkUpdateRaProfileFailure({ error: 'err' }));
         expect(next.isBulkUpdatingRaProfile).toBe(false);

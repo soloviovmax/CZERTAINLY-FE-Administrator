@@ -1,6 +1,6 @@
 import type { AppEpic } from 'ducks';
-import { of } from 'rxjs';
-import { catchError, filter, map, mergeMap, switchMap } from 'rxjs/operators';
+import { merge, of } from 'rxjs';
+import { catchError, filter, map, mergeMap, switchMap, take } from 'rxjs/operators';
 import { extractError } from 'utils/net';
 import { actions as alertActions } from './alerts';
 import { actions as appRedirectActions } from './app-redirect';
@@ -839,45 +839,53 @@ const bulkDeleteGroup: AppEpic = (action$, state, deps) => {
 const bulkUpdateRaProfile: AppEpic = (action$, state, deps) => {
     return action$.pipe(
         filter(slice.actions.bulkUpdateRaProfile.match),
-        switchMap((action) =>
-            deps.apiClients.certificates
+        switchMap((action) => {
+            const requestedUuids = action.payload.raProfileRequest.certificateUuids ?? [];
+            const requestedRaProfileUuid = action.payload.raProfileRequest.raProfileUuid;
+
+            const verifyAfterRefetch$ = action$.pipe(
+                filter(slice.actions.listCertificatesSuccess.match),
+                take(1),
+                map((listAction) => {
+                    const applied = listAction.payload.filter(
+                        (cert) => requestedUuids.includes(cert.uuid) && cert.raProfile?.uuid === requestedRaProfileUuid,
+                    ).length;
+                    const requested = requestedUuids.length;
+                    if (applied === requested) {
+                        return alertActions.success('Update operation for selected certificates RA profile completed.');
+                    }
+                    if (applied === 0) {
+                        return alertActions.error(
+                            'No certificates were updated. The backend rejected the requested RA profile for the selection.',
+                        );
+                    }
+                    return alertActions.info(
+                        `RA profile was applied to ${applied} of ${requested} certificates. The rest were rejected by the backend.`,
+                    );
+                }),
+            );
+
+            return deps.apiClients.certificates
                 .bulkUpdateCertificateObjects({
                     multipleCertificateObjectUpdateDto: transformCertificateBulkObjectModelToDto(action.payload.raProfileRequest),
                 })
                 .pipe(
-                    switchMap(() =>
-                        deps.apiClients.raProfiles
-                            .getRaProfile({
-                                authorityUuid: action.payload.authorityUuid,
-                                raProfileUuid: action.payload.raProfileRequest.raProfileUuid!,
-                            })
-                            .pipe(
-                                map((raProfile) =>
-                                    slice.actions.bulkUpdateRaProfileSuccess({
-                                        uuids: action.payload.raProfileRequest.certificateUuids!,
-                                        raProfile: transformRaProfileResponseDtoToModel(raProfile),
-                                    }),
-                                ),
-
-                                catchError((err) =>
-                                    of(
-                                        slice.actions.updateOwnerFailure({
-                                            error: extractError(err, 'Failed to bulk update update RA profile'),
-                                        }),
-                                        appRedirectActions.fetchError({ error: err, message: 'Failed to bulk update update RA profile' }),
-                                    ),
-                                ),
-                            ),
-                    ),
-
-                    catchError((err) =>
-                        of(
-                            slice.actions.updateOwnerFailure({ error: extractError(err, 'Failed to bulk update update RA profile') }),
-                            appRedirectActions.fetchError({ error: err, message: 'Failed to bulk update update RA profile' }),
+                    mergeMap(() =>
+                        merge(
+                            of(slice.actions.bulkUpdateRaProfileSuccess({ uuids: requestedUuids }), slice.actions.listCertificates({})),
+                            verifyAfterRefetch$,
                         ),
                     ),
-                ),
-        ),
+                    catchError((err) =>
+                        of(
+                            slice.actions.bulkUpdateRaProfileFailure({
+                                error: extractError(err, 'Failed to bulk update RA profile'),
+                            }),
+                            appRedirectActions.fetchError({ error: err, message: 'Failed to bulk update RA profile' }),
+                        ),
+                    ),
+                );
+        }),
     );
 };
 
