@@ -94,14 +94,15 @@ const NotificationInstanceForm = ({ notificationInstanceId, onCancel, onSuccess 
     }, [notificationProviderAttributesDescriptors, dispatch]);
 
     useEffect(() => {
+        if (!mappingAttributes?.length) return;
         dispatch(customAttributesActions.listCustomAttributes({}));
-    }, [dispatch]);
+    }, [dispatch, mappingAttributes]);
 
     const getContentTypeOptions = useCallback(
         (contentType: AttributeContentType) => {
             const contentTypeCustomAttributes = customAttributes.filter((customAttribute) => customAttribute.contentType === contentType);
             return contentTypeCustomAttributes.map((contentTypeCustomAttribute) => ({
-                label: contentTypeCustomAttribute.name,
+                label: contentTypeCustomAttribute.label || contentTypeCustomAttribute.name,
                 value: contentTypeCustomAttribute.uuid,
             }));
         },

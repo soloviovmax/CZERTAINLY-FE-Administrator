@@ -12,7 +12,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router';
 import Container from 'components/Container';
-import Label from 'components/Label';
 import { getEditAndDeleteWidgetButtons, createWidgetDetailHeaders } from 'utils/widget';
 import NotificationInstanceForm from '../notification-instance-form';
 import Breadcrumb from 'components/Breadcrumb';
@@ -70,8 +69,12 @@ const NotificationInstanceDetails = () => {
                 connectorUuid: notificationInstance.connectorUuid,
             }),
         );
-        dispatch(customAttributesActions.listCustomAttributes({}));
     }, [dispatch, notificationInstance]);
+
+    useEffect(() => {
+        if (!mappingAttributes?.length) return;
+        dispatch(customAttributesActions.listCustomAttributes({}));
+    }, [dispatch, mappingAttributes]);
 
     const onEditClick = useCallback(() => {
         setIsEditModalOpen(true);
@@ -132,12 +135,20 @@ const NotificationInstanceDetails = () => {
         [mappingAttributes],
     );
 
-    const getCustomAttributeName = useCallback(
+    const getCustomAttributeLabel = useCallback(
         (attributeUuid: string) => {
             const customAttribute = customAttributes?.find((customAttribute) => customAttribute.uuid === attributeUuid);
-            return customAttribute?.name || '';
+            return customAttribute?.label || customAttribute?.name || '';
         },
         [customAttributes],
+    );
+
+    const getMappingAttributeLabel = useCallback(
+        (attributeUuid: string, fallback: string) => {
+            const mappingAttribute = mappingAttributes?.find((m) => m.uuid === attributeUuid);
+            return mappingAttribute?.properties?.label || fallback;
+        },
+        [mappingAttributes],
     );
 
     const attributeHeaders: TableHeader[] = useMemo(
@@ -172,16 +183,16 @@ const NotificationInstanceDetails = () => {
                       return {
                           id: attribute.mappingAttributeUuid,
                           columns: [
-                              attribute.mappingAttributeName,
+                              getMappingAttributeLabel(attribute.mappingAttributeUuid, attribute.mappingAttributeName),
                               <Link key="customAttr" to={`../../../customattributes/detail/${attribute.customAttributeUuid}`}>
-                                  {getCustomAttributeName(attribute.customAttributeUuid)}
+                                  {getCustomAttributeLabel(attribute.customAttributeUuid)}
                               </Link>,
                               getMappingAttributesContentType(attribute.mappingAttributeUuid),
                           ],
                       };
                   })
                 : [],
-        [notificationInstance, getMappingAttributesContentType, getCustomAttributeName],
+        [notificationInstance, getMappingAttributesContentType, getCustomAttributeLabel, getMappingAttributeLabel],
     );
 
     if (isFetchingNotificationInstanceDetail && !notificationInstance) {
@@ -209,9 +220,6 @@ const NotificationInstanceDetails = () => {
 
                 {notificationInstance?.attributes?.length ? (
                     <Widget title="Attributes" busy={isFetchingNotificationInstanceDetail} titleSize="large">
-                        <br />
-                        <Label>Notification Instance Attributes</Label>
-
                         <AttributeViewer attributes={notificationInstance.attributes} viewerType={ATTRIBUTE_VIEWER_TYPE.ATTRIBUTE} />
                     </Widget>
                 ) : (
@@ -219,9 +227,6 @@ const NotificationInstanceDetails = () => {
                 )}
                 {notificationInstance?.attributeMappings?.length ? (
                     <Widget title="Attribute Mappings" busy={isFetchingNotificationInstanceDetail} titleSize="large">
-                        <br />
-                        <Label>Notification Instance Attribute Mappings</Label>
-
                         <CustomTable headers={attributeHeaders} data={rolesTableData} />
                     </Widget>
                 ) : (
