@@ -14,18 +14,24 @@ function isChunkLoadError(error: unknown): boolean {
     return CHUNK_LOAD_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
 }
 
+export function reloadOnce(): boolean {
+    if (window.sessionStorage.getItem(RELOAD_FLAG) === 'true') {
+        return false;
+    }
+    window.sessionStorage.setItem(RELOAD_FLAG, 'true');
+    window.location.reload();
+    return true;
+}
+
 export async function loadWithReload<T>(factory: () => Promise<T>): Promise<T> {
     try {
         const module = await factory();
         window.sessionStorage.removeItem(RELOAD_FLAG);
         return module;
     } catch (error) {
-        const alreadyReloaded = window.sessionStorage.getItem(RELOAD_FLAG) === 'true';
         // Only a failed chunk fetch is recoverable by reloading. Module evaluation/runtime
         // errors must propagate untouched — a reload would not fix them and would mask the cause.
-        if (isChunkLoadError(error) && !alreadyReloaded) {
-            window.sessionStorage.setItem(RELOAD_FLAG, 'true');
-            window.location.reload();
+        if (isChunkLoadError(error) && reloadOnce()) {
             return new Promise<T>(() => {});
         }
         throw error;
