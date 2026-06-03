@@ -123,6 +123,10 @@ describe('attributes utils', () => {
             const content = [{ data: { uuid: '1111', resource: 'connectors' }, reference: 'Ref Name' } as any];
             expect(getAttributeCopyValue(AttributeContentType.Resource, content)).toBe('connectors, Ref Name, 1111');
         });
+
+        test('should emit empty fields for a Resource item with no data and no reference', () => {
+            expect(getAttributeCopyValue(AttributeContentType.Resource, [{} as any])).toBe(', , ');
+        });
     });
 
     describe('getAttributeContent', () => {
@@ -160,6 +164,16 @@ describe('attributes utils', () => {
                 { data: { uuid: '2222', name: 'Conn Two', resource: 'connectors' } } as any,
             ];
             expect(getAttributeContent(AttributeContentType.Resource, content)).toBe('Conn One, Conn Two');
+        });
+
+        test('prefers reference over data fields for Resource content', () => {
+            const content = [{ data: { uuid: '1111', name: 'Conn One' }, reference: 'Ref Name' } as any];
+            expect(getAttributeContent(AttributeContentType.Resource, content)).toBe('Ref Name');
+        });
+
+        test('falls back to uuid for Resource content when name and reference are missing', () => {
+            const content = [{ data: { uuid: '1111' } } as any];
+            expect(getAttributeContent(AttributeContentType.Resource, content)).toBe('1111');
         });
 
         test('returns primitive value for numeric and text content types', () => {

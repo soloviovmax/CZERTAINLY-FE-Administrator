@@ -5,26 +5,22 @@ import type { AttributeResponseModel } from 'types/attributes';
 import type { MetadataModel } from 'types/locations';
 import { ATTRIBUTE_VIEWER_TYPE } from './index';
 
+const makeResourceAttribute = (content: any[], overrides: Partial<AttributeResponseModel> = {}): AttributeResponseModel =>
+    ({
+        uuid: 'attr-1',
+        name: 'resAttr',
+        label: 'Resource Attr',
+        version: 'v1',
+        contentType: AttributeContentType.Resource,
+        content,
+        ...overrides,
+    }) as any;
+
+const connOne = { data: { uuid: '1234', name: 'Conn One', resource: Resource.Connectors } } as any;
+
 test.describe('AttributeViewer', () => {
     test('renders Resource attribute content as link', async ({ mount, page }) => {
-        const resourceAttribute: AttributeResponseModel = {
-            uuid: 'attr-1',
-            name: 'resAttr',
-            label: 'Resource Attr',
-            version: 'v1' as any,
-            contentType: AttributeContentType.Resource,
-            content: [
-                {
-                    data: {
-                        uuid: '1234',
-                        name: 'Conn One',
-                        resource: Resource.Connectors,
-                    },
-                } as any,
-            ],
-        } as any;
-
-        await mount(<AttributeViewerMountHarness attributes={[resourceAttribute]} />);
+        await mount(<AttributeViewerMountHarness attributes={[makeResourceAttribute([connOne])]} />);
 
         const link = page.getByRole('link', { name: 'Conn One' });
         await expect(link).toBeVisible();
@@ -32,18 +28,14 @@ test.describe('AttributeViewer', () => {
     });
 
     test('renders all items of a multi-value Resource attribute as links', async ({ mount, page }) => {
-        const resourceAttribute: AttributeResponseModel = {
-            uuid: 'attr-multi',
-            name: 'resAttrMulti',
-            label: 'Resource Attr Multi',
-            version: 'v1' as any,
-            contentType: AttributeContentType.Resource,
-            content: [
-                { data: { uuid: '1111', name: 'Conn One', resource: Resource.Connectors } } as any,
-                { data: { uuid: '2222', name: 'Conn Two', resource: Resource.Connectors } } as any,
-                { data: { uuid: '3333', name: 'Conn Three', resource: Resource.Connectors } } as any,
+        const resourceAttribute = makeResourceAttribute(
+            [
+                { data: { uuid: '1111', name: 'Conn One', resource: Resource.Connectors } },
+                { data: { uuid: '2222', name: 'Conn Two', resource: Resource.Connectors } },
+                { data: { uuid: '3333', name: 'Conn Three', resource: Resource.Connectors } },
             ],
-        } as any;
+            { uuid: 'attr-multi', name: 'resAttrMulti', label: 'Resource Attr Multi' },
+        );
 
         await mount(<AttributeViewerMountHarness attributes={[resourceAttribute]} />);
 
@@ -55,23 +47,29 @@ test.describe('AttributeViewer', () => {
         await expect(three).toHaveAttribute('href', '/connectors/detail/3333');
     });
 
-    test('METADATA viewer uses connectorName and sourceObjectType columns', async ({ mount, page }) => {
-        const resourceAttribute: AttributeResponseModel = {
-            uuid: 'attr-1',
-            name: 'resAttr',
-            label: 'Resource Attr',
-            version: 'v1' as any,
-            contentType: AttributeContentType.Resource,
-            content: [
-                {
-                    data: {
-                        uuid: '1234',
-                        name: 'Conn One',
-                        resource: Resource.Connectors,
-                    },
-                } as any,
+    test('uses name, reference then uuid for the link label and renders text for items without uuid/resource', async ({ mount, page }) => {
+        const resourceAttribute = makeResourceAttribute(
+            [
+                { data: { uuid: '1111', name: 'Conn One', resource: Resource.Connectors } },
+                { data: { uuid: '2222', resource: Resource.Connectors }, reference: 'Ref Label' },
+                { data: { uuid: '3333', resource: Resource.Connectors } },
+                { data: { name: 'Orphan Item' } },
+                {},
             ],
-        } as any;
+            { uuid: 'attr-mixed', name: 'resAttrMixed', label: 'Resource Attr Mixed' },
+        );
+
+        await mount(<AttributeViewerMountHarness attributes={[resourceAttribute]} />);
+
+        await expect(page.getByRole('link', { name: 'Conn One' })).toHaveAttribute('href', '/connectors/detail/1111');
+        await expect(page.getByRole('link', { name: 'Ref Label' })).toHaveAttribute('href', '/connectors/detail/2222');
+        await expect(page.getByRole('link', { name: '3333' })).toHaveAttribute('href', '/connectors/detail/3333');
+        await expect(page.getByText('Orphan Item')).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Orphan Item' })).toHaveCount(0);
+    });
+
+    test('METADATA viewer uses connectorName and sourceObjectType columns', async ({ mount, page }) => {
+        const resourceAttribute = makeResourceAttribute([connOne]);
 
         const metadata: MetadataModel = {
             connectorUuid: 'conn-uuid',
