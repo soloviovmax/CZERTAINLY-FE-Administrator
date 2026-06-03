@@ -120,13 +120,16 @@ export function Attribute({
 
     const handleSelectChangeMulti = useCallback(
         (fieldOnChange: (v: any) => void) => (newValue: any) => {
-            if (Array.isArray(newValue) && newValue.some((v: any) => v.value === '__add_new__')) {
+            const selected = Array.isArray(newValue) ? newValue : [];
+            const toRawValue = (v: any) => (v && typeof v === 'object' && 'value' in v ? v.value : v);
+            if (selected.some((v: any) => toRawValue(v) === '__add_new__')) {
                 handleAddNew();
-                const filteredValue = newValue.filter((v: any) => v.value !== '__add_new__');
+                const filteredValue = selected.filter((v: any) => toRawValue(v) !== '__add_new__').map(toRawValue);
                 fieldOnChange(filteredValue.length > 0 ? filteredValue : undefined);
                 return;
             }
-            fieldOnChange(newValue);
+            const rawValues = selected.map(toRawValue);
+            fieldOnChange(rawValues.length > 0 ? rawValues : undefined);
             onUserInteraction();
         },
         [handleAddNew, onUserInteraction],
