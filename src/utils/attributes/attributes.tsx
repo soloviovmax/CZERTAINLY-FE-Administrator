@@ -41,6 +41,16 @@ export const attributeFieldNameTransform: { [name: string]: string } = {
 export const getAttributeCopyValue = (contentType: AttributeContentType, content: BaseAttributeContentModel[] | undefined) => {
     if (!content) return undefined;
 
+    if (contentType === AttributeContentType.Resource) {
+        return content
+            .map((item) => {
+                const data = (item?.data ?? {}) as { uuid?: string; name?: string; resource?: string };
+                const name = data.name ?? item?.reference ?? '';
+                return `${data.resource ?? ''}, ${name}, ${data.uuid ?? ''}`;
+            })
+            .join('\n');
+    }
+
     const mapping = (content: BaseAttributeContentModel): string | undefined => {
         switch (contentType) {
             case AttributeContentType.Codeblock:
@@ -89,6 +99,10 @@ export const getAttributeContent = (contentType: AttributeContentType, content: 
             case AttributeContentType.Object:
             case AttributeContentType.File:
                 return content.reference;
+            case AttributeContentType.Resource: {
+                const data = content.data as { uuid?: string; name?: string } | undefined;
+                return content.reference ?? data?.name ?? data?.uuid;
+            }
             case AttributeContentType.Time:
                 return String(content.data);
             case AttributeContentType.Date:
