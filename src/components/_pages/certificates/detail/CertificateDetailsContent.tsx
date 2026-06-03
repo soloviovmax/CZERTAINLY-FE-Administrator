@@ -605,12 +605,17 @@ export default function CertificateDetailsContent({ certificate, validationResul
                                   disabled={isCertificateArchived}
                                   variant="transparent"
                                   color="secondary"
-                                  onClick={() => {
-                                      setUpdateRaProfile(true);
-                                      setRaProfile(certificate?.raProfile?.uuid);
-                                      setRaProfileAuthorityUuid(certificate?.raProfile?.authorityInstanceUuid);
-                                      dispatch(raProfileActions.listRaProfiles());
-                                  }}
+onClick={() => {
+    setUpdateRaProfile(true);
+
+    const currentRaProfileUuid = certificate?.raProfile?.uuid;
+    const currentAuthorityUuid = certificate?.raProfile?.authorityInstanceUuid;
+
+    setRaProfile(currentRaProfileUuid && currentAuthorityUuid ? currentRaProfileUuid : undefined);
+    setRaProfileAuthorityUuid(currentRaProfileUuid && currentAuthorityUuid ? currentAuthorityUuid : undefined);
+
+    dispatch(raProfileActions.listRaProfiles());
+}}
                                   title="Update RA Profile"
                               >
                                   <EditIcon size={16} />
