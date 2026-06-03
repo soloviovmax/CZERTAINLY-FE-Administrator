@@ -3,6 +3,7 @@ import { loadWithReload, RELOAD_FLAG } from './lazyWithRetry';
 
 describe('loadWithReload', () => {
     let reloadSpy: ReturnType<typeof vi.fn>;
+    const originalLocationDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
 
     beforeEach(() => {
         window.sessionStorage.clear();
@@ -10,12 +11,17 @@ describe('loadWithReload', () => {
         // window.location.reload is read-only in happy-dom; redefine it with a spy.
         Object.defineProperty(window, 'location', {
             value: { ...window.location, reload: reloadSpy },
+            configurable: true,
             writable: true,
         });
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
+        // Restore the original window.location so the override doesn't leak into other tests.
+        if (originalLocationDescriptor) {
+            Object.defineProperty(window, 'location', originalLocationDescriptor);
+        }
     });
 
     it('returns the module and clears the guard on success', async () => {
@@ -50,5 +56,13 @@ describe('loadWithReload', () => {
 
         await expect(loadWithReload(() => Promise.reject(error))).rejects.toBe(error);
         expect(reloadSpy).not.toHaveBeenCalled();
+    });
+
+    it('rethrows non-chunk errors without reloading (module evaluation/runtime error)', async () => {
+        const error = new Error('Cannot read properties of undefined');
+
+        await expect(loadWithReload(() => Promise.reject(error))).rejects.toBe(error);
+        expect(reloadSpy).not.toHaveBeenCalled();
+        expect(window.sessionStorage.getItem(RELOAD_FLAG)).toBeNull();
     });
 });
