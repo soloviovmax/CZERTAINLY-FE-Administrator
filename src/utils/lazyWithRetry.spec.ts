@@ -3,14 +3,14 @@ import { loadWithReload, RELOAD_FLAG } from './lazyWithRetry';
 
 describe('loadWithReload', () => {
     let reloadSpy: ReturnType<typeof vi.fn>;
-    const originalLocationDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
+    const originalLocationDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'location');
 
     beforeEach(() => {
-        window.sessionStorage.clear();
+        globalThis.sessionStorage.clear();
         reloadSpy = vi.fn();
-        // window.location.reload is read-only in happy-dom; redefine it with a spy.
-        Object.defineProperty(window, 'location', {
-            value: { ...window.location, reload: reloadSpy },
+        // globalThis.location.reload is read-only in happy-dom; redefine it with a spy.
+        Object.defineProperty(globalThis, 'location', {
+            value: { ...globalThis.location, reload: reloadSpy },
             configurable: true,
             writable: true,
         });
@@ -18,21 +18,21 @@ describe('loadWithReload', () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
-        // Restore the original window.location so the override doesn't leak into other tests.
+        // Restore the original globalThis.location so the override doesn't leak into other tests.
         if (originalLocationDescriptor) {
-            Object.defineProperty(window, 'location', originalLocationDescriptor);
+            Object.defineProperty(globalThis, 'location', originalLocationDescriptor);
         }
     });
 
     it('returns the module and clears the guard on success', async () => {
-        window.sessionStorage.setItem(RELOAD_FLAG, 'true');
+        globalThis.sessionStorage.setItem(RELOAD_FLAG, 'true');
         const module = { default: 'Component' };
 
         const result = await loadWithReload(() => Promise.resolve(module));
 
         expect(result).toBe(module);
         expect(reloadSpy).not.toHaveBeenCalled();
-        expect(window.sessionStorage.getItem(RELOAD_FLAG)).toBeNull();
+        expect(globalThis.sessionStorage.getItem(RELOAD_FLAG)).toBeNull();
     });
 
     it('reloads once and sets the guard on the first failure (stale chunk)', async () => {
@@ -43,7 +43,7 @@ describe('loadWithReload', () => {
         await Promise.resolve();
 
         expect(reloadSpy).toHaveBeenCalledTimes(1);
-        expect(window.sessionStorage.getItem(RELOAD_FLAG)).toBe('true');
+        expect(globalThis.sessionStorage.getItem(RELOAD_FLAG)).toBe('true');
 
         // the returned promise stays pending (Suspense keeps its fallback)
         const settled = await Promise.race([pending.then(() => 'resolved'), Promise.resolve('pending')]);
@@ -51,7 +51,7 @@ describe('loadWithReload', () => {
     });
 
     it('rethrows without reloading if the guard is already set (genuinely missing chunk)', async () => {
-        window.sessionStorage.setItem(RELOAD_FLAG, 'true');
+        globalThis.sessionStorage.setItem(RELOAD_FLAG, 'true');
         const error = new Error('Failed to fetch dynamically imported module');
 
         await expect(loadWithReload(() => Promise.reject(error))).rejects.toBe(error);
@@ -63,6 +63,6 @@ describe('loadWithReload', () => {
 
         await expect(loadWithReload(() => Promise.reject(error))).rejects.toBe(error);
         expect(reloadSpy).not.toHaveBeenCalled();
-        expect(window.sessionStorage.getItem(RELOAD_FLAG)).toBeNull();
+        expect(globalThis.sessionStorage.getItem(RELOAD_FLAG)).toBeNull();
     });
 });

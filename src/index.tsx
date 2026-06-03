@@ -6,7 +6,7 @@ import './tailwindcss.css';
 import App from './App';
 import { reloadOnce } from 'utils/lazyWithRetry';
 
-window.addEventListener('vite:preloadError', (event) => {
+globalThis.addEventListener('vite:preloadError', (event) => {
     event.preventDefault();
     reloadOnce();
 });

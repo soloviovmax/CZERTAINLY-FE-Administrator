@@ -15,18 +15,18 @@ function isChunkLoadError(error: unknown): boolean {
 }
 
 export function reloadOnce(): boolean {
-    if (window.sessionStorage.getItem(RELOAD_FLAG) === 'true') {
+    if (globalThis.sessionStorage.getItem(RELOAD_FLAG) === 'true') {
         return false;
     }
-    window.sessionStorage.setItem(RELOAD_FLAG, 'true');
-    window.location.reload();
+    globalThis.sessionStorage.setItem(RELOAD_FLAG, 'true');
+    globalThis.location.reload();
     return true;
 }
 
 export async function loadWithReload<T>(factory: () => Promise<T>): Promise<T> {
     try {
         const module = await factory();
-        window.sessionStorage.removeItem(RELOAD_FLAG);
+        globalThis.sessionStorage.removeItem(RELOAD_FLAG);
         return module;
     } catch (error) {
         // Only a failed chunk fetch is recoverable by reloading. Module evaluation/runtime
