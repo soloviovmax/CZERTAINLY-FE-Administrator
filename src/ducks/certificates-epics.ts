@@ -865,7 +865,7 @@ const bulkUpdateRaProfile: AppEpic = (action$, state, deps) => {
                         if (applied === verifiable && unverifiable === 0) {
                             return alertActions.success('Update operation for selected certificates RA profile completed.');
                         }
-                        if (applied === 0) {
+                        if (applied === 0 && unverifiable === 0) {
                             return alertActions.error(
                                 'No certificates were updated. The backend rejected the requested RA profile for the selection.',
                             );
