@@ -193,7 +193,7 @@ function Select({
 
     const hasOptions = options.length > 0;
     const triggerDisabled = !!isDisabled || !hasOptions;
-    const hasSearch = isSearchable && !isMulti;
+    const hasSearch = isSearchable;
 
     // Unwrap { value, label } for single-mode value.
     const singleRawValue = useMemo(() => {
@@ -211,7 +211,7 @@ function Select({
 
     const effectiveClearable = isClearable ?? isMulti;
 
-    // Filter options by search term (single + searchable only).
+    // Filter options by search term (searchable only).
     const visibleOptions = useMemo(() => {
         if (!hasSearch || !searchTerm) return options;
         const needle = searchTerm.toLowerCase();

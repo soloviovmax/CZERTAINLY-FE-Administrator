@@ -27,6 +27,28 @@ export function MultiHarness({ initial = [] as { value: string; label: string }[
     );
 }
 
+export function SearchableMultiHarness({ initial = [] as { value: string; label: string }[] }) {
+    const [v, setV] = useState<typeof initial | undefined>(initial);
+    return (
+        <div>
+            <Select
+                id="sm"
+                value={v ?? []}
+                onChange={(nv) => setV(nv as any)}
+                options={[
+                    { value: '1', label: 'Apple' },
+                    { value: '2', label: 'Banana' },
+                    { value: '3', label: 'Cherry' },
+                ]}
+                isMulti
+                isSearchable
+                dataTestId="sel"
+            />
+            <div data-testid="value-display">{v === undefined ? 'undefined' : JSON.stringify(v)}</div>
+        </div>
+    );
+}
+
 export function SearchableHarness() {
     const [v, setV] = useState<any>('');
     return (
