@@ -222,7 +222,7 @@ export default function AttributeViewer({
                         <>
                             {attribute.content.map((item, idx) => {
                                 const data = (item as any)?.data as { uuid?: string; name?: string; resource?: Resource } | undefined;
-                                const label = data?.name || data?.uuid || (item as any)?.reference || '';
+                                const label = data?.name || (item as any)?.reference || data?.uuid || '';
                                 const separator = idx > 0 ? ', ' : '';
                                 if (data?.uuid && data.resource) {
                                     return (
