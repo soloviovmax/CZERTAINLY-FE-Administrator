@@ -1,6 +1,6 @@
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
-import { useCallback, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import * as ReactHookForm from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router';
@@ -165,6 +165,15 @@ export default function AttributeViewer({
         return result;
     };
 
+    const renderResourceLink = useCallback(
+        (resource: Resource, uuid: string, label: ReactNode) => (
+            <Link onClick={() => dispatch(userInterfaceActions.resetState())} to={`/${resource}/detail/${uuid}`}>
+                {label}
+            </Link>
+        ),
+        [dispatch],
+    );
+
     const renderSourceObjectsButton = useCallback(
         (attribute: AttributeResponseModel | MetadataItemModel, resource: Resource) => {
             const headers = [
@@ -174,12 +183,7 @@ export default function AttributeViewer({
 
             const createData = (so: NameAndUuidDto) => ({
                 id: so.uuid,
-                columns: [
-                    <Link key="link" onClick={() => dispatch(userInterfaceActions.resetState())} to={`/${resource}/detail/${so.uuid}`}>
-                        {so.name}
-                    </Link>,
-                    so.uuid,
-                ],
+                columns: [<span key="link">{renderResourceLink(resource, so.uuid, so.name)}</span>, so.uuid],
             });
 
             if ('sourceObjects' in attribute && attribute.sourceObjects.length > 0 && resource) {
@@ -207,22 +211,31 @@ export default function AttributeViewer({
             }
             return null;
         },
-        [dispatch],
+        [dispatch, renderResourceLink],
     );
 
     const getAttributesTableData = useCallback(
         (attribute: AttributeResponseModel | MetadataItemModel, resource?: Resource): TableDataRow => {
             const renderContentCell = () => {
-                if (attribute.contentType === AttributeContentType.Resource && attribute.content?.[0]) {
-                    const first = attribute.content[0] as any;
-                    const data = first?.data as { uuid?: string; name?: string; resource?: Resource } | undefined;
-                    if (data?.uuid && data.resource) {
-                        return (
-                            <Link onClick={() => dispatch(userInterfaceActions.resetState())} to={`/${data.resource}/detail/${data.uuid}`}>
-                                {data.name || data.uuid}
-                            </Link>
-                        );
-                    }
+                if (attribute.contentType === AttributeContentType.Resource && attribute.content?.length) {
+                    return (
+                        <>
+                            {attribute.content.map((item, idx) => {
+                                const data = (item as any)?.data as { uuid?: string; name?: string; resource?: Resource } | undefined;
+                                const label = data?.name || (item as any)?.reference || data?.uuid || '';
+                                const separator = idx > 0 ? ', ' : '';
+                                if (data?.uuid && data.resource) {
+                                    return (
+                                        <span key={data.uuid}>
+                                            {separator}
+                                            {renderResourceLink(data.resource, data.uuid, label)}
+                                        </span>
+                                    );
+                                }
+                                return <span key={data?.uuid || idx}>{`${separator}${label}`}</span>;
+                            })}
+                        </>
+                    );
                 }
 
                 return getContent(attribute.contentType, attribute.content);
@@ -255,7 +268,7 @@ export default function AttributeViewer({
                 ],
             };
         },
-        [contentTypeEnum, dispatch, getContent, onCopyContentClick, renderSourceObjectsButton],
+        [contentTypeEnum, getContent, onCopyContentClick, renderSourceObjectsButton, renderResourceLink],
     );
 
     const getMetadataTableData = useCallback(

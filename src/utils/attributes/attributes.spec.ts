@@ -108,6 +108,25 @@ describe('attributes utils', () => {
             const content = [{ data: 10 } as any];
             expect(getAttributeCopyValue(AttributeContentType.File, content)).toBe('10');
         });
+
+        test('should copy resource, name and uuid for each Resource item', () => {
+            const content = [
+                { data: { uuid: '1111', name: 'Conn One', resource: 'connectors' } } as any,
+                { data: { uuid: '2222', name: 'Conn Two', resource: 'connectors' } } as any,
+            ];
+            expect(getAttributeCopyValue(AttributeContentType.Resource, content)).toBe(
+                'connectors, Conn One, 1111\nconnectors, Conn Two, 2222',
+            );
+        });
+
+        test('should fall back to reference for Resource name when data has none', () => {
+            const content = [{ data: { uuid: '1111', resource: 'connectors' }, reference: 'Ref Name' } as any];
+            expect(getAttributeCopyValue(AttributeContentType.Resource, content)).toBe('connectors, Ref Name, 1111');
+        });
+
+        test('should emit empty fields for a Resource item with no data and no reference', () => {
+            expect(getAttributeCopyValue(AttributeContentType.Resource, [{} as any])).toBe(', , ');
+        });
     });
 
     describe('getAttributeContent', () => {
@@ -137,6 +156,24 @@ describe('attributes utils', () => {
             expect(getAttributeContent(AttributeContentType.Credential, [baseContent])).toBe('Ref');
             expect(getAttributeContent(AttributeContentType.Object, [baseContent])).toBe('Ref');
             expect(getAttributeContent(AttributeContentType.File, [baseContent])).toBe('Ref');
+        });
+
+        test('joins all items of a multi-value Resource attribute', () => {
+            const content = [
+                { data: { uuid: '1111', name: 'Conn One', resource: 'connectors' } } as any,
+                { data: { uuid: '2222', name: 'Conn Two', resource: 'connectors' } } as any,
+            ];
+            expect(getAttributeContent(AttributeContentType.Resource, content)).toBe('Conn One, Conn Two');
+        });
+
+        test('prefers reference over data fields for Resource content', () => {
+            const content = [{ data: { uuid: '1111', name: 'Conn One' }, reference: 'Ref Name' } as any];
+            expect(getAttributeContent(AttributeContentType.Resource, content)).toBe('Ref Name');
+        });
+
+        test('falls back to uuid for Resource content when name and reference are missing', () => {
+            const content = [{ data: { uuid: '1111' } } as any];
+            expect(getAttributeContent(AttributeContentType.Resource, content)).toBe('1111');
         });
 
         test('returns primitive value for numeric and text content types', () => {
