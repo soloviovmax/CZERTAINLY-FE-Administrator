@@ -1,6 +1,7 @@
 import { selectors } from 'ducks/auth';
 import { featureFlags } from 'utils/feature-flags';
-import { lazy, Suspense, useMemo } from 'react';
+import { lazyWithRetry } from 'utils/lazyWithRetry';
+import { Suspense, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { HashRouter, Navigate, Route, Routes } from 'react-router';
 
@@ -11,158 +12,164 @@ import Spinner from './Spinner';
 import { Resource } from 'types/openapi';
 import Login from './_pages/login';
 
-const AuditLogs = lazy(() => import('./_pages/auditLogs'));
-const CertificatesDashboard = lazy(() => import('./_pages/dashboard/CertificatesDashboard'));
-const SecretsDashboard = lazy(() => import('./_pages/dashboard/SecretsDashboard'));
-const AuthenticationSettings = lazy(() => import('./_pages/auth-settings'));
-const OAuth2ProviderDetail = lazy(() => import('./_pages/auth-settings/detail'));
+const AuditLogs = lazyWithRetry(() => import('./_pages/auditLogs'));
+const CertificatesDashboard = lazyWithRetry(() => import('./_pages/dashboard/CertificatesDashboard'));
+const SecretsDashboard = lazyWithRetry(() => import('./_pages/dashboard/SecretsDashboard'));
+const AuthenticationSettings = lazyWithRetry(() => import('./_pages/auth-settings'));
+const OAuth2ProviderDetail = lazyWithRetry(() => import('./_pages/auth-settings/detail'));
 
-const LoggingSettings = lazy(() => import('./_pages/logging-settings'));
+const LoggingSettings = lazyWithRetry(() => import('./_pages/logging-settings'));
 
-const TrustedCertificateDetail = lazy(() =>
+const TrustedCertificateDetail = lazyWithRetry(() =>
     import('./_pages/trusted-certificates/detail/TrustedCertificateDetail').then((m) => ({ default: m.TrustedCertificateDetail })),
 );
-const TrustedCertificatesList = lazy(() =>
+const TrustedCertificatesList = lazyWithRetry(() =>
     import('./_pages/trusted-certificates/list/TrustedCertificateList').then((m) => ({ default: m.TrustedCertificatesList })),
 );
 
-const AcmeAccountDetail = lazy(() => import('./_pages/acme-accounts/detail'));
-const AcmeAccountsList = lazy(() => import('./_pages/acme-accounts/list'));
+const AcmeAccountDetail = lazyWithRetry(() => import('./_pages/acme-accounts/detail'));
+const AcmeAccountsList = lazyWithRetry(() => import('./_pages/acme-accounts/list'));
 
-const AcmeProfileDetail = lazy(() => import('./_pages/acme-profiles/detail'));
-const AcmeProfilesList = lazy(() => import('./_pages/acme-profiles/list'));
+const AcmeProfileDetail = lazyWithRetry(() => import('./_pages/acme-profiles/detail'));
+const AcmeProfilesList = lazyWithRetry(() => import('./_pages/acme-profiles/list'));
 
-const AuthorityDetail = lazy(() => import('./_pages/authorities/detail'));
-const AuthoritiesList = lazy(() => import('./_pages/authorities/list'));
-const AuthorityForm = lazy(() => import('./_pages/authorities/form'));
+const AuthorityDetail = lazyWithRetry(() => import('./_pages/authorities/detail'));
+const AuthoritiesList = lazyWithRetry(() => import('./_pages/authorities/list'));
+const AuthorityForm = lazyWithRetry(() => import('./_pages/authorities/form'));
 
-const CertificateDetail = lazy(() => import('./_pages/certificates/detail'));
-const CertificateEdit = lazy(() => import('./_pages/certificates/form'));
-const CertificatesList = lazy(() => import('./_pages/certificates/list'));
+const CertificateDetail = lazyWithRetry(() => import('./_pages/certificates/detail'));
+const CertificateEdit = lazyWithRetry(() => import('./_pages/certificates/form'));
+const CertificatesList = lazyWithRetry(() => import('./_pages/certificates/list'));
 
-const ComplianceProfileDetail = lazy(() => import('./_pages/compliance-profiles/detail'));
-const ComplianceProfilesList = lazy(() => import('./_pages/compliance-profiles/list'));
+const ComplianceProfileDetail = lazyWithRetry(() => import('./_pages/compliance-profiles/detail'));
+const ComplianceProfilesList = lazyWithRetry(() => import('./_pages/compliance-profiles/list'));
 
-const ConnectorDetail = lazy(() => import('./_pages/connectors/detail'));
-const ConnectorsList = lazy(() => import('./_pages/connectors/list'));
+const ConnectorDetail = lazyWithRetry(() => import('./_pages/connectors/detail'));
+const ConnectorsList = lazyWithRetry(() => import('./_pages/connectors/list'));
 
-const ProxyDetail = lazy(() => import('./_pages/proxies/detail/ProxyDetail').then((m) => ({ default: m.ProxyDetail })));
-const ProxiesList = lazy(() => import('./_pages/proxies/list/ProxiesList').then((m) => ({ default: m.ProxiesList })));
+const ProxyDetail = lazyWithRetry(() => import('./_pages/proxies/detail/ProxyDetail').then((m) => ({ default: m.ProxyDetail })));
+const ProxiesList = lazyWithRetry(() => import('./_pages/proxies/list/ProxiesList').then((m) => ({ default: m.ProxiesList })));
 
-const ApprovalProfileDetails = lazy(() => import('./_pages/approval-profiles/detail'));
-const ApprovalProfiles = lazy(() => import('./_pages/approval-profiles/list'));
+const ApprovalProfileDetails = lazyWithRetry(() => import('./_pages/approval-profiles/detail'));
+const ApprovalProfiles = lazyWithRetry(() => import('./_pages/approval-profiles/list'));
 
-const ApprovalDetails = lazy(() => import('./_pages/approvals/details'));
-const ApprovalsList = lazy(() => import('./_pages/approvals/list'));
+const ApprovalDetails = lazyWithRetry(() => import('./_pages/approvals/details'));
+const ApprovalsList = lazyWithRetry(() => import('./_pages/approvals/list'));
 
-const CredentialDetail = lazy(() => import('./_pages/credentials/detail'));
-const CredentialsList = lazy(() => import('./_pages/credentials/list'));
+const CredentialDetail = lazyWithRetry(() => import('./_pages/credentials/detail'));
+const CredentialsList = lazyWithRetry(() => import('./_pages/credentials/list'));
 
-const CryptographicKeyDetail = lazy(() => import('./_pages/cryptographic-keys/detail'));
-const CryptographicKeyList = lazy(() => import('./_pages/cryptographic-keys/list'));
-const SecretsList = lazy(() => import('./_pages/secrets/list'));
-const SecretDetail = lazy(() => import('./_pages/secrets/detail'));
+const CryptographicKeyDetail = lazyWithRetry(() => import('./_pages/cryptographic-keys/detail'));
+const CryptographicKeyList = lazyWithRetry(() => import('./_pages/cryptographic-keys/list'));
+const SecretsList = lazyWithRetry(() => import('./_pages/secrets/list'));
+const SecretDetail = lazyWithRetry(() => import('./_pages/secrets/detail'));
 
-const CustomAttributesDetail = lazy(() => import('./_pages/custom-attributes/detail'));
-const CustomAttributesList = lazy(() => import('./_pages/custom-attributes/list'));
+const CustomAttributesDetail = lazyWithRetry(() => import('./_pages/custom-attributes/detail'));
+const CustomAttributesList = lazyWithRetry(() => import('./_pages/custom-attributes/list'));
 
-const DiscoveryDetail = lazy(() => import('./_pages/discoveries/detail'));
-const DiscoveriesList = lazy(() => import('./_pages/discoveries/list'));
+const DiscoveryDetail = lazyWithRetry(() => import('./_pages/discoveries/detail'));
+const DiscoveriesList = lazyWithRetry(() => import('./_pages/discoveries/list'));
 
-const EntityDetail = lazy(() => import('./_pages/entities/detail'));
-const EntitiesList = lazy(() => import('./_pages/entities/list'));
+const EntityDetail = lazyWithRetry(() => import('./_pages/entities/detail'));
+const EntitiesList = lazyWithRetry(() => import('./_pages/entities/list'));
 
-const ScepProfileDetail = lazy(() => import('./_pages/scep-profiles/detail'));
-const ScepProfilesList = lazy(() => import('./_pages/scep-profiles/list'));
+const ScepProfileDetail = lazyWithRetry(() => import('./_pages/scep-profiles/detail'));
+const ScepProfilesList = lazyWithRetry(() => import('./_pages/scep-profiles/list'));
 
-const CmpProfileDetails = lazy(() => import('./_pages/cmp-profiles/details'));
-const CmpProfilesList = lazy(() => import('./_pages/cmp-profiles/list'));
+const CmpProfileDetails = lazyWithRetry(() => import('./_pages/cmp-profiles/details'));
+const CmpProfilesList = lazyWithRetry(() => import('./_pages/cmp-profiles/list'));
 
-const GlobalMetadataDetail = lazy(() => import('./_pages/global-metadata/detail'));
-const GlobalMetadataList = lazy(() => import('./_pages/global-metadata/list'));
+const GlobalMetadataDetail = lazyWithRetry(() => import('./_pages/global-metadata/detail'));
+const GlobalMetadataList = lazyWithRetry(() => import('./_pages/global-metadata/list'));
 
-const TimeQualityConfigurationDetail = lazy(() =>
+const TimeQualityConfigurationDetail = lazyWithRetry(() =>
     import('./_pages/time-quality-configurations/detail/TimeQualityConfigurationDetail').then((m) => ({
         default: m.TimeQualityConfigurationDetail,
     })),
 );
-const TimeQualityConfigurationForm = lazy(() =>
+const TimeQualityConfigurationForm = lazyWithRetry(() =>
     import('./_pages/time-quality-configurations/form/TimeQualityConfigurationForm').then((m) => ({
         default: m.TimeQualityConfigurationForm,
     })),
 );
-const TimeQualityConfigurationsList = lazy(() =>
+const TimeQualityConfigurationsList = lazyWithRetry(() =>
     import('./_pages/time-quality-configurations/list/TimeQualityConfigurationsList').then((m) => ({
         default: m.TimeQualityConfigurationsList,
     })),
 );
 
-const TspProfileDetail = lazy(() => import('./_pages/tsp-profiles/detail/TspProfileDetail').then((m) => ({ default: m.TspProfileDetail })));
-const TspProfileForm = lazy(() => import('./_pages/tsp-profiles/form/TspProfileForm').then((m) => ({ default: m.TspProfileForm })));
-const TspProfilesList = lazy(() => import('./_pages/tsp-profiles/list/TspProfilesList').then((m) => ({ default: m.TspProfilesList })));
+const TspProfileDetail = lazyWithRetry(() =>
+    import('./_pages/tsp-profiles/detail/TspProfileDetail').then((m) => ({ default: m.TspProfileDetail })),
+);
+const TspProfileForm = lazyWithRetry(() =>
+    import('./_pages/tsp-profiles/form/TspProfileForm').then((m) => ({ default: m.TspProfileForm })),
+);
+const TspProfilesList = lazyWithRetry(() =>
+    import('./_pages/tsp-profiles/list/TspProfilesList').then((m) => ({ default: m.TspProfilesList })),
+);
 
-const GroupDetail = lazy(() => import('./_pages/group/detail'));
-const GroupList = lazy(() => import('./_pages/group/list'));
+const GroupDetail = lazyWithRetry(() => import('./_pages/group/detail'));
+const GroupList = lazyWithRetry(() => import('./_pages/group/list'));
 
-const LocationDetail = lazy(() => import('./_pages/locations/detail'));
-const LocationsList = lazy(() => import('./_pages/locations/list'));
+const LocationDetail = lazyWithRetry(() => import('./_pages/locations/detail'));
+const LocationsList = lazyWithRetry(() => import('./_pages/locations/list'));
 
-const RaProfileDetail = lazy(() => import('./_pages/ra-profiles/detail'));
-const RaProfilesList = lazy(() => import('./_pages/ra-profiles/list'));
+const RaProfileDetail = lazyWithRetry(() => import('./_pages/ra-profiles/detail'));
+const RaProfilesList = lazyWithRetry(() => import('./_pages/ra-profiles/list'));
 
-const PlatformSettingsDetail = lazy(() => import('./_pages/platform-settings/detail'));
+const PlatformSettingsDetail = lazyWithRetry(() => import('./_pages/platform-settings/detail'));
 
-const RoleDetail = lazy(() => import('./_pages/roles/detail'));
-const RolesList = lazy(() => import('./_pages/roles/list'));
-const RolePermissions = lazy(() => import('./_pages/roles/RolePermissionsForm'));
+const RoleDetail = lazyWithRetry(() => import('./_pages/roles/detail'));
+const RolesList = lazyWithRetry(() => import('./_pages/roles/list'));
+const RolePermissions = lazyWithRetry(() => import('./_pages/roles/RolePermissionsForm'));
 
-const TokenProfileDetail = lazy(() => import('./_pages/token-profiles/detail'));
-const TokenProfileList = lazy(() => import('./_pages/token-profiles/list'));
+const TokenProfileDetail = lazyWithRetry(() => import('./_pages/token-profiles/detail'));
+const TokenProfileList = lazyWithRetry(() => import('./_pages/token-profiles/list'));
 
-const TokenDetail = lazy(() => import('./_pages/tokens/detail'));
-const TokenList = lazy(() => import('./_pages/tokens/list'));
+const TokenDetail = lazyWithRetry(() => import('./_pages/tokens/detail'));
+const TokenList = lazyWithRetry(() => import('./_pages/tokens/list'));
 
-const UserProfileDetail = lazy(() => import('./_pages/user-profile/detail'));
+const UserProfileDetail = lazyWithRetry(() => import('./_pages/user-profile/detail'));
 
-const UserDetail = lazy(() => import('./_pages/users/detail'));
-const UsersList = lazy(() => import('./_pages/users/list'));
+const UserDetail = lazyWithRetry(() => import('./_pages/users/detail'));
+const UsersList = lazyWithRetry(() => import('./_pages/users/list'));
 
-const NotificationsList = lazy(() => import('./_pages/notifications/list'));
-const NotificationInstanceDetail = lazy(() => import('./_pages/notifications/notification-instance-details'));
-const EventsSettings = lazy(() => import('./_pages/notifications/events-settings'));
-const EventDetail = lazy(() => import('./_pages/notifications/events-settings/detail'));
+const NotificationsList = lazyWithRetry(() => import('./_pages/notifications/list'));
+const NotificationInstanceDetail = lazyWithRetry(() => import('./_pages/notifications/notification-instance-details'));
+const EventsSettings = lazyWithRetry(() => import('./_pages/notifications/events-settings'));
+const EventDetail = lazyWithRetry(() => import('./_pages/notifications/events-settings/detail'));
 
-const NotificationProfileDetail = lazy(() => import('./_pages/notifications/notification-profiles/detail'));
-const NotificationProfilesList = lazy(() => import('./_pages/notifications/notification-profiles/list'));
+const NotificationProfileDetail = lazyWithRetry(() => import('./_pages/notifications/notification-profiles/detail'));
+const NotificationProfilesList = lazyWithRetry(() => import('./_pages/notifications/notification-profiles/list'));
 
-const ConditionDetails = lazy(() => import('./_pages/conditions/details'));
+const ConditionDetails = lazyWithRetry(() => import('./_pages/conditions/details'));
 
-const ExecutionDetails = lazy(() => import('./_pages/executions/details'));
-const ExecutionForm = lazy(() => import('./_pages/executions/form'));
+const ExecutionDetails = lazyWithRetry(() => import('./_pages/executions/details'));
+const ExecutionForm = lazyWithRetry(() => import('./_pages/executions/form'));
 
-const ActionDetails = lazy(() => import('./_pages/actions/detail'));
-const ActionsList = lazy(() => import('./_pages/actions/list'));
+const ActionDetails = lazyWithRetry(() => import('./_pages/actions/detail'));
+const ActionsList = lazyWithRetry(() => import('./_pages/actions/list'));
 
-const TriggerDetails = lazy(() => import('./_pages/triggers/details'));
-const TriggerList = lazy(() => import('./_pages/triggers/list'));
+const TriggerDetails = lazyWithRetry(() => import('./_pages/triggers/details'));
+const TriggerList = lazyWithRetry(() => import('./_pages/triggers/list'));
 
-const RuleDetails = lazy(() => import('./_pages/rules/detail'));
-const RulesList = lazy(() => import('./_pages/rules/list'));
+const RuleDetails = lazyWithRetry(() => import('./_pages/rules/detail'));
+const RulesList = lazyWithRetry(() => import('./_pages/rules/list'));
 
-const SchedulerJobDetail = lazy(() => import('./_pages/scheduler/detail'));
-const SchedulerJobsList = lazy(() => import('./_pages/scheduler/list'));
+const SchedulerJobDetail = lazyWithRetry(() => import('./_pages/scheduler/detail'));
+const SchedulerJobsList = lazyWithRetry(() => import('./_pages/scheduler/list'));
 
-const CustomOIDList = lazy(() => import('components/_pages/custom-oid/list'));
-const CustomOIDDetail = lazy(() => import('components/_pages/custom-oid/detail'));
+const CustomOIDList = lazyWithRetry(() => import('components/_pages/custom-oid/list'));
+const CustomOIDDetail = lazyWithRetry(() => import('components/_pages/custom-oid/detail'));
 
-const VaultsList = lazy(() => import('./_pages/vaults/list'));
-const VaultDetail = lazy(() => import('./_pages/vaults/detail'));
-const VaultProfilesList = lazy(() => import('./_pages/vault-profiles/list'));
-const VaultProfileDetail = lazy(() => import('./_pages/vault-profiles/detail'));
+const VaultsList = lazyWithRetry(() => import('./_pages/vaults/list'));
+const VaultDetail = lazyWithRetry(() => import('./_pages/vaults/detail'));
+const VaultProfilesList = lazyWithRetry(() => import('./_pages/vault-profiles/list'));
+const VaultProfileDetail = lazyWithRetry(() => import('./_pages/vault-profiles/detail'));
 
-const CbomsList = lazy(() => import('./_pages/cboms/list'));
-const CbomDetail = lazy(() => import('components/_pages/cboms/detail'));
-const CbomVersionsHistory = lazy(() => import('components/_pages/cboms/versions'));
+const CbomsList = lazyWithRetry(() => import('./_pages/cboms/list'));
+const CbomDetail = lazyWithRetry(() => import('components/_pages/cboms/detail'));
+const CbomVersionsHistory = lazyWithRetry(() => import('components/_pages/cboms/versions'));
 
 const RouteFallback = () => <Spinner size="xl" />;
 

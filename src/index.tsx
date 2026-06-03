@@ -5,6 +5,14 @@ import reportWebVitals from './reportWebVitals';
 import './tailwindcss.css';
 import App from './App';
 
+window.addEventListener('vite:preloadError', (event) => {
+    event.preventDefault();
+    if (window.sessionStorage.getItem('chunk-reload-attempted') !== 'true') {
+        window.sessionStorage.setItem('chunk-reload-attempted', 'true');
+        window.location.reload();
+    }
+});
+
 const container = document.getElementById('root')!;
 const root = createRoot(container);
 
