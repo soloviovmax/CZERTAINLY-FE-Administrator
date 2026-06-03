@@ -1,6 +1,6 @@
 import { test, expect } from '../../../playwright/ct-test';
 import Select from './index';
-import { MultiHarness, SearchableHarness, SingleHarness } from './Select.harness';
+import { MultiHarness, SearchableHarness, SearchableMultiHarness, SingleHarness } from './Select.harness';
 
 const BASE_OPTIONS = [
     { value: '1', label: 'Option 1' },
@@ -105,6 +105,18 @@ test.describe('Select', () => {
         await page.getByTestId('sel-trigger').click();
         await page.getByTestId('sel-search').fill('zzz');
         await expect(page.getByText('No options')).toBeVisible();
+    });
+
+    test('searchable multi-select filters and selects while staying open', async ({ mount, page }) => {
+        await mount(<SearchableMultiHarness />);
+        await page.getByTestId('sel-trigger').click();
+        await page.getByTestId('sel-search').fill('ban');
+        await expect(page.getByRole('option', { name: 'Banana' })).toBeVisible();
+        await expect(page.getByRole('option', { name: 'Apple' })).toHaveCount(0);
+        await page.getByRole('option', { name: 'Banana' }).click();
+        // multi keeps the popover (and search) open after selecting
+        await expect(page.getByTestId('sel-search')).toBeVisible();
+        await expect(page.getByTestId('value-display')).toHaveText(JSON.stringify([{ value: '2', label: 'Banana' }]));
     });
 
     test('clear button resets single value', async ({ mount, page }) => {
