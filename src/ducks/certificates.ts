@@ -707,16 +707,8 @@ export const slice = createSlice({
             state.isBulkUpdatingRaProfile = true;
         },
 
-        bulkUpdateRaProfileSuccess: (state, action: PayloadAction<{ uuids: string[]; raProfile: RaProfileResponseModel }>) => {
+        bulkUpdateRaProfileSuccess: (state, action: PayloadAction<{ uuids: string[] }>) => {
             state.isBulkUpdatingRaProfile = false;
-
-            action.payload.uuids.forEach((uuid) => {
-                const certificateIndex = state.certificates.findIndex((certificate) => certificate.uuid === uuid);
-
-                if (certificateIndex >= 0) state.certificates[certificateIndex].raProfile = action.payload.raProfile;
-
-                if (state.certificateDetail?.uuid === uuid) state.certificateDetail.raProfile = action.payload.raProfile;
-            });
         },
 
         bulkDeleteRaProfile: (state, action: PayloadAction<{ certificateUuids: string[] }>) => {
