@@ -403,6 +403,29 @@ describe('certificates epics', () => {
             expect((emitted[2] as any).payload).toContain('2 of 3');
         });
 
+        test('emits info alert when some selected certificates are not on the current page', async () => {
+            const emitted = await runBulkUpdateRaProfileEpic({
+                certificateUuids: ['c1', 'c2', 'c3'],
+                requestedRaProfileUuid: 'ra-new',
+                refetchedCertificates: [{ uuid: 'c1', raProfile: { uuid: 'ra-new' } }],
+            });
+
+            expect(emitted[2].type).toBe(alertActions.info.type);
+            expect((emitted[2] as any).payload).toContain('1 of 1');
+            expect((emitted[2] as any).payload).toContain('2 not on the current page');
+        });
+
+        test('emits info alert when none of the selected certificates are on the current page', async () => {
+            const emitted = await runBulkUpdateRaProfileEpic({
+                certificateUuids: ['c1', 'c2'],
+                requestedRaProfileUuid: 'ra-new',
+                refetchedCertificates: [{ uuid: 'c-other', raProfile: { uuid: 'ra-new' } }],
+            });
+
+            expect(emitted[2].type).toBe(alertActions.info.type);
+            expect((emitted[2] as any).payload).toContain('could not be verified');
+        });
+
         test('emits failure action when PATCH itself fails', async () => {
             const epics = certificatesEpics as ((action$: any, state$: any, deps: any) => any)[];
             const action$ = new Subject<UnknownAction>();

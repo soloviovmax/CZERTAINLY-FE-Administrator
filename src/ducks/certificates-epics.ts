@@ -847,11 +847,21 @@ const bulkUpdateRaProfile: AppEpic = (action$, state, deps) => {
                 filter(slice.actions.listCertificatesSuccess.match),
                 take(1),
                 map((listAction) => {
-                    const applied = listAction.payload.filter(
-                        (cert) => requestedUuids.includes(cert.uuid) && cert.raProfile?.uuid === requestedRaProfileUuid,
-                    ).length;
                     const requested = requestedUuids.length;
-                    if (applied === requested) {
+                    if (requested === 0 || !requestedRaProfileUuid) {
+                        return alertActions.info('Bulk RA profile update finished.');
+                    }
+                    const presentCerts = listAction.payload.filter((cert) => requestedUuids.includes(cert.uuid));
+                    const verifiable = presentCerts.length;
+                    const applied = presentCerts.filter((cert) => cert.raProfile?.uuid === requestedRaProfileUuid).length;
+                    const unverifiable = requested - verifiable;
+
+                    if (verifiable === 0) {
+                        return alertActions.info(
+                            'Bulk RA profile update finished. Selected certificates are not on the current page, so the result could not be verified.',
+                        );
+                    }
+                    if (applied === verifiable && unverifiable === 0) {
                         return alertActions.success('Update operation for selected certificates RA profile completed.');
                     }
                     if (applied === 0) {
@@ -859,9 +869,8 @@ const bulkUpdateRaProfile: AppEpic = (action$, state, deps) => {
                             'No certificates were updated. The backend rejected the requested RA profile for the selection.',
                         );
                     }
-                    return alertActions.info(
-                        `RA profile was applied to ${applied} of ${requested} certificates. The rest were rejected by the backend.`,
-                    );
+                    const tail = unverifiable > 0 ? ` (${unverifiable} not on the current page and could not be verified)` : '';
+                    return alertActions.info(`RA profile was applied to ${applied} of ${verifiable} certificates${tail}.`);
                 }),
             );
 
