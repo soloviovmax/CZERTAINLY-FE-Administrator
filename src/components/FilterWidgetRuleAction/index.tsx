@@ -864,7 +864,7 @@ export default function FilterWidgetRuleAction({
                             }}
                             value={fieldSource || ''}
                             isClearable
-                            label="Field Source"
+                            label="Target Type"
                         />
 
                         <Select
@@ -877,7 +877,7 @@ export default function FilterWidgetRuleAction({
                             value={filterField || ''}
                             isDisabled={!fieldSource}
                             isClearable
-                            label="Field"
+                            label="Target Field"
                         />
 
                         {isMappedMode ? (
@@ -895,7 +895,7 @@ export default function FilterWidgetRuleAction({
                                     value={sourceFieldSource || ''}
                                     isClearable
                                     isDisabled={!filterField}
-                                    label="Source Field Source"
+                                    label="Source Type"
                                 />
                                 <Select
                                     id="sourceField"
