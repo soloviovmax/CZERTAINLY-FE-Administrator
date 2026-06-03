@@ -1,5 +1,5 @@
 import type { AppEpic } from 'ducks';
-import { merge, of } from 'rxjs';
+import { merge, of, race } from 'rxjs';
 import { catchError, filter, map, mergeMap, switchMap, take } from 'rxjs/operators';
 import { extractError } from 'utils/net';
 import { actions as alertActions } from './alerts';
@@ -843,35 +843,47 @@ const bulkUpdateRaProfile: AppEpic = (action$, state, deps) => {
             const requestedUuids = action.payload.raProfileRequest.certificateUuids ?? [];
             const requestedRaProfileUuid = action.payload.raProfileRequest.raProfileUuid;
 
-            const verifyAfterRefetch$ = action$.pipe(
-                filter(slice.actions.listCertificatesSuccess.match),
-                take(1),
-                map((listAction) => {
-                    const requested = requestedUuids.length;
-                    if (requested === 0 || !requestedRaProfileUuid) {
-                        return alertActions.info('Bulk RA profile update finished.');
-                    }
-                    const presentCerts = listAction.payload.filter((cert) => requestedUuids.includes(cert.uuid));
-                    const verifiable = presentCerts.length;
-                    const applied = presentCerts.filter((cert) => cert.raProfile?.uuid === requestedRaProfileUuid).length;
-                    const unverifiable = requested - verifiable;
+            const verifyAfterRefetch$ = race(
+                action$.pipe(
+                    filter(slice.actions.listCertificatesSuccess.match),
+                    take(1),
+                    map((listAction) => {
+                        const requested = requestedUuids.length;
+                        if (requested === 0 || !requestedRaProfileUuid) {
+                            return alertActions.info('Bulk RA profile update finished.');
+                        }
+                        const presentCerts = listAction.payload.filter((cert) => requestedUuids.includes(cert.uuid));
+                        const verifiable = presentCerts.length;
+                        const applied = presentCerts.filter((cert) => cert.raProfile?.uuid === requestedRaProfileUuid).length;
+                        const unverifiable = requested - verifiable;
 
-                    if (verifiable === 0) {
-                        return alertActions.info(
-                            'Bulk RA profile update finished. Selected certificates are not on the current page, so the result could not be verified.',
-                        );
-                    }
-                    if (applied === verifiable && unverifiable === 0) {
-                        return alertActions.success('Update operation for selected certificates RA profile completed.');
-                    }
-                    if (applied === 0) {
-                        return alertActions.error(
-                            'No certificates were updated. The backend rejected the requested RA profile for the selection.',
-                        );
-                    }
-                    const tail = unverifiable > 0 ? ` (${unverifiable} not on the current page and could not be verified)` : '';
-                    return alertActions.info(`RA profile was applied to ${applied} of ${verifiable} certificates${tail}.`);
-                }),
+                        if (verifiable === 0) {
+                            return alertActions.info(
+                                'Bulk RA profile update finished. Selected certificates are not on the current page, so the result could not be verified.',
+                            );
+                        }
+                        if (applied === verifiable && unverifiable === 0) {
+                            return alertActions.success('Update operation for selected certificates RA profile completed.');
+                        }
+                        if (applied === 0) {
+                            return alertActions.error(
+                                'No certificates were updated. The backend rejected the requested RA profile for the selection.',
+                            );
+                        }
+                        const tail = unverifiable > 0 ? ` (${unverifiable} not on the current page and could not be verified)` : '';
+                        return alertActions.info(`RA profile was applied to ${applied} of ${verifiable} certificates${tail}.`);
+                    }),
+                ),
+                action$.pipe(
+                    filter(pagingActions.listFailure.match),
+                    filter((listFailureAction) => listFailureAction.payload === EntityType.CERTIFICATE),
+                    take(1),
+                    map(() =>
+                        alertActions.info(
+                            'Bulk RA profile update finished, but the certificate list could not be refreshed, so the result could not be verified.',
+                        ),
+                    ),
+                ),
             );
 
             return deps.apiClients.certificates
