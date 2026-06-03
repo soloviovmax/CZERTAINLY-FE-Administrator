@@ -30,12 +30,15 @@ export function AttributeFieldSelectTestWrapper({
     });
 
     const onSelectChangeMulti = (fieldOnChange: (v: unknown) => void) => (newValue: unknown) => {
-        if (Array.isArray(newValue) && newValue.some((v: any) => v.value === '__add_new__')) {
-            const filtered = newValue.filter((v: any) => v.value !== '__add_new__');
+        const selected = Array.isArray(newValue) ? newValue : [];
+        const toRawValue = (v: any) => (v && typeof v === 'object' && 'value' in v ? v.value : v);
+        if (selected.some((v: any) => toRawValue(v) === '__add_new__')) {
+            const filtered = selected.filter((v: any) => toRawValue(v) !== '__add_new__').map(toRawValue);
             fieldOnChange(filtered.length > 0 ? filtered : undefined);
             return;
         }
-        fieldOnChange(newValue);
+        const rawValues = selected.map(toRawValue);
+        fieldOnChange(rawValues.length > 0 ? rawValues : undefined);
     };
     const onSelectChangeSingle = (fieldOnChange: (v: unknown) => void) => (newValue: unknown) => {
         if (newValue === '__add_new__') return; // simulate production: modal opens, field unchanged
