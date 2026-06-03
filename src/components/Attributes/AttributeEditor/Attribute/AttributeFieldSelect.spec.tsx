@@ -365,4 +365,31 @@ test.describe('AttributeFieldSelect', () => {
         );
         expect(selectOptions).toEqual(expect.arrayContaining(['known', 'custom1', 'custom2']));
     });
+
+    test('extensible multi-select: removing a custom value drops it without producing an [object Object] option', async ({
+        mount,
+        page,
+    }) => {
+        const descriptor = minimalDescriptor({
+            properties: { ...defaultProperties, multiSelect: true, extensibleList: true, label: 'Extensible Multi' },
+        } as any);
+
+        await mount(
+            <AttributeFieldSelectTestWrapper
+                name="testSelect"
+                descriptor={descriptor}
+                options={[]}
+                defaultValues={{ testSelect: ['111', '222'] }}
+            />,
+        );
+
+        await page.getByRole('button', { name: 'Remove 222', exact: true }).click();
+
+        const select = page.getByTestId('select-testSelectSelect-input');
+        await expect(select).toHaveValues(['111']);
+
+        await page.getByTestId('select-testSelectSelect-trigger').click();
+        await expect(page.getByRole('option', { name: '[object Object]' })).toHaveCount(0);
+        await expect(page.getByRole('option', { name: '111', exact: true })).toBeVisible();
+    });
 });
