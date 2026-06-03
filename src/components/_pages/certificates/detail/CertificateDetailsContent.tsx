@@ -214,6 +214,7 @@ export default function CertificateDetailsContent({ certificate, validationResul
     const onCancelRaProfileUpdate = useCallback(() => {
         setUpdateRaProfile(false);
         setRaProfile(undefined);
+        setRaProfileAuthorityUuid(undefined);
     }, []);
 
     const onUpdateGroup = useCallback(() => {
@@ -606,6 +607,15 @@ export default function CertificateDetailsContent({ certificate, validationResul
                                   color="secondary"
                                   onClick={() => {
                                       setUpdateRaProfile(true);
+
+                                      const currentRaProfileUuid = certificate?.raProfile?.uuid;
+                                      const currentAuthorityUuid = certificate?.raProfile?.authorityInstanceUuid;
+
+                                      setRaProfile(currentRaProfileUuid && currentAuthorityUuid ? currentRaProfileUuid : undefined);
+                                      setRaProfileAuthorityUuid(
+                                          currentRaProfileUuid && currentAuthorityUuid ? currentAuthorityUuid : undefined,
+                                      );
+
                                       dispatch(raProfileActions.listRaProfiles());
                                   }}
                                   title="Update RA Profile"
@@ -792,7 +802,7 @@ export default function CertificateDetailsContent({ certificate, validationResul
                         id="updateRaProfile"
                         options={raProfileOptions}
                         placeholder={`Select RA Profile`}
-                        value={raProfileOptions.find((option) => option.value === raProfile) || ''}
+                        value={raProfile && raProfileAuthorityUuid ? `${raProfile}:#${raProfileAuthorityUuid}` : ''}
                         onChange={(value) => {
                             updateRaAndAuthorityState((value as string) || '');
                         }}
