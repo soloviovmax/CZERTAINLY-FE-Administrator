@@ -161,12 +161,30 @@ describe('lazyWithRetry', () => {
             vi.spyOn(globalThis.sessionStorage, 'setItem').mockImplementation(() => {
                 throw new Error('storage disabled');
             });
+            // first navigation to the page (not a reload), so the loop guard lets the reload proceed
+            vi.spyOn(globalThis.performance, 'getEntriesByType').mockReturnValue([{ type: 'navigate' } as PerformanceNavigationTiming]);
             const event = preloadErrorEvent(new Error('Failed to fetch dynamically imported module'));
 
             handleVitePreloadError(event);
 
             expect(reloadSpy).toHaveBeenCalledTimes(1);
             expect(event.defaultPrevented).toBe(true);
+        });
+
+        it('does not reload again when storage is unavailable and the page already reloaded (bounded loop)', () => {
+            // storage can't persist a cooldown, but the navigation type shows this load is itself a
+            // reload — the previous reload didn't fix the chunk, so stop instead of looping
+            vi.spyOn(globalThis.sessionStorage, 'getItem').mockImplementation(() => {
+                throw new Error('storage disabled');
+            });
+            vi.spyOn(globalThis.performance, 'getEntriesByType').mockReturnValue([{ type: 'reload' } as PerformanceNavigationTiming]);
+            const event = preloadErrorEvent(new Error('Failed to fetch dynamically imported module'));
+
+            handleVitePreloadError(event);
+
+            expect(reloadSpy).not.toHaveBeenCalled();
+            // not prevented → the genuinely missing chunk surfaces to the ErrorBoundary
+            expect(event.defaultPrevented).toBe(false);
         });
     });
 });

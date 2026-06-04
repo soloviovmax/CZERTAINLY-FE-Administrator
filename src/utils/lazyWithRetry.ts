@@ -32,13 +32,13 @@ function neverSettles<T>(): Promise<T> {
 }
 
 // sessionStorage can throw (Safari private mode, hardened privacy settings, disabled storage).
-// These helpers swallow that so a storage failure never defeats the production recovery path —
-// a read failure is treated as "no prior attempt" and a write failure still lets the reload proceed.
-function readReloadTimestamp(): number {
+// `available: false` signals that so reloadOnce can fall back to a storage-free loop guard
+// rather than treating a thrown read as "no prior attempt" and reloading forever.
+function readReloadTimestamp(): { available: boolean; lastAttempt: number } {
     try {
-        return Number(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY));
+        return { available: true, lastAttempt: Number(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)) };
     } catch {
-        return 0;
+        return { available: false, lastAttempt: 0 };
     }
 }
 
@@ -54,9 +54,24 @@ function writeReloadTimestamp(value: number | null): void {
     }
 }
 
+// Whether the current page load was itself a reload. Used only as the loop guard when
+// sessionStorage is unavailable: if we already reloaded and the chunk still fails, reloading
+// again won't help, so this bounds the worst case to a single reload instead of a tight loop.
+function isReloadNavigation(): boolean {
+    try {
+        const [navigation] = globalThis.performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+        return navigation?.type === 'reload';
+    } catch {
+        return false;
+    }
+}
+
 export function reloadOnce(): boolean {
-    const lastAttempt = readReloadTimestamp();
-    if (lastAttempt && Date.now() - lastAttempt < RELOAD_COOLDOWN_MS) {
+    const { available, lastAttempt } = readReloadTimestamp();
+    // Primary cooldown: a persisted timestamp. When storage is unavailable we can't persist one,
+    // so fall back to the navigation type — a reload that lands on the same failing chunk stops here.
+    const withinCooldown = available ? Boolean(lastAttempt) && Date.now() - lastAttempt < RELOAD_COOLDOWN_MS : isReloadNavigation();
+    if (withinCooldown) {
         return false;
     }
     writeReloadTimestamp(Date.now());
