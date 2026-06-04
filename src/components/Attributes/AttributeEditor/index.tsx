@@ -137,10 +137,10 @@ function AttributeEditorInner({
 
             // Add to deletedAttributes in form state using the unique key
             const currentDeleted = formValues[deletedAttributesKey] || [];
-            setValue(deletedAttributesKey, [...currentDeleted, attributeName]);
+            setValue(deletedAttributesKey, [...currentDeleted, attributeName], { shouldDirty: true });
 
             // Remove from form values
-            setValue(`__attributes__${id}__.${attributeName}`, undefined);
+            setValue(`__attributes__${id}__.${attributeName}`, undefined, { shouldDirty: true });
 
             // Remove from options
             const newOptions = { ...options };
