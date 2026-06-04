@@ -9,14 +9,17 @@ export const RELOAD_FLAG = 'chunk-reload-attempted';
 // even if no successful load cleared the flag in between.
 export const RELOAD_COOLDOWN_MS = 10_000;
 
-// Browser-specific messages thrown when a dynamically imported chunk cannot be fetched.
+// Browser-specific messages thrown when a dynamically imported chunk cannot be fetched, plus
+// the message Vite's preload helper throws when a dependency preload (e.g. a stale CSS link)
+// fails — both indicate a stale asset after a deploy and are recoverable by reloading.
 const CHUNK_LOAD_ERROR_PATTERNS = [
     'Failed to fetch dynamically imported module', // Chromium
     'error loading dynamically imported module', // Firefox
     'Importing a module script failed', // Safari
+    'Unable to preload CSS for', // Vite dependency-preload failure (stale CSS chunk)
 ];
 
-function isChunkLoadError(error: unknown): boolean {
+export function isChunkLoadError(error: unknown): boolean {
     const message = error instanceof Error ? error.message : String(error);
     return CHUNK_LOAD_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
 }
@@ -37,14 +40,38 @@ export function reloadOnce(): boolean {
     return true;
 }
 
+// Vite wraps every production route import() in its preload helper, which catches a failed
+// chunk fetch, dispatches a cancelable `vite:preloadError` event, and only rethrows the error
+// when the event's default is NOT prevented. This handler is therefore the single recovery
+// point in production. It reloads once for a stale-chunk fetch failure and calls
+// preventDefault() ONLY when it actually reloads, so that:
+//   - module-evaluation/runtime errors (payload isn't a chunk-load error) keep propagating,
+//   - and a repeat failure within the cooldown (genuinely missing chunk) also keeps
+//     propagating to the ErrorBoundary instead of being swallowed into a reload loop.
+export function handleVitePreloadError(event: Event & { payload?: unknown }): void {
+    if (isChunkLoadError(event.payload) && reloadOnce()) {
+        event.preventDefault();
+    }
+}
+
 export async function loadWithReload<T>(factory: () => Promise<T>): Promise<T> {
     try {
         const module = await factory();
+        // When handleVitePreloadError above has already swallowed a chunk failure, Vite's
+        // preload wrapper resolves the import to `undefined` while a reload is in flight. Keep
+        // the cooldown guard intact (clearing it here would defeat the cooldown and risk a
+        // reload loop) and hold the Suspense fallback until the page navigates away.
+        if (module === undefined) {
+            return neverSettles<T>();
+        }
+        // A genuinely successful load clears the guard so a later deploy can recover again.
         globalThis.sessionStorage.removeItem(RELOAD_FLAG);
         return module;
     } catch (error) {
-        // Only a failed chunk fetch is recoverable by reloading. Module evaluation/runtime
-        // errors must propagate untouched — a reload would not fix them and would mask the cause.
+        // Fallback for dynamic imports that aren't wrapped by Vite's preload helper (e.g. the
+        // dev server's native import(), where vite:preloadError never fires). Only a failed
+        // chunk fetch is recoverable by reloading; module evaluation/runtime errors must
+        // propagate untouched — a reload would not fix them and would mask the cause.
         if (isChunkLoadError(error) && reloadOnce()) {
             return neverSettles<T>();
         }
