@@ -1,6 +1,7 @@
 import { type ComponentType, lazy } from 'react';
 
-export const RELOAD_FLAG = 'chunk-reload-attempted';
+// sessionStorage key holding the timestamp of the last auto-reload attempt (used as a cooldown).
+export const RELOAD_TIMESTAMP_KEY = 'chunk-reload-timestamp';
 
 // How long after an auto-reload a repeat chunk failure is attributed to that reload
 // rather than to a fresh stale-chunk situation. A failure inside this window means the
@@ -30,12 +31,35 @@ function neverSettles<T>(): Promise<T> {
     return new Promise<T>(() => {});
 }
 
+// sessionStorage can throw (Safari private mode, hardened privacy settings, disabled storage).
+// These helpers swallow that so a storage failure never defeats the production recovery path —
+// a read failure is treated as "no prior attempt" and a write failure still lets the reload proceed.
+function readReloadTimestamp(): number {
+    try {
+        return Number(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY));
+    } catch {
+        return 0;
+    }
+}
+
+function writeReloadTimestamp(value: number | null): void {
+    try {
+        if (value === null) {
+            globalThis.sessionStorage.removeItem(RELOAD_TIMESTAMP_KEY);
+        } else {
+            globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(value));
+        }
+    } catch {
+        // storage unavailable — proceed without persisting the cooldown
+    }
+}
+
 export function reloadOnce(): boolean {
-    const lastAttempt = Number(globalThis.sessionStorage.getItem(RELOAD_FLAG));
+    const lastAttempt = readReloadTimestamp();
     if (lastAttempt && Date.now() - lastAttempt < RELOAD_COOLDOWN_MS) {
         return false;
     }
-    globalThis.sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+    writeReloadTimestamp(Date.now());
     globalThis.location.reload();
     return true;
 }
@@ -65,7 +89,7 @@ export async function loadWithReload<T>(factory: () => Promise<T>): Promise<T> {
             return neverSettles<T>();
         }
         // A genuinely successful load clears the guard so a later deploy can recover again.
-        globalThis.sessionStorage.removeItem(RELOAD_FLAG);
+        writeReloadTimestamp(null);
         return module;
     } catch (error) {
         // Fallback for dynamic imports that aren't wrapped by Vite's preload helper (e.g. the
