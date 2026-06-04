@@ -104,7 +104,7 @@ export default function CustomOIDDetail() {
         [oid],
     );
 
-    if (isFetching) {
+    if (isFetching && !isEditDialogOpen) {
         return <DetailPageSkeleton layout="simple" buttonsCount={2} />;
     }
 

@@ -55,7 +55,7 @@ export default function PlatformSettingsDetail() {
         [onEditClick],
     );
 
-    if (isFetchingPlatform) {
+    if (isFetchingPlatform && !isEditModalOpen) {
         return <DetailPageSkeleton layout="tabs" tabCount={2} rowCount={2} showBreadcrumb={false} tabWidgetButtonsCount={1} />;
     }
 

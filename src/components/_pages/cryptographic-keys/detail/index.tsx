@@ -369,7 +369,7 @@ export default function CryptographicKeyDetail() {
         }
     }, [cryptographicKey, keyItemUuid]);
 
-    if (state.isFetchingDetail) {
+    if (state.isFetchingDetail && !isEditModalOpen) {
         return <DetailPageSkeleton layout="split" tabCount={2} rowCount={9} buttonsCount={6} />;
     }
 

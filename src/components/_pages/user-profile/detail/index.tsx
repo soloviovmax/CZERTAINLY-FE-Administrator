@@ -85,7 +85,7 @@ export default function UserProfileDetail() {
         [profile],
     );
 
-    if (isFetchingDetail) {
+    if (isFetchingDetail && !isEditModalOpen) {
         return <DetailPageSkeleton layout="simple" buttonsCount={1} showBreadcrumb={false} />;
     }
 
