@@ -10,6 +10,12 @@ export const RELOAD_TIMESTAMP_KEY = 'chunk-reload-timestamp';
 // even if no successful load cleared the flag in between.
 export const RELOAD_COOLDOWN_MS = 10_000;
 
+// How long to hold the Suspense fallback after triggering a reload before giving up. A reload
+// normally navigates away well within this window. If it doesn't — e.g. location.reload() is a
+// no-op in a sandboxed iframe / embedded webview — the held promise rejects so the chunk error
+// reaches the ErrorBoundary instead of hanging on the fallback spinner forever.
+export const RELOAD_NAVIGATION_TIMEOUT_MS = 10_000;
+
 // Browser-specific messages thrown when a dynamically imported chunk cannot be fetched, plus
 // the message Vite's preload helper throws when a dependency preload (e.g. a stale CSS link)
 // fails — both indicate a stale asset after a deploy and are recoverable by reloading.
@@ -25,10 +31,27 @@ export function isChunkLoadError(error: unknown): boolean {
     return CHUNK_LOAD_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
 }
 
-// A promise that never settles. After triggering a reload the page is navigating away, so
-// Suspense should keep its fallback rather than resolve or surface the error to the ErrorBoundary.
-function neverSettles<T>(): Promise<T> {
-    return new Promise<T>(() => {});
+// A promise that holds the Suspense fallback while the page navigates away after a reload, then
+// rejects if navigation never happens within the timeout (reload blocked / no-op) so the error
+// surfaces to the ErrorBoundary instead of hanging forever.
+function holdForReload<T>(): Promise<T> {
+    return new Promise<T>((_resolve, reject) => {
+        globalThis.setTimeout(() => {
+            reject(new Error('Page did not reload after a chunk-load failure'));
+        }, RELOAD_NAVIGATION_TIMEOUT_MS);
+    });
+}
+
+// Set once we trigger a reload in this page's lifetime. Lets us swallow the sibling
+// vite:preloadError events that a single deploy-stale navigation fires (the route chunk plus its
+// preloaded dependencies) so none of them momentarily surface to the ErrorBoundary before the
+// page navigates away. Deliberately in-memory (never persisted): on the reloaded page it must
+// start false so a genuinely missing chunk is judged by the cooldown and propagates.
+let reloadInFlight = false;
+
+// Test-only: reset the in-memory reload-in-flight guard between cases.
+export function resetReloadGuardForTests(): void {
+    reloadInFlight = false;
 }
 
 // sessionStorage can throw (Safari private mode, hardened privacy settings, disabled storage).
@@ -67,6 +90,10 @@ function isReloadNavigation(): boolean {
 }
 
 export function reloadOnce(): boolean {
+    // A reload is already navigating away — don't trigger another.
+    if (reloadInFlight) {
+        return false;
+    }
     const { available, lastAttempt } = readReloadTimestamp();
     // Primary cooldown: a persisted timestamp. When storage is unavailable we can't persist one,
     // so fall back to the navigation type — a reload that lands on the same failing chunk stops here.
@@ -74,6 +101,7 @@ export function reloadOnce(): boolean {
     if (withinCooldown) {
         return false;
     }
+    reloadInFlight = true;
     writeReloadTimestamp(Date.now());
     globalThis.location.reload();
     return true;
@@ -83,12 +111,16 @@ export function reloadOnce(): boolean {
 // chunk fetch, dispatches a cancelable `vite:preloadError` event, and only rethrows the error
 // when the event's default is NOT prevented. This handler is therefore the single recovery
 // point in production. It reloads once for a stale-chunk fetch failure and calls
-// preventDefault() ONLY when it actually reloads, so that:
+// preventDefault() so that:
 //   - module-evaluation/runtime errors (payload isn't a chunk-load error) keep propagating,
 //   - and a repeat failure within the cooldown (genuinely missing chunk) also keeps
 //     propagating to the ErrorBoundary instead of being swallowed into a reload loop.
+// Once a reload is in flight, every further chunk-load error is swallowed too: a single
+// deploy-stale navigation fires multiple events (the chunk plus its dep preloads) and only the
+// first triggers the reload — preventing the siblings keeps them off the ErrorBoundary while the
+// page navigates away.
 export function handleVitePreloadError(event: Event & { payload?: unknown }): void {
-    if (isChunkLoadError(event.payload) && reloadOnce()) {
+    if (isChunkLoadError(event.payload) && (reloadOnce() || reloadInFlight)) {
         event.preventDefault();
     }
 }
@@ -101,7 +133,7 @@ export async function loadWithReload<T>(factory: () => Promise<T>): Promise<T> {
         // the cooldown guard intact (clearing it here would defeat the cooldown and risk a
         // reload loop) and hold the Suspense fallback until the page navigates away.
         if (module === undefined) {
-            return neverSettles<T>();
+            return holdForReload<T>();
         }
         // A genuinely successful load clears the guard so a later deploy can recover again.
         writeReloadTimestamp(null);
@@ -111,8 +143,8 @@ export async function loadWithReload<T>(factory: () => Promise<T>): Promise<T> {
         // dev server's native import(), where vite:preloadError never fires). Only a failed
         // chunk fetch is recoverable by reloading; module evaluation/runtime errors must
         // propagate untouched — a reload would not fix them and would mask the cause.
-        if (isChunkLoadError(error) && reloadOnce()) {
-            return neverSettles<T>();
+        if (isChunkLoadError(error) && (reloadOnce() || reloadInFlight)) {
+            return holdForReload<T>();
         }
         throw error;
     }

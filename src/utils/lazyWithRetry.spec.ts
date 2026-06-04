@@ -1,5 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { handleVitePreloadError, loadWithReload, RELOAD_COOLDOWN_MS, RELOAD_TIMESTAMP_KEY } from './lazyWithRetry';
+import {
+    handleVitePreloadError,
+    loadWithReload,
+    RELOAD_COOLDOWN_MS,
+    RELOAD_NAVIGATION_TIMEOUT_MS,
+    RELOAD_TIMESTAMP_KEY,
+    resetReloadGuardForTests,
+} from './lazyWithRetry';
 
 describe('lazyWithRetry', () => {
     let reloadSpy: ReturnType<typeof vi.fn>;
@@ -7,6 +14,7 @@ describe('lazyWithRetry', () => {
 
     beforeEach(() => {
         globalThis.sessionStorage.clear();
+        resetReloadGuardForTests();
         reloadSpy = vi.fn();
         // globalThis.location.reload is read-only in happy-dom; redefine it with a spy.
         Object.defineProperty(globalThis, 'location', {
@@ -99,6 +107,22 @@ describe('lazyWithRetry', () => {
             expect(reloadSpy).not.toHaveBeenCalled();
             expect(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).toBeNull();
         });
+
+        it('rejects after the navigation timeout if the reload never navigates away (blocked/no-op reload)', async () => {
+            vi.useFakeTimers();
+            try {
+                const pending = loadWithReload(() => Promise.reject(new Error('Failed to fetch dynamically imported module')));
+                const assertion = expect(pending).rejects.toThrow('Page did not reload after a chunk-load failure');
+
+                // flush the rejection handling, then fire the navigation timeout
+                await vi.advanceTimersByTimeAsync(RELOAD_NAVIGATION_TIMEOUT_MS);
+
+                await assertion;
+                expect(reloadSpy).toHaveBeenCalledTimes(1);
+            } finally {
+                vi.useRealTimers();
+            }
+        });
     });
 
     describe('handleVitePreloadError (production preload path)', () => {
@@ -120,6 +144,20 @@ describe('lazyWithRetry', () => {
 
             expect(reloadSpy).toHaveBeenCalledTimes(1);
             expect(event.defaultPrevented).toBe(true);
+        });
+
+        it('swallows sibling chunk errors while a reload is already in flight (one navigation, many events)', () => {
+            // a single deploy-stale navigation fires the route chunk error plus its dep-preload errors
+            const first = preloadErrorEvent(new Error('Failed to fetch dynamically imported module'));
+            const sibling = preloadErrorEvent(new Error('Unable to preload CSS for /assets/index-abc123.css'));
+
+            handleVitePreloadError(first);
+            handleVitePreloadError(sibling);
+
+            // only the first triggers the reload, but BOTH are prevented so neither hits the ErrorBoundary
+            expect(reloadSpy).toHaveBeenCalledTimes(1);
+            expect(first.defaultPrevented).toBe(true);
+            expect(sibling.defaultPrevented).toBe(true);
         });
 
         it('lets module-evaluation errors propagate (no reload, default not prevented)', () => {
