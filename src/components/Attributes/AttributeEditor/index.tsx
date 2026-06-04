@@ -140,7 +140,7 @@ function AttributeEditorInner({
             setValue(deletedAttributesKey, [...currentDeleted, attributeName]);
 
             // Remove from form values
-            setValue(`__attributes__${id}__.${attributeName}`, undefined);
+            setValue(`__attributes__${id}__.${attributeName}`, undefined, { shouldDirty: true });
 
             // Remove from options
             const newOptions = { ...options };
