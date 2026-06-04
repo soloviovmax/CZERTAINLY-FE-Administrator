@@ -4,6 +4,9 @@ import 'reactflow/dist/style.css';
 import reportWebVitals from './reportWebVitals';
 import './tailwindcss.css';
 import App from './App';
+import { handleVitePreloadError } from 'utils/lazyWithRetry';
+
+globalThis.addEventListener('vite:preloadError', handleVitePreloadError as EventListener);
 
 const container = document.getElementById('root')!;
 const root = createRoot(container);
