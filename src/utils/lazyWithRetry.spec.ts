@@ -39,35 +39,52 @@ describe('lazyWithRetry', () => {
     }
 
     describe('loadWithReload (fallback for unwrapped imports)', () => {
-        it('returns the module and clears the guard on success', async () => {
-            globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now()));
+        it('returns the module on success without clearing the guard (a sibling 404 must not loop)', async () => {
+            // clearing on success would let a concurrently-failing chunk reload forever, since the
+            // cross-reload guard depends on this timestamp — leave it to expire via the cooldown
+            const timestamp = String(Date.now());
+            globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, timestamp);
             const module = { default: 'Component' };
 
             const result = await loadWithReload(() => Promise.resolve(module));
 
             expect(result).toBe(module);
             expect(reloadSpy).not.toHaveBeenCalled();
-            expect(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).toBeNull();
+            expect(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).toBe(timestamp);
         });
 
-        it('stays pending and keeps the guard when the import resolves undefined (swallowed by the preload handler)', async () => {
-            // handleVitePreloadError already preventDefault()ed the failure and triggered a reload,
-            // so Vite's preload wrapper resolves the import to undefined while the reload is in flight.
-            const timestamp = String(Date.now());
-            globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, timestamp);
+        it('production handoff: handler reloads, then the swallowed undefined import stays pending', async () => {
+            // the real production sequence — the global handler fires first (synchronously),
+            // reloads and sets reloadInFlight; Vite's preload wrapper then resolves the import to
+            // undefined, which loadWithReload must hold (not resolve to undefined) until navigation.
+            const event = preloadErrorEvent(new Error('Failed to fetch dynamically imported module'));
+            handleVitePreloadError(event);
+            expect(reloadSpy).toHaveBeenCalledTimes(1);
+            expect(event.defaultPrevented).toBe(true);
 
             const pending = loadWithReload(() => Promise.resolve(undefined));
+            pending.catch(() => {}); // holdForReload rejects after the timeout — keep it handled in tests
 
             const settled = await Promise.race([pending.then(() => 'resolved'), Promise.resolve('pending')]);
             expect(settled).toBe('pending');
-            // the cooldown guard must NOT be cleared — clearing it would defeat the cooldown on reload
-            expect(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY)).toBe(timestamp);
+            expect(reloadSpy).toHaveBeenCalledTimes(1);
+            // the timestamp guard remains for the cooldown
+            expect(Number(globalThis.sessionStorage.getItem(RELOAD_TIMESTAMP_KEY))).toBeGreaterThan(0);
+        });
+
+        it('returns a spurious undefined as-is when no reload is in flight (surfaces instead of hanging)', async () => {
+            // an undefined resolution NOT caused by the preload handler must not be mistaken for a
+            // swallowed chunk and held forever — it should surface (here, resolve to undefined).
+            const result = await loadWithReload(() => Promise.resolve(undefined));
+
+            expect(result).toBeUndefined();
             expect(reloadSpy).not.toHaveBeenCalled();
         });
 
         it('reloads once and records the attempt timestamp on the first failure (stale chunk)', async () => {
             // never resolves — the page is expected to reload instead
             const pending = loadWithReload(() => Promise.reject(new Error('Failed to fetch dynamically imported module')));
+            pending.catch(() => {}); // holdForReload rejects after the timeout — keep it handled in tests
 
             // give the rejected promise a tick to be handled
             await Promise.resolve();
@@ -79,6 +96,19 @@ describe('lazyWithRetry', () => {
             // the returned promise stays pending (Suspense keeps its fallback)
             const settled = await Promise.race([pending.then(() => 'resolved'), Promise.resolve('pending')]);
             expect(settled).toBe('pending');
+        });
+
+        it('does not loop when a sibling chunk succeeds while another is genuinely missing', async () => {
+            // simulate the post-reload state: a timestamp from the reload that just happened
+            globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now()));
+
+            // chunk A exists and resolves — must NOT clear the timestamp
+            await loadWithReload(() => Promise.resolve({ default: 'A' }));
+
+            // chunk B is a true 404; within the cooldown it must propagate, not reload again
+            const error = new Error('Failed to fetch dynamically imported module');
+            await expect(loadWithReload(() => Promise.reject(error))).rejects.toBe(error);
+            expect(reloadSpy).not.toHaveBeenCalled();
         });
 
         it('rethrows without reloading if a reload was attempted within the cooldown (genuinely missing chunk)', async () => {
@@ -94,7 +124,8 @@ describe('lazyWithRetry', () => {
             // recovered without ever clearing the flag, then a new deploy left another stale chunk
             globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(Date.now() - RELOAD_COOLDOWN_MS - 1));
 
-            loadWithReload(() => Promise.reject(new Error('Failed to fetch dynamically imported module')));
+            const pending = loadWithReload(() => Promise.reject(new Error('Failed to fetch dynamically imported module')));
+            pending.catch(() => {}); // holdForReload rejects after the timeout — keep it handled in tests
             await Promise.resolve();
 
             expect(reloadSpy).toHaveBeenCalledTimes(1);

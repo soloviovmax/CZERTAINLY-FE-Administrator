@@ -6,15 +6,16 @@ export const RELOAD_TIMESTAMP_KEY = 'chunk-reload-timestamp';
 // How long after an auto-reload a repeat chunk failure is attributed to that reload
 // rather than to a fresh stale-chunk situation. A failure inside this window means the
 // reload didn't help (the chunk is genuinely missing) → don't reload again, avoiding a
-// loop. A failure after it — e.g. a later deploy — is a new situation and recovers again,
-// even if no successful load cleared the flag in between.
+// loop. A failure after it — e.g. a later deploy — is a new situation and recovers again.
+// The timestamp is never actively cleared; it simply expires after this window.
 export const RELOAD_COOLDOWN_MS = 10_000;
 
-// How long to hold the Suspense fallback after triggering a reload before giving up. A reload
-// normally navigates away well within this window. If it doesn't — e.g. location.reload() is a
-// no-op in a sandboxed iframe / embedded webview — the held promise rejects so the chunk error
-// reaches the ErrorBoundary instead of hanging on the fallback spinner forever.
-export const RELOAD_NAVIGATION_TIMEOUT_MS = 10_000;
+// How long to hold the Suspense fallback after triggering a reload before giving up. A real
+// reload navigates away near-instantly, so this only bites when location.reload() is a no-op
+// (sandboxed iframe / embedded webview): the held promise then rejects so the chunk error
+// reaches the ErrorBoundary instead of hanging on the spinner. Kept a few seconds (not sub-second)
+// so a genuinely slow reload doesn't flash the ErrorBoundary before the new document commits.
+export const RELOAD_NAVIGATION_TIMEOUT_MS = 5_000;
 
 // Browser-specific messages thrown when a dynamically imported chunk cannot be fetched, plus
 // the message Vite's preload helper throws when a dependency preload (e.g. a stale CSS link)
@@ -65,13 +66,9 @@ function readReloadTimestamp(): { available: boolean; lastAttempt: number } {
     }
 }
 
-function writeReloadTimestamp(value: number | null): void {
+function writeReloadTimestamp(value: number): void {
     try {
-        if (value === null) {
-            globalThis.sessionStorage.removeItem(RELOAD_TIMESTAMP_KEY);
-        } else {
-            globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(value));
-        }
+        globalThis.sessionStorage.setItem(RELOAD_TIMESTAMP_KEY, String(value));
     } catch {
         // storage unavailable — proceed without persisting the cooldown
     }
@@ -129,14 +126,17 @@ export async function loadWithReload<T>(factory: () => Promise<T>): Promise<T> {
     try {
         const module = await factory();
         // When handleVitePreloadError above has already swallowed a chunk failure, Vite's
-        // preload wrapper resolves the import to `undefined` while a reload is in flight. Keep
-        // the cooldown guard intact (clearing it here would defeat the cooldown and risk a
-        // reload loop) and hold the Suspense fallback until the page navigates away.
-        if (module === undefined) {
+        // preload wrapper resolves the import to `undefined` while a reload is in flight — hold
+        // the Suspense fallback until the page navigates away. Gate on reloadInFlight (always set
+        // before a swallow) so a spurious `undefined` from any other source still surfaces to the
+        // ErrorBoundary rather than hanging forever.
+        if (module === undefined && reloadInFlight) {
             return holdForReload<T>();
         }
-        // A genuinely successful load clears the guard so a later deploy can recover again.
-        writeReloadTimestamp(null);
+        // Deliberately don't touch the cooldown timestamp on success: clearing it for any chunk
+        // that loads would defeat the cross-reload loop guard when a sibling chunk is genuinely
+        // missing (the timestamp would be gone, so reloadOnce would reload again → loop). The
+        // timestamp simply expires after RELOAD_COOLDOWN_MS, which is enough for a later deploy.
         return module;
     } catch (error) {
         // Fallback for dynamic imports that aren't wrapped by Vite's preload helper (e.g. the
