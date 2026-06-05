@@ -2,29 +2,12 @@ import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router';
 import { useMemo } from 'react';
-import { PlatformEnum, RecipientType } from 'types/openapi';
+import { defaultPlatformEnums, identity } from '../notificationProfileTestFixtures';
 import NotificationProfileForm from './index';
-
-const identity =
-    <S,>(initial: S) =>
-    (state: S | undefined) =>
-        state ?? initial;
-
-const defaultPlatformEnums = {
-    [PlatformEnum.RecipientType]: {
-        [RecipientType.None]: { label: 'None' },
-        [RecipientType.Default]: { label: 'Default' },
-        [RecipientType.User]: { label: 'User' },
-        [RecipientType.Group]: { label: 'Group' },
-        [RecipientType.Role]: { label: 'Role' },
-        [RecipientType.Owner]: { label: 'Owner' },
-        [RecipientType.Mapped]: { label: 'Mapped' },
-    },
-};
 
 export type NotificationProfileFormTestWrapperProps = {
     notificationInstances?: { uuid: string; name: string }[];
-    platformEnumsOverride?: Record<string, Record<string, { label: string }>>;
+    platformEnumsOverride?: Record<string, Record<string, { label: string; description?: string }>>;
 };
 
 export function NotificationProfileFormTestWrapper({

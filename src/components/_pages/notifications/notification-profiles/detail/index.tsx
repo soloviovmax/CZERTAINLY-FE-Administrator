@@ -3,7 +3,7 @@ import CustomTable, { type TableDataRow, type TableHeader } from 'components/Cus
 import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { actions, selectors } from 'ducks/notification-profiles';
 import { actions as notificationActions, selectors as notificationSelectors } from 'ducks/notifications';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -13,6 +13,8 @@ import { Link, useParams } from 'react-router';
 import NotificationProfileForm from '../form';
 
 import Badge from 'components/Badge';
+import Tooltip from 'components/Tooltip';
+import { Info } from 'lucide-react';
 import { PlatformEnum, RecipientType } from 'types/openapi';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import { getInputStringFromIso8601String } from 'utils/duration';
@@ -126,57 +128,59 @@ export default function NotificationProfileDetail() {
         ],
         [],
     );
-    const profileData: TableDataRow[] = useMemo(
-        () =>
-            notificationProfile
-                ? [
-                      {
-                          id: 'uuid',
-                          columns: ['UUID', notificationProfile.uuid],
-                      },
-                      {
-                          id: 'name',
-                          columns: ['Name', notificationProfile.name],
-                      },
-                      {
-                          id: 'description',
-                          columns: ['Description', notificationProfile.description ?? ''],
-                      },
-                      {
-                          id: 'version',
-                          columns: ['Profile Version', notificationProfile.version.toString()],
-                      },
-                      {
-                          id: 'recipientType',
-                          columns: [
-                              'Recipient Type',
-                              <Badge key="recipientType" color="secondary">
-                                  {getEnumLabel(recipientTypeEnum, notificationProfile.recipientType)}
-                              </Badge>,
-                          ],
-                      },
-                      {
-                          id: 'internalNotification',
-                          columns: [
-                              'Internal Notification',
-                              <BooleanBadge key="internalNotification" value={notificationProfile.internalNotification} />,
-                          ],
-                      },
-                      {
-                          id: 'frequency',
-                          columns: [
-                              'Frequency',
-                              notificationProfile.frequency ? getInputStringFromIso8601String(notificationProfile.frequency) : '',
-                          ],
-                      },
-                      {
-                          id: 'repetitions',
-                          columns: ['Max Repetitions', notificationProfile.repetitions?.toString() ?? ''],
-                      },
-                  ]
-                : [],
-        [notificationProfile, recipientTypeEnum],
-    );
+    const profileData: TableDataRow[] = useMemo(() => {
+        if (!notificationProfile) return [];
+        const recipientTypeDescription = getEnumDescription(recipientTypeEnum, notificationProfile.recipientType);
+        return [
+            {
+                id: 'uuid',
+                columns: ['UUID', notificationProfile.uuid],
+            },
+            {
+                id: 'name',
+                columns: ['Name', notificationProfile.name],
+            },
+            {
+                id: 'description',
+                columns: ['Description', notificationProfile.description ?? ''],
+            },
+            {
+                id: 'version',
+                columns: ['Profile Version', notificationProfile.version.toString()],
+            },
+            {
+                id: 'recipientType',
+                columns: [
+                    'Recipient Type',
+                    <span key="recipientType" className="inline-flex items-center gap-1">
+                        <Badge color="secondary">{getEnumLabel(recipientTypeEnum, notificationProfile.recipientType)}</Badge>
+                        {recipientTypeDescription && (
+                            <Tooltip content={recipientTypeDescription}>
+                                <button type="button" aria-label="Recipient type description" className="flex text-gray-400 cursor-help">
+                                    <Info size={16} className="block" data-testid="recipientType-info" />
+                                </button>
+                            </Tooltip>
+                        )}
+                    </span>,
+                ],
+            },
+            {
+                id: 'internalNotification',
+                columns: [
+                    'Internal Notification',
+                    <BooleanBadge key="internalNotification" value={notificationProfile.internalNotification} />,
+                ],
+            },
+            {
+                id: 'frequency',
+                columns: ['Frequency', notificationProfile.frequency ? getInputStringFromIso8601String(notificationProfile.frequency) : ''],
+            },
+            {
+                id: 'repetitions',
+                columns: ['Max Repetitions', notificationProfile.repetitions?.toString() ?? ''],
+            },
+        ];
+    }, [notificationProfile, recipientTypeEnum]);
     const recipientsData: TableDataRow[] = useMemo(
         () =>
             notificationProfile?.recipients

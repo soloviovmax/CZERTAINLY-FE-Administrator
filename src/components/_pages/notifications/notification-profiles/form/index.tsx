@@ -1,7 +1,7 @@
 import ProgressButton from 'components/ProgressButton';
 import Widget from 'components/Widget';
 import { actions, selectors } from 'ducks/notification-profiles';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { actions as groupAction, selectors as groupSelectors } from 'ducks/certificateGroups';
 import { actions as rolesActions, selectors as rolesSelectors } from 'ducks/roles';
 import { actions as userAction, selectors as userSelectors } from 'ducks/users';
@@ -30,6 +30,8 @@ import { LockWidgetNameEnum } from 'types/user-interface';
 import { getInputStringFromIso8601String, getIso8601StringFromInputString } from 'utils/duration';
 import TextInput from 'components/TextInput';
 import TextArea from 'components/TextArea';
+import Tooltip from 'components/Tooltip';
+import { Info } from 'lucide-react';
 
 type NotificationProfileFormProps = Readonly<{
     notificationProfileId?: string;
@@ -199,7 +201,7 @@ export default function NotificationProfileForm({
     const isNotificationInstanceRequired =
         type === RecipientType.Default ||
         type === RecipientType.None ||
-        type === RecipientType.Mapped ||
+        type === RecipientType.Object ||
         ((type === RecipientType.User || type === RecipientType.Role || type === RecipientType.Group) && !formValues.internalNotification);
 
     return (
@@ -266,7 +268,7 @@ export default function NotificationProfileForm({
                                         />
                                         {fieldState.error && fieldState.isTouched && (
                                             <p className="mt-1 text-sm text-red-600">
-                                                Notification Instance is required when Recipient Type is Default, None, or Mapped, or when
+                                                Notification Instance is required when Recipient Type is Default, None, or Object, or when
                                                 Send internal notifications is off
                                             </p>
                                         )}
@@ -285,7 +287,7 @@ export default function NotificationProfileForm({
                                     onChange={field.onChange}
                                     label="Send internal notifications"
                                     disabled={
-                                        type === RecipientType.Default || type === RecipientType.None || type === RecipientType.Mapped
+                                        type === RecipientType.Default || type === RecipientType.None || type === RecipientType.Object
                                     }
                                 />
                             )}
@@ -371,6 +373,8 @@ function RecipientTypeFields() {
         [recipientTypeEnum],
     );
 
+    const recipientTypeDescription = getEnumDescription(recipientTypeEnum, watchedRecipientType);
+
     const renderRecipientField = useCallback(() => {
         let props: { options: { value: string; label: string }[]; description: string; placeholder: string } | null = null;
         switch (watchedRecipientType) {
@@ -431,9 +435,18 @@ function RecipientTypeFields() {
     return (
         <>
             <div>
-                <Label htmlFor="recipientType" required>
-                    Recipient Type
-                </Label>
+                <div className="flex items-center gap-1 mb-2">
+                    <Label htmlFor="recipientType" required className="!mb-0">
+                        Recipient Type
+                    </Label>
+                    {recipientTypeDescription && (
+                        <Tooltip content={recipientTypeDescription}>
+                            <button type="button" aria-label="Recipient type description" className="flex text-gray-400 cursor-help">
+                                <Info size={16} className="block" data-testid="recipientType-info" />
+                            </button>
+                        </Tooltip>
+                    )}
+                </div>
                 <p className="text-sm text-gray-500 mb-2">Recipient type of notifications managed by profile.</p>
                 <Controller
                     name="recipientType"
@@ -451,7 +464,7 @@ function RecipientTypeFields() {
                                     switch (value) {
                                         case RecipientType.None:
                                         case RecipientType.Default:
-                                        case RecipientType.Mapped:
+                                        case RecipientType.Object:
                                             setValue('internalNotification', false);
                                             break;
                                     }
