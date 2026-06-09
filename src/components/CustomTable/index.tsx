@@ -43,6 +43,7 @@ type Props = {
     onPageChanged?: (page: number) => void;
     itemsPerPageOptions?: number[];
     newRowWidgetProps?: NewRowWidgetProps;
+    columnForDetail?: string;
     detailHeaders?: TableHeader[];
     paginationStateKey?: string;
     paginationPersistKey?: string;
