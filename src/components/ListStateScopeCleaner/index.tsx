@@ -6,7 +6,7 @@ import { actions as listFilterActions } from 'ducks/list-filters';
 import { actions as listScopeActions, selectors as listScopeSelectors } from 'ducks/list-scopes';
 import { actions as tablePaginationActions } from 'ducks/table-pagination';
 import { actions as pagingActions } from 'ducks/paging';
-import { actions as filterActions, type EntityType } from 'ducks/filters';
+import { actions as filterActions } from 'ducks/filters';
 import { LIST_VIEW_SCOPES, isPathInScope, persistPaginationKey } from 'utils/listViewState';
 
 const ListStateScopeCleaner = () => {
@@ -29,8 +29,7 @@ const ListStateScopeCleaner = () => {
                 continue;
             }
 
-            const entity = Number(entityKey) as EntityType;
-
+            const entity = Number(entityKey);
             dispatch(pagingActions.resetPaging({ entity }));
             dispatch(filterActions.setCurrentFilters({ entity, currentFilters: [] }));
             dispatch(filterActions.setPreservedFilters({ entity, preservedFilters: [] }));

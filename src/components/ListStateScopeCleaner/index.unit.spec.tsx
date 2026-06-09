@@ -1,18 +1,16 @@
-import { act } from 'react';
+import { act, createElement } from 'react';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router';
-import { createElement } from 'react';
 
 import ListStateScopeCleaner from './index';
 import { slice as listFiltersSlice } from 'ducks/list-filters';
 import { slice as listScopesSlice, actions as listScopeActions } from 'ducks/list-scopes';
 import { slice as tablePaginationSlice, actions as tablePaginationActions } from 'ducks/table-pagination';
 import { slice as pagingSlice, actions as pagingActions, selectors as pagingSelectors } from 'ducks/paging';
-import { slice as filtersSlice } from 'ducks/filters';
-import { EntityType } from 'ducks/filters';
+import { slice as filtersSlice, EntityType } from 'ducks/filters';
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
