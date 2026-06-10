@@ -8,6 +8,8 @@ export type Props = {
     onAdd: (attribute: CustomAttributeModel) => void;
 };
 
+const EMPTY_VALUE: { value: string | number; label: string }[] = [];
+
 export default function CustomAttributeAddSelect({ attributeDescriptors, onAdd }: Readonly<Props>) {
     const { options, uuidToAttributeMap } = useMemo(() => {
         const customAttributes = attributeDescriptors?.filter<CustomAttributeModel>((el) => isCustomAttributeModel(el)) || [];
@@ -38,7 +40,7 @@ export default function CustomAttributeAddSelect({ attributeDescriptors, onAdd }
                 placeholder="Show..."
                 isClearable
                 isMulti
-                value={[]}
+                value={EMPTY_VALUE}
                 onChange={(values) => {
                     (values || []).forEach((selected) => {
                         const attribute = uuidToAttributeMap.get(selected.value.toString());
