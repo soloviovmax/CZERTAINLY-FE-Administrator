@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import Select from 'components/Select';
 import { type AttributeDescriptorModel, type CustomAttributeModel, isCustomAttributeModel } from '../../../../types/attributes';
 import Label from 'components/Label';
@@ -27,8 +27,6 @@ export default function CustomAttributeAddSelect({ attributeDescriptors, onAdd }
         };
     }, [attributeDescriptors]);
 
-    const [selectedValues, setSelectedValues] = useState<{ value: string | number; label: string }[]>([]);
-
     if (options.length === 0) return null;
 
     return (
@@ -40,17 +38,9 @@ export default function CustomAttributeAddSelect({ attributeDescriptors, onAdd }
                 placeholder="Show..."
                 isClearable
                 isMulti
-                value={selectedValues}
+                value={[]}
                 onChange={(values) => {
-                    const newValues = values || [];
-                    setSelectedValues(newValues);
-
-                    // Find newly added attributes (ones that weren't in the previous selection)
-                    const previousUuids = new Set(selectedValues.map((v) => v.value.toString()));
-                    const newlyAdded = newValues.filter((v) => !previousUuids.has(v.value.toString()));
-
-                    // Call onAdd for each newly added attribute
-                    newlyAdded.forEach((selected) => {
+                    (values || []).forEach((selected) => {
                         const attribute = uuidToAttributeMap.get(selected.value.toString());
                         if (attribute) {
                             onAdd(attribute);
