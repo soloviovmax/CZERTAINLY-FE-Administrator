@@ -23,6 +23,7 @@ import { actions as userAction, selectors as userSelectors } from 'ducks/users';
 import Badge from 'components/Badge';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
+import { EnumValueDescription } from 'components/EnumDescription';
 
 export default function AdministratorDetail() {
     const dispatch = useDispatch();
@@ -162,9 +163,10 @@ export default function AdministratorDetail() {
                           id: 'variant',
                           columns: [
                               'Variant',
-                              <Badge key="variant" color="primary">
-                                  {getEnumLabel(cmpCmpProfileVariantEnum, cmpProfile.variant)}
-                              </Badge>,
+                              <span key="variant" className="inline-flex items-center gap-1">
+                                  <Badge color="primary">{getEnumLabel(cmpCmpProfileVariantEnum, cmpProfile.variant)}</Badge>
+                                  <EnumValueDescription platformEnum={PlatformEnum.CmpProfileVariant} value={cmpProfile.variant} />
+                              </span>,
                           ],
                       },
                       {

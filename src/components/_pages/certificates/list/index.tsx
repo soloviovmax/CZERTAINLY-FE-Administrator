@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 
 import Dropdown from 'components/Dropdown';
+import { EnumColumnDescription } from 'components/EnumDescription';
 
 import type { ApiClients } from '../../../../api';
 import PagedList from 'components/PagedList/PagedList';
@@ -230,7 +231,12 @@ export default function CertificateList({
     const certificatesRowHeaders: TableHeader[] = useMemo(
         () => [
             {
-                content: 'State',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        State
+                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateState} title="State" />
+                    </span>
+                ),
                 align: 'center',
                 id: 'state',
                 width: '5%',

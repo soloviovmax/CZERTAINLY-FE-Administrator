@@ -8,6 +8,7 @@ import Container from 'components/Container';
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import StatusBadge from 'components/StatusBadge';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import CustomAttributeWidget from 'components/Attributes/CustomAttributeWidget';
@@ -202,13 +203,16 @@ export default function SigningProfileDetail() {
                           id: 'workflowType',
                           columns: [
                               'Signing Workflow Type',
-                              <span
-                                  key="value"
-                                  className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800"
-                              >
-                                  {workflowTypeLabels[(signingProfile.workflow as TimestampingWorkflowDto)?.type] ??
-                                      (signingProfile.workflow as TimestampingWorkflowDto)?.type ??
-                                      '—'}
+                              <span key="value" className="inline-flex items-center gap-1">
+                                  <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                                      {workflowTypeLabels[(signingProfile.workflow as TimestampingWorkflowDto)?.type] ??
+                                          (signingProfile.workflow as TimestampingWorkflowDto)?.type ??
+                                          '—'}
+                                  </span>
+                                  <EnumValueDescription
+                                      platformEnum={PlatformEnum.SigningWorkflowType}
+                                      value={(signingProfile.workflow as TimestampingWorkflowDto)?.type}
+                                  />
                               </span>,
                           ],
                       },
@@ -219,11 +223,11 @@ export default function SigningProfileDetail() {
                               signingProfile.enabledProtocols && signingProfile.enabledProtocols.length > 0 ? (
                                   <div key="value" className="flex flex-wrap gap-1">
                                       {signingProfile.enabledProtocols.map((p) => (
-                                          <span
-                                              key={p}
-                                              className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800"
-                                          >
-                                              {protocolLabels[p] ?? p}
+                                          <span key={p} className="inline-flex items-center gap-1">
+                                              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                                                  {protocolLabels[p] ?? p}
+                                              </span>
+                                              <EnumValueDescription platformEnum={PlatformEnum.SigningProtocol} value={p} />
                                           </span>
                                       ))}
                                   </div>
@@ -369,11 +373,11 @@ export default function SigningProfileDetail() {
                 id: 'signingScheme',
                 columns: [
                     'Signing Scheme',
-                    <span
-                        key="value"
-                        className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800"
-                    >
-                        {signingSchemeLabels[sc?.signingScheme as SigningScheme] ?? sc?.signingScheme ?? '—'}
+                    <span key="value" className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                            {signingSchemeLabels[sc?.signingScheme as SigningScheme] ?? sc?.signingScheme ?? '—'}
+                        </span>
+                        <EnumValueDescription platformEnum={PlatformEnum.SigningScheme} value={sc?.signingScheme} />
                     </span>,
                 ],
             },
@@ -384,8 +388,9 @@ export default function SigningProfileDetail() {
                 id: 'managedSigningType',
                 columns: [
                     'Managed Signing Type',
-                    <span key="value">
+                    <span key="value" className="inline-flex items-center gap-1">
                         {managedSigningTypeLabels[sc.managedSigningType as ManagedSigningType] ?? sc.managedSigningType}
+                        <EnumValueDescription platformEnum={PlatformEnum.ManagedSigningType} value={sc.managedSigningType} />
                     </span>,
                 ],
             });

@@ -6,6 +6,7 @@ import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { actions as approvalActions, selectors as approvalSelectors } from 'ducks/approvals';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumColumnDescription, EnumValueDescription } from 'components/EnumDescription';
 import Breadcrumb from 'components/Breadcrumb';
 import Container from 'components/Container';
 import TabLayout from 'components/Layout/TabLayout';
@@ -140,8 +141,9 @@ export default function ApprovalDetails() {
                           id: 'status',
                           columns: [
                               'Status',
-                              <>
+                              <span key="status" className="inline-flex items-center gap-1">
                                   <StatusBadge textStatus={approvalDetails.status} />
+                                  <EnumValueDescription platformEnum={PlatformEnum.ApprovalStatusEnum} value={approvalDetails.status} />
                                   <Button
                                       variant="transparent"
                                       title="Go to details"
@@ -152,7 +154,7 @@ export default function ApprovalDetails() {
                                   >
                                       <ArrowRightCircle size={16} />
                                   </Button>
-                              </>,
+                              </span>,
                           ],
                       },
 
@@ -171,7 +173,13 @@ export default function ApprovalDetails() {
                       },
                       {
                           id: 'resource',
-                          columns: ['Resource', approvalDetails.resource || ''],
+                          columns: [
+                              'Resource',
+                              <span key="resource" className="inline-flex items-center gap-1">
+                                  {approvalDetails.resource || ''}
+                                  <EnumValueDescription platformEnum={PlatformEnum.Resource} value={approvalDetails.resource} />
+                              </span>,
+                          ],
                       },
 
                       {
@@ -250,7 +258,12 @@ export default function ApprovalDetails() {
             },
             {
                 id: 'status',
-                content: 'Status',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Status
+                        <EnumColumnDescription platformEnum={PlatformEnum.ApprovalStatusEnum} title="Status" />
+                    </span>
+                ),
             },
             {
                 id: 'comment',

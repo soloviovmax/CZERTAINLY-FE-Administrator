@@ -10,6 +10,8 @@ import {
 } from 'types/openapi';
 import { capitalize } from 'utils/common-utils';
 import { Info } from 'lucide-react';
+import { PlatformEnum } from 'types/openapi';
+import { EnumColumnDescription } from 'components/EnumDescription';
 
 export const getComplianceProfileStatusColor = (status: ComplianceRuleAvailabilityStatus) => {
     switch (status) {
@@ -53,7 +55,12 @@ export function getRulesAndGroupsTableHeaders(type: 'assigned' | 'available') {
         },
         {
             id: 'resource',
-            content: 'Resource',
+            content: (
+                <span className="inline-flex items-center gap-1">
+                    Resource
+                    <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                </span>
+            ),
             sortable: true,
         },
         {

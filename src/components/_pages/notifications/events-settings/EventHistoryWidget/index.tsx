@@ -1,6 +1,7 @@
 import Badge, { type BadgeColor } from 'components/Badge';
 import Button from 'components/Button';
-import type { TableDataRow } from 'components/CustomTable';
+import type { TableDataRow, TableHeader } from 'components/CustomTable';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import PagedCustomTable from 'components/CustomTable/PagedCustomTable';
 import Widget from 'components/Widget';
 import EventFiringDetailsDialog from 'components/_pages/notifications/events-settings/EventFiringDetailsDialog';
@@ -36,6 +37,24 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
     const resourceEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.Resource));
 
     const [selectedEntry, setSelectedEntry] = useState<EventHistoryDto | undefined>(undefined);
+
+    const headers: TableHeader[] = useMemo(
+        () =>
+            eventHistoryHeaders.map((header) =>
+                header.id === 'resource'
+                    ? {
+                          ...header,
+                          content: (
+                              <span className="inline-flex items-center gap-1">
+                                  {header.content}
+                                  <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                              </span>
+                          ),
+                      }
+                    : header,
+            ),
+        [],
+    );
 
     const onReloadData = useCallback(
         (pageSize: number, pageNumber: number) => {
@@ -86,7 +105,7 @@ export default function EventHistoryWidget({ event }: Readonly<Props>) {
         <Widget title="Event History" titleSize="large">
             <PagedCustomTable
                 key={event}
-                headers={eventHistoryHeaders}
+                headers={headers}
                 data={data}
                 totalItems={eventHistory?.totalItems}
                 onReloadData={onReloadData}

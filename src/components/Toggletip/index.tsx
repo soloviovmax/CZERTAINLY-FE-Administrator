@@ -1,0 +1,116 @@
+import * as Popover from '@radix-ui/react-popover';
+import cn from 'classnames';
+import { Info, X } from 'lucide-react';
+import { useCallback, useRef, useState, type ReactNode } from 'react';
+
+type Props = {
+    content: ReactNode;
+    ariaLabel?: string;
+    iconSize?: number;
+    placement?: 'top' | 'bottom';
+    triggerClassName?: string;
+    contentClassName?: string;
+    showClose?: boolean;
+    dataTestId?: string;
+};
+
+const HOVER_OPEN_DELAY = 400;
+const HOVER_CLOSE_DELAY = 150;
+
+function Toggletip({
+    content,
+    ariaLabel = 'More information',
+    iconSize = 16,
+    placement = 'bottom',
+    triggerClassName,
+    contentClassName,
+    showClose = true,
+    dataTestId,
+}: Readonly<Props>) {
+    const [open, setOpen] = useState(false);
+    const pinnedRef = useRef(false);
+    const openTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const clearTimers = useCallback(() => {
+        if (openTimerRef.current) clearTimeout(openTimerRef.current);
+        if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+        openTimerRef.current = null;
+        closeTimerRef.current = null;
+    }, []);
+
+    const handleOpenChange = useCallback(
+        (next: boolean) => {
+            clearTimers();
+            pinnedRef.current = next;
+            setOpen(next);
+        },
+        [clearTimers],
+    );
+
+    const hoverOpen = useCallback(() => {
+        clearTimers();
+        openTimerRef.current = setTimeout(() => setOpen(true), HOVER_OPEN_DELAY);
+    }, [clearTimers]);
+
+    const hoverClose = useCallback(() => {
+        clearTimers();
+        closeTimerRef.current = setTimeout(() => {
+            if (!pinnedRef.current) setOpen(false);
+        }, HOVER_CLOSE_DELAY);
+    }, [clearTimers]);
+
+    return (
+        <Popover.Root open={open} onOpenChange={handleOpenChange}>
+            <Popover.Trigger asChild>
+                <button
+                    type="button"
+                    aria-label={ariaLabel}
+                    className={cn(
+                        'inline-flex items-center justify-center text-[var(--color-gray-800)] hover:text-[var(--color-gray-800)] focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 rounded-full dark:text-neutral-300 dark:hover:text-neutral-100',
+                        triggerClassName,
+                    )}
+                    data-testid={dataTestId ?? 'toggletip-trigger'}
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseEnter={hoverOpen}
+                    onMouseLeave={hoverClose}
+                >
+                    <Info size={iconSize} className="block" aria-hidden />
+                </button>
+            </Popover.Trigger>
+            <Popover.Portal>
+                <Popover.Content
+                    side={placement}
+                    align="start"
+                    sideOffset={8}
+                    collisionPadding={8}
+                    onOpenAutoFocus={(e) => e.preventDefault()}
+                    onMouseEnter={hoverOpen}
+                    onMouseLeave={hoverClose}
+                    className={cn(
+                        'relative z-[100] flex max-h-[var(--radix-popover-content-available-height)] max-w-sm flex-col overflow-hidden rounded-lg border border-gray-200 bg-white text-xs text-[var(--dark-gray-color)] shadow-lg dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200',
+                        contentClassName,
+                    )}
+                    data-testid={dataTestId ? `${dataTestId}-content` : 'toggletip-content'}
+                >
+                    <div
+                        aria-live="polite"
+                        className="min-h-0 overflow-y-auto break-words py-3 ps-3 pe-7 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500"
+                    >
+                        {content}
+                    </div>
+                    {showClose && (
+                        <Popover.Close
+                            aria-label="Close"
+                            className="absolute top-2 end-2 inline-flex items-center justify-center rounded-full p-0.5 text-gray-400 hover:text-gray-600 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-neutral-500 dark:hover:text-neutral-300"
+                        >
+                            <X size={14} aria-hidden />
+                        </Popover.Close>
+                    )}
+                </Popover.Content>
+            </Popover.Portal>
+        </Popover.Root>
+    );
+}
+
+export default Toggletip;

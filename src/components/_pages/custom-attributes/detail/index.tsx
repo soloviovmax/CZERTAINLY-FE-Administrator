@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState, Fragment } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import Badge from 'components/Badge';
+import { EnumValueDescription } from 'components/EnumDescription';
 import { PlatformEnum, Resource } from 'types/openapi';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import { getAttributeContent } from 'utils/attributes/attributes';
@@ -188,9 +189,17 @@ export default function CustomAttributeDetail() {
                           id: 'protectionLevel',
                           columns: [
                               'Protection Level',
-                              customAttribute.protectionLevel == null
-                                  ? '—'
-                                  : getEnumLabel(protectionLevelEnum, customAttribute.protectionLevel),
+                              customAttribute.protectionLevel == null ? (
+                                  '—'
+                              ) : (
+                                  <span key="protectionLevel" className="inline-flex items-center gap-1">
+                                      {getEnumLabel(protectionLevelEnum, customAttribute.protectionLevel)}
+                                      <EnumValueDescription
+                                          platformEnum={PlatformEnum.ProtectionLevel}
+                                          value={customAttribute.protectionLevel}
+                                      />
+                                  </span>
+                              ),
                           ],
                       },
                       {

@@ -57,6 +57,7 @@ import CertificateList from 'components/_pages/certificates/list';
 import { capitalize } from 'utils/common-utils';
 import ComplianceCheckResultWidget from 'components/_pages/certificates/ComplianceCheckResultWidget/ComplianceCheckResultWidget';
 import Badge from 'components/Badge';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
 import CertificateDetailsContent from './CertificateDetailsContent';
@@ -613,8 +614,24 @@ export default function CertificateDetail() {
                 id: 'relation',
                 content: 'Relation',
             },
-            { id: 'relationType', content: 'Relation Type' },
-            { id: 'state', content: 'State' },
+            {
+                id: 'relationType',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Relation Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateRelationType} title="Relation Type" />
+                    </span>
+                ),
+            },
+            {
+                id: 'state',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        State
+                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateState} title="State" />
+                    </span>
+                ),
+            },
             { id: 'serialNumber', content: 'Serial Number' },
             { id: 'valid', content: 'Valid From' },
             { id: 'expires', content: 'Expires At' },

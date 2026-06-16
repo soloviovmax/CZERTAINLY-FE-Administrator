@@ -9,6 +9,7 @@ import { Link } from 'react-router';
 import { type Resource, type TriggerDto, PlatformEnum, type ResourceEvent } from 'types/openapi';
 
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Button from 'components/Button';
 import BooleanBadge from 'components/BooleanBadge/BooleanBadge';
 import { ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
@@ -131,7 +132,12 @@ export default function TriggerEditorWidget({ resource, event, selectedTriggers,
         },
         {
             id: 'eventName',
-            content: 'Event Name',
+            content: (
+                <span className="inline-flex items-center gap-1">
+                    Event Name
+                    <EnumColumnDescription platformEnum={PlatformEnum.ResourceEvent} title="Event Name" />
+                </span>
+            ),
         },
         {
             id: 'resource',

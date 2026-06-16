@@ -15,7 +15,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router';
 import TokenProfileForm from '../form';
 import KeyUsageSelect from '../../cryptographic-keys/KeyUsageSelect';
-import { selectors as enumSelectors } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Label from 'components/Label';
 import Badge from 'components/Badge';
 import { type KeyUsage, PlatformEnum, Resource } from 'types/openapi';
@@ -193,15 +194,16 @@ export default function TokenProfileDetail() {
                           columns: [
                               'Key Usages',
                               tokenProfile.usages.map((usage) => (
-                                  <Badge key={usage} color="secondary" className="mr-xs">
-                                      {usage}
-                                  </Badge>
+                                  <span key={usage} className="inline-flex items-center gap-1 mr-xs">
+                                      <Badge color="secondary">{getEnumLabel(keyUsageEnum, usage)}</Badge>
+                                      <EnumValueDescription platformEnum={PlatformEnum.KeyUsage} value={usage} />
+                                  </span>
                               )),
                           ],
                       },
                   ]
                 : [],
-        [tokenProfile],
+        [tokenProfile, keyUsageEnum],
     );
 
     const onUpdateKeyUsageConfirmed = useCallback(() => {

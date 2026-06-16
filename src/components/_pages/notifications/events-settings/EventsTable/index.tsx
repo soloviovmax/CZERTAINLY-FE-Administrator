@@ -16,6 +16,7 @@ import { useForm, Controller, FormProvider, useWatch } from 'react-hook-form';
 import Button from 'components/Button';
 import ProgressButton from 'components/ProgressButton';
 import Select from 'components/Select';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { Edit } from 'lucide-react';
 import TriggerEditorWidget from 'components/TriggerEditorWidget';
 import { useAreDefaultValuesSame, useRunOnSuccessfulFinish } from 'utils/common-hooks';
@@ -198,7 +199,12 @@ const EventsTable = ({ mode, resource, resourceUuid, widgetLocks }: Props) => {
         () => [
             {
                 id: 'eventName',
-                content: 'Event Name',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Event Name
+                        <EnumColumnDescription platformEnum={PlatformEnum.ResourceEvent} title="Event Name" />
+                    </span>
+                ),
                 sortable: true,
             },
             {

@@ -8,6 +8,7 @@ import Dialog from '../../../Dialog';
 import Spinner from '../../../Spinner';
 import Button from 'components/Button';
 import Select from 'components/Select';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { CircleArrowUp } from 'lucide-react';
 
 type Props = Readonly<{
@@ -55,7 +56,12 @@ export default function ConnectorMetadataDialog({ show, setShow }: Props) {
             },
             {
                 id: 'contentType',
-                content: 'Content Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Content Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.AttributeContentType} title="Content Type" />
+                    </span>
+                ),
                 sortable: true,
                 width: '20%',
             },
