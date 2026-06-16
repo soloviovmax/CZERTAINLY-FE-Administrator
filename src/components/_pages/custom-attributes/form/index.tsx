@@ -3,7 +3,7 @@ import ProgressButton from 'components/ProgressButton';
 import Widget from 'components/Widget';
 
 import { actions, selectors } from 'ducks/customAttributes';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useAreDefaultValuesSame, useRunOnSuccessfulFinish } from 'utils/common-hooks';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
@@ -313,9 +313,12 @@ export default function CustomAttributeForm({ customAttributeId, onCancel, onSuc
                                     options={Object.values(ProtectionLevel).map((v: ProtectionLevel) => ({
                                         label: getEnumLabel(protectionLevelEnum, v),
                                         value: v,
+                                        description: getEnumDescription(protectionLevelEnum, v),
                                     }))}
                                     placeholder="None"
                                     isClearable
+                                    showOptionDescriptionInDropdown
+                                    showSelectedDescriptionAsHelp
                                 />
                             )}
                         />

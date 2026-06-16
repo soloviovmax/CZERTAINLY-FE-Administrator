@@ -3,7 +3,7 @@ import Widget from 'components/Widget';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { ApiClients } from 'src/api';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { type EntityType, actions as filterActions, selectors } from 'ducks/filters';
 import { useDispatch, useSelector } from 'react-redux';
 import Select from 'components/Select';
@@ -856,6 +856,7 @@ export default function FilterWidgetRuleAction({
                             options={availableFilters.map((f) => ({
                                 label: getEnumLabel(searchGroupEnum, f.filterFieldSource),
                                 value: f.filterFieldSource,
+                                description: getEnumDescription(searchGroupEnum, f.filterFieldSource),
                             }))}
                             onChange={(value) => {
                                 setFieldSource((value as FilterFieldSource) || undefined);
@@ -865,6 +866,8 @@ export default function FilterWidgetRuleAction({
                             value={fieldSource || ''}
                             isClearable
                             label="Target Type"
+                            showOptionDescriptionInDropdown
+                            showSelectedDescriptionAsHelp
                         />
 
                         <Select
@@ -887,6 +890,7 @@ export default function FilterWidgetRuleAction({
                                     options={sourceAvailableFilters.map((f) => ({
                                         label: getEnumLabel(searchGroupEnum, f.filterFieldSource),
                                         value: f.filterFieldSource,
+                                        description: getEnumDescription(searchGroupEnum, f.filterFieldSource),
                                     }))}
                                     onChange={(value) => {
                                         setSourceFieldSource((value as FilterFieldSource) || undefined);
@@ -896,6 +900,8 @@ export default function FilterWidgetRuleAction({
                                     isClearable
                                     isDisabled={!filterField}
                                     label="Source Type"
+                                    showOptionDescriptionInDropdown
+                                    showSelectedDescriptionAsHelp
                                 />
                                 <Select
                                     id="sourceField"

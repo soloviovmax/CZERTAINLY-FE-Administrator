@@ -1,4 +1,4 @@
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { useSelector } from 'react-redux';
 import { AttributeContentType, PlatformEnum } from 'types/openapi';
@@ -52,11 +52,14 @@ export default function DynamicContent({ editable, isList }: Readonly<Props>) {
                                 options={AllowedAttributeContentType.map((contentType) => ({
                                     label: getEnumLabel(attributeContentTypeEnum, contentType),
                                     value: contentType,
+                                    description: getEnumDescription(attributeContentTypeEnum, contentType),
                                 }))}
                                 onChange={(value) => {
                                     field.onChange(value);
                                     setValue('content', []);
                                 }}
+                                showOptionDescriptionInDropdown
+                                showSelectedDescriptionAsHelp
                             />
                             {fieldState.error && fieldState.isTouched && (
                                 <p className="mt-1 text-sm text-red-600">

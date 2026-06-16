@@ -20,7 +20,7 @@ import type { TokenProfileDetailResponseModel } from 'types/token-profiles';
 import { collectFormAttributes } from 'utils/attributes/attributes';
 
 import Switch from 'components/Switch';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { validateAlphaNumericWithSpecialChars, validateLength, validateRequired } from 'utils/validators';
 import { buildValidationRules, getFieldErrorMessage } from 'utils/validators-helper';
 import { actions as customAttributesActions, selectors as customAttributesSelectors } from '../../../../ducks/customAttributes';
@@ -263,11 +263,12 @@ export default function TokenProfileForm({
     }, [isBusy, resourceCustomAttributes, tokenProfile]);
 
     const keyUsageOptions = useMemo(() => {
-        const options: { value: KeyUsage; label: string }[] = [];
+        const options: { value: KeyUsage; label: string; description?: string }[] = [];
         for (const key in KeyUsage) {
             options.push({
                 value: KeyUsage[key as keyof typeof KeyUsage],
                 label: getEnumLabel(keyUsageEnum, KeyUsage[key as keyof typeof KeyUsage]),
+                description: getEnumDescription(keyUsageEnum, KeyUsage[key as keyof typeof KeyUsage]),
             });
         }
         return options;
@@ -381,6 +382,7 @@ export default function TokenProfileForm({
                                             options={keyUsageOptions}
                                             placeholder="Select Key Usages"
                                             placement="bottom"
+                                            showOptionDescriptionInDropdown
                                         />
                                         {fieldState.error && fieldState.isTouched && (
                                             <p className="mt-1 text-sm text-red-600">
