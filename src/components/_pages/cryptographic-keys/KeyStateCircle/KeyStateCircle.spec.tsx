@@ -3,23 +3,24 @@ import KeyStateCircleWithStore from './KeyStateCircleWithStore';
 import { KeyState } from 'types/openapi';
 
 test.describe('KeyStateCircle', () => {
-    test('should render circle with title for Active', async ({ mount, page }) => {
+    test('should render circle with a custom tooltip for Active', async ({ mount, page }) => {
         await mount(<KeyStateCircleWithStore state={KeyState.Active} />);
-        const circle = page.getByTitle('Active');
+        const circle = page.getByRole('img', { name: 'Active' });
         await expect(circle).toBeAttached();
-        await expect(circle).toHaveAttribute('title', 'Active');
+        await expect(circle).not.toHaveAttribute('title');
+        await circle.hover();
+        await expect(page.getByRole('tooltip').filter({ hasText: 'Active' })).toBeVisible();
     });
 
     test('should render circle for Compromised', async ({ mount, page }) => {
         await mount(<KeyStateCircleWithStore state={KeyState.Compromised} />);
-        const circle = page.getByTitle('Compromised');
+        const circle = page.getByRole('img', { name: 'Compromised' });
         await expect(circle).toBeAttached();
-        await expect(circle).toHaveAttribute('title', 'Compromised');
     });
 
     test('should render circle for unknown state', async ({ mount, page }) => {
         await mount(<KeyStateCircleWithStore state={'unknown' as KeyState} />);
-        const circle = page.getByTitle('unknown');
+        const circle = page.getByRole('img', { name: 'unknown' });
         await expect(circle).toBeAttached();
     });
 });

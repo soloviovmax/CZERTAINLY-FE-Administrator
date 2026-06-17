@@ -1,3 +1,4 @@
+import Tooltip from 'components/Tooltip';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { useSelector } from 'react-redux';
 import { KeyState, PlatformEnum } from 'types/openapi';
@@ -22,7 +23,11 @@ function KeyStateCircle({ state }: Props) {
 
     const { color, text } = state ? stateMap[state] || _default : _default;
 
-    return <span title={text} className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: color }} />;
+    return (
+        <Tooltip content={text}>
+            <span role="img" aria-label={text} className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: color }} />
+        </Tooltip>
+    );
 }
 
 export default KeyStateCircle;

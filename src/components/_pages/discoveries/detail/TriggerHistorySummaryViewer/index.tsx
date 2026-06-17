@@ -10,6 +10,7 @@ import Widget from 'components/Widget';
 import { actions as userInterfaceActions } from 'ducks/user-interface';
 import { useDispatch } from 'react-redux';
 import Button from 'components/Button';
+import Tooltip from 'components/Tooltip';
 import { X, Check, Ban, Info } from 'lucide-react';
 
 const TriggerHistorySummaryViewer = ({ triggerHistoryObjectSummary }: TriggerHistorySummaryProps) => {
@@ -96,21 +97,27 @@ const TriggerHistorySummaryViewer = ({ triggerHistoryObjectSummary }: TriggerHis
     const getIcon = useMemo(() => {
         if (!triggerHistoryObjectSummary.matched) {
             return (
-                <span title="Not Matched">
-                    <X size={16} aria-hidden />
-                </span>
+                <Tooltip content="Not Matched">
+                    <span role="img" aria-label="Not Matched">
+                        <X size={16} aria-hidden />
+                    </span>
+                </Tooltip>
             );
         } else if (triggerHistoryObjectSummary.matched && !triggerHistoryObjectSummary.ignored) {
             return (
-                <span title="Matched">
-                    <Check size={16} aria-hidden />
-                </span>
+                <Tooltip content="Matched">
+                    <span role="img" aria-label="Matched">
+                        <Check size={16} aria-hidden />
+                    </span>
+                </Tooltip>
             );
         } else {
             return (
-                <span title="Ignored">
-                    <Ban size={16} aria-hidden />
-                </span>
+                <Tooltip content="Ignored">
+                    <span role="img" aria-label="Ignored">
+                        <Ban size={16} aria-hidden />
+                    </span>
+                </Tooltip>
             );
         }
     }, [triggerHistoryObjectSummary.matched, triggerHistoryObjectSummary.ignored]);
