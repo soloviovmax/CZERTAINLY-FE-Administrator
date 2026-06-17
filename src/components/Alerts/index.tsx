@@ -13,7 +13,7 @@ function Alerts() {
 
     return (
         <Container
-            className="sticky bottom-12 !gap-2 z-9999 px-2 md:px-4 max-w-[1200px] mx-auto pointer-events-auto"
+            className="sticky bottom-12 !gap-2 z-[9999] px-2 md:px-4 max-w-[1200px] mx-auto pointer-events-auto"
             data-testid="alerts-container"
         >
             {alerts.map((alert) => (
@@ -42,13 +42,14 @@ function Alerts() {
                     />
                     <button
                         type="button"
+                        aria-label="Dismiss"
                         className={cn('absolute top-2 right-2 translate-y-[3px]', {
                             'text-teal-800 dark:text-teal-500': alert.color === 'success',
                             'text-red-800 dark:text-red-500': alert.color !== 'success',
                         })}
                         onClick={() => dispatch(actions.dismiss(alert.id))}
                     >
-                        <X size={14} />
+                        <X size={14} aria-hidden="true" />
                     </button>
                 </div>
             ))}

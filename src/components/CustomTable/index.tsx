@@ -1,7 +1,7 @@
 import type React from 'react';
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { jsxInnerText } from 'utils/jsxInnerText';
-import { DEFAULT_ITEMS_PER_PAGE_OPTIONS } from 'utils/common-utils';
+import { DEFAULT_ITEMS_PER_PAGE_OPTIONS } from 'utils/pagination';
 import { useDispatch, useSelector } from 'react-redux';
 import { actions as userInterfaceActions } from 'ducks/user-interface';
 import { actions as tablePaginationActions, selectors as tablePaginationSelectors } from 'ducks/table-pagination';
