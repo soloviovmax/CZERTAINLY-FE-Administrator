@@ -7,10 +7,10 @@ import {
     type ComplianceRuleListDto,
     ComplianceRuleAvailabilityStatus,
     type Resource,
+    PlatformEnum,
 } from 'types/openapi';
 import { capitalize } from 'utils/common-utils';
 import { Info } from 'lucide-react';
-import { PlatformEnum } from 'types/openapi';
 import { EnumColumnDescription } from 'components/EnumDescription';
 
 export const getComplianceProfileStatusColor = (status: ComplianceRuleAvailabilityStatus) => {
