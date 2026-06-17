@@ -138,7 +138,6 @@ export default function ApprovalProfilesList() {
                 paginationData={{
                     pageSize: pageSize,
                     totalItems: profileApprovalListTotalItems || 0,
-                    itemsPerPageOptions: [10, 20, 50, 100],
                     loadedPageSize: pageSize,
                     totalPages: profileApprovalListTotalItems ? Math.ceil(profileApprovalListTotalItems / pageSize) : 0,
                     page: pageNumber,
