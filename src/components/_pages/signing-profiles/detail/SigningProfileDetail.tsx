@@ -191,9 +191,8 @@ export default function SigningProfileDetail() {
 
     const generalData: TableDataRow[] = useMemo(
         () =>
-            !signingProfile
-                ? []
-                : [
+            signingProfile
+                ? [
                       { id: 'uuid', columns: ['UUID', signingProfile.uuid] },
                       { id: 'name', columns: ['Name', signingProfile.name] },
                       { id: 'description', columns: ['Description', signingProfile.description || ''] },
@@ -238,7 +237,8 @@ export default function SigningProfileDetail() {
                               ),
                           ],
                       },
-                  ],
+                  ]
+                : [],
         [signingProfile],
     );
 
@@ -375,7 +375,7 @@ export default function SigningProfileDetail() {
                     'Signing Scheme',
                     <span key="value" className="inline-flex items-center gap-1">
                         <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
-                            {signingSchemeLabels[sc?.signingScheme as SigningScheme] ?? sc?.signingScheme ?? '—'}
+                            {signingSchemeLabels[sc?.signingScheme] ?? sc?.signingScheme ?? '—'}
                         </span>
                         <EnumValueDescription platformEnum={PlatformEnum.SigningScheme} value={sc?.signingScheme} />
                     </span>,
@@ -389,7 +389,7 @@ export default function SigningProfileDetail() {
                 columns: [
                     'Managed Signing Type',
                     <span key="value" className="inline-flex items-center gap-1">
-                        {managedSigningTypeLabels[sc.managedSigningType as ManagedSigningType] ?? sc.managedSigningType}
+                        {managedSigningTypeLabels[sc.managedSigningType] ?? sc.managedSigningType}
                         <EnumValueDescription platformEnum={PlatformEnum.ManagedSigningType} value={sc.managedSigningType} />
                     </span>,
                 ],
