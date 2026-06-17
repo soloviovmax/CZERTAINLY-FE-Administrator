@@ -104,8 +104,11 @@ const getCertificateRelations: AppEpic = (action$, state, deps) => {
 const associateCertificate: AppEpic = (action$, state, deps) => {
     return action$.pipe(
         filter(slice.actions.associateCertificate.match),
-        switchMap((action) =>
-            deps.apiClients.certificates.associateCertificates(action.payload).pipe(
+        switchMap((action) => {
+            const { uuid, certificateUuid, relation } = action.payload;
+            const [successorUuid, predecessorUuid] = relation === 'successor' ? [certificateUuid, uuid] : [uuid, certificateUuid];
+
+            return deps.apiClients.certificates.associateCertificates({ uuid: successorUuid, certificateUuid: predecessorUuid }).pipe(
                 mergeMap(() => of(slice.actions.associateCertificateSuccess(action.payload))),
                 catchError((err) =>
                     of(
@@ -113,8 +116,8 @@ const associateCertificate: AppEpic = (action$, state, deps) => {
                         appRedirectActions.fetchError({ error: err, message: 'Failed to associate certificate' }),
                     ),
                 ),
-            ),
-        ),
+            );
+        }),
     );
 };
 

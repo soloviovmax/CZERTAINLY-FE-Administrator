@@ -274,11 +274,17 @@ export const slice = createSlice({
             state.isFetchingRelations = false;
         },
 
-        associateCertificate: (state, action: PayloadAction<{ uuid: string; certificateUuid: string }>) => {
+        associateCertificate: (
+            state,
+            action: PayloadAction<{ uuid: string; certificateUuid: string; relation: 'predecessor' | 'successor' }>,
+        ) => {
             state.isAssociating = true;
         },
 
-        associateCertificateSuccess: (state, action: PayloadAction<{ uuid: string; certificateUuid: string }>) => {
+        associateCertificateSuccess: (
+            state,
+            action: PayloadAction<{ uuid: string; certificateUuid: string; relation: 'predecessor' | 'successor' }>,
+        ) => {
             state.isAssociating = false;
         },
 

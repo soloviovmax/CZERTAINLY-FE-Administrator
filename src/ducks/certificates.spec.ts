@@ -81,10 +81,10 @@ describe('certificates slice', () => {
     });
 
     test('associateCertificate / success / failure update isAssociating', () => {
-        let next = reducer(initialState, actions.associateCertificate({ uuid: 'loc-1', certificateUuid: 'cert-1' }));
+        let next = reducer(initialState, actions.associateCertificate({ uuid: 'loc-1', certificateUuid: 'cert-1', relation: 'successor' }));
         expect(next.isAssociating).toBe(true);
 
-        next = reducer(next, actions.associateCertificateSuccess({ uuid: 'loc-1', certificateUuid: 'cert-1' }));
+        next = reducer(next, actions.associateCertificateSuccess({ uuid: 'loc-1', certificateUuid: 'cert-1', relation: 'successor' }));
         expect(next.isAssociating).toBe(false);
 
         next = reducer({ ...next, isAssociating: true }, actions.associateCertificateFailure({ error: 'err' }));
