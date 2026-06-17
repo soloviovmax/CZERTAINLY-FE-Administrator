@@ -12,7 +12,10 @@ function Alerts() {
     const dispatch = useDispatch();
 
     return (
-        <Container className="sticky bottom-12 !gap-2 z-9999 px-2 md:px-4 max-w-[1200px] mx-auto" data-testid="alerts-container">
+        <Container
+            className="sticky bottom-12 !gap-2 z-9999 px-2 md:px-4 max-w-[1200px] mx-auto pointer-events-auto"
+            data-testid="alerts-container"
+        >
             {alerts.map((alert) => (
                 <div
                     key={alert.id}
@@ -38,6 +41,7 @@ function Alerts() {
                         dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(alert.message) }}
                     />
                     <button
+                        type="button"
                         className={cn('absolute top-2 right-2 translate-y-[3px]', {
                             'text-teal-800 dark:text-teal-500': alert.color === 'success',
                             'text-red-800 dark:text-red-500': alert.color !== 'success',
