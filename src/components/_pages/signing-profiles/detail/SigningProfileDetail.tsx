@@ -88,7 +88,7 @@ export default function SigningProfileDetail() {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [confirmDeactivateTsp, setConfirmDeactivateTsp] = useState(false);
     const [activateTspDialog, setActivateTspDialog] = useState(false);
-    const [selectedTspProfileUuid, setSelectedTspConfigUuid] = useState<string | undefined>(undefined);
+    const [selectedTspProfileUuid, setSelectedTspProfileUuid] = useState<string | undefined>(undefined);
 
     // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -481,7 +481,7 @@ export default function SigningProfileDetail() {
                             if (tspActivationDetails?.available) {
                                 setConfirmDeactivateTsp(true);
                             } else {
-                                setSelectedTspConfigUuid(undefined);
+                                setSelectedTspProfileUuid(undefined);
                                 dispatch(tspProfileActions.listTspProfiles());
                                 setActivateTspDialog(true);
                             }
@@ -492,15 +492,15 @@ export default function SigningProfileDetail() {
                     <></>,
                     <></>,
                     <></>,
-                    !tspActivationDetails?.available ? (
-                        <>Timestamping Protocol is not activated on this profile.</>
-                    ) : (
+                    tspActivationDetails?.available ? (
                         <>
                             <b>Protocol settings</b>
                             <br />
                             <br />
                             <CustomTable hasHeader={false} headers={detailHeaders} data={tspActivationData} />
                         </>
+                    ) : (
+                        <>Timestamping Protocol is not activated on this profile.</>
                     ),
                 ],
             },
@@ -666,7 +666,7 @@ export default function SigningProfileDetail() {
                             id="tspConfigSelect"
                             options={tspProfiles.map((c) => ({ value: c.uuid, label: c.name }))}
                             value={selectedTspProfileUuid ?? ''}
-                            onChange={(value) => setSelectedTspConfigUuid(value as string | undefined)}
+                            onChange={(value) => setSelectedTspProfileUuid(value as string | undefined)}
                             placeholder="Select TSP configuration"
                         />
                     </div>

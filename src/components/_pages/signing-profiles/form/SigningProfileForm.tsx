@@ -94,11 +94,23 @@ const WORKFLOW_TYPE = SigningWorkflowType.Timestamping;
 // Returns undefined if the value can't be parsed.
 function parseIsoDurationSeconds(duration: string | undefined): number | undefined {
     if (!duration) return undefined;
-    const match = /^P(?:([\d.]+)D)?(?:T(?:([\d.]+)H)?(?:([\d.]+)M)?(?:([\d.]+)S)?)?$/.exec(duration.trim());
+    // Single anchored pass that enforces the canonical D → (T) H → M → S ordering. Each unit is its own
+    // capture group, so out-of-order values (e.g. "PT1S1H") fail to match. Anchoring keeps it linear-time.
+    const match = /^P(?:(\d+(?:\.\d+)?)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?$/.exec(duration.trim());
     if (!match) return undefined;
     const [, days, hours, minutes, seconds] = match;
+    // Reject component-less durations like "P" or "PT".
+    if (days === undefined && hours === undefined && minutes === undefined && seconds === undefined) return undefined;
     const total = (Number(days) || 0) * 86400 + (Number(hours) || 0) * 3600 + (Number(minutes) || 0) * 60 + (Number(seconds) || 0);
     return Number.isFinite(total) ? total : undefined;
+}
+
+// Tailwind classes for a selectable option card (signing scheme / managed signing type).
+function optionCardClassName(isSupported: boolean, isSelected: boolean): string {
+    if (isSupported) {
+        return isSelected ? 'border-blue-500 bg-blue-50 text-gray-900' : 'border-gray-300 bg-white text-gray-900 hover:border-blue-300';
+    }
+    return 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed opacity-60';
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -290,20 +302,17 @@ export default function SigningProfileForm() {
 
     // Delta #219: for qualified signing, warn if the selected Time Quality accuracy is coarser than 1s.
     const selectedTqcAccuracySeconds =
-        selectedTimeQualityConfiguration && selectedTimeQualityConfiguration.uuid === timeQualityConfigurationUuidValue
-            ? parseIsoDurationSeconds(selectedTimeQualityConfiguration.accuracy)
+        selectedTimeQualityConfiguration?.uuid === timeQualityConfigurationUuidValue
+            ? parseIsoDurationSeconds(selectedTimeQualityConfiguration?.accuracy)
             : undefined;
     const showAccuracyWarning =
         Boolean(qualifiedTimestampValue) && selectedTqcAccuracySeconds !== undefined && selectedTqcAccuracySeconds > 1;
-    const signingOperationAttributes = useMemo(
-        () =>
-            editMode
-                ? isStaticKeyManagedSigning(signingProfile?.signingScheme || {})
-                    ? signingProfile?.signingScheme.signingOperationAttributes
-                    : undefined
-                : undefined,
-        [editMode, signingProfile?.signingScheme],
-    );
+    const signingOperationAttributes = useMemo(() => {
+        if (editMode && isStaticKeyManagedSigning(signingProfile?.signingScheme || {})) {
+            return signingProfile?.signingScheme.signingOperationAttributes;
+        }
+        return undefined;
+    }, [editMode, signingProfile?.signingScheme]);
 
     const customAttributes = useMemo(
         () => (editMode ? signingProfile?.customAttributes : undefined),
@@ -749,13 +758,10 @@ export default function SigningProfileForm() {
                             return (
                                 <label
                                     key={scheme}
-                                    className={`flex items-center gap-x-3 p-3 border rounded-lg cursor-pointer ${
-                                        isSupported
-                                            ? signingSchemeValue === scheme
-                                                ? 'border-blue-500 bg-blue-50 text-gray-900'
-                                                : 'border-gray-300 bg-white text-gray-900 hover:border-blue-300'
-                                            : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
-                                    }`}
+                                    className={`flex items-center gap-x-3 p-3 border rounded-lg cursor-pointer ${optionCardClassName(
+                                        isSupported,
+                                        signingSchemeValue === scheme,
+                                    )}`}
                                 >
                                     <input
                                         type="radio"
@@ -787,13 +793,10 @@ export default function SigningProfileForm() {
                                 return (
                                     <label
                                         key={mst}
-                                        className={`flex items-center gap-x-3 p-3 border rounded-lg cursor-pointer ${
-                                            isSupported
-                                                ? managedSigningTypeValue === mst
-                                                    ? 'border-blue-500 bg-blue-50 text-gray-900'
-                                                    : 'border-gray-300 bg-white text-gray-900 hover:border-blue-300'
-                                                : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
-                                        }`}
+                                        className={`flex items-center gap-x-3 p-3 border rounded-lg cursor-pointer ${optionCardClassName(
+                                            isSupported,
+                                            managedSigningTypeValue === mst,
+                                        )}`}
                                     >
                                         <input
                                             type="radio"
