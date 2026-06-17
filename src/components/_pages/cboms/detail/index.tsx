@@ -862,12 +862,7 @@ export default function CbomDetail() {
                                                     />
                                                 </div>
 
-                                                <CustomTable
-                                                    headers={componentHeaders}
-                                                    data={componentRows}
-                                                    hasPagination
-                                                    itemsPerPageOptions={[10, 20, 50, 100, 200, 500, 1000]}
-                                                />
+                                                <CustomTable headers={componentHeaders} data={componentRows} hasPagination />
                                             </>
                                         )}
                                     </Widget>

@@ -77,7 +77,6 @@ export default function PagedCustomTable({ headers, data, totalItems, onReloadDa
             pageSize: pageSize,
             loadedPageSize: pageSize,
             totalPages: Math.ceil((totalItems ?? 0) / pageSize),
-            itemsPerPageOptions: [10, 20, 50, 100, 200, 500, 1000],
         }),
         [pageNumber, totalItems, pageSize],
     );
