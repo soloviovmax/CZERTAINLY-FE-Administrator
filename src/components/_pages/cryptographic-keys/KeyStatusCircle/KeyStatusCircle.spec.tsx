@@ -11,7 +11,7 @@ test.describe('KeyStatusCircle', () => {
 
         const circle = component.getByTestId('key-status-circle');
         await expect(circle).toBeAttached();
-        await expect(circle).toHaveAttribute('aria-label', 'Enabled');
+        await expect(circle).toContainText('Enabled');
         await expect(circle).not.toHaveAttribute('title');
     });
 
@@ -24,7 +24,7 @@ test.describe('KeyStatusCircle', () => {
 
         const circle = component.getByTestId('key-status-circle');
         await expect(circle).toBeAttached();
-        await expect(circle).toHaveAttribute('aria-label', 'Disabled');
+        await expect(circle).toContainText('Disabled');
         await expect(circle).not.toHaveAttribute('title');
     });
 

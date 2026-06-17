@@ -31,13 +31,9 @@ function CertificateStatus({ status, badgeSize = 'small', asIcon = false }: Prop
 
     return asIcon ? (
         <Tooltip content={capitalize(text)}>
-            <span
-                role="img"
-                aria-label={capitalize(text)}
-                className="w-3 h-3 rounded-full inline-block"
-                style={{ backgroundColor: color }}
-                data-testid="certificate-status"
-            />
+            <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: color }} data-testid="certificate-status">
+                <span className="sr-only">{capitalize(text)}</span>
+            </span>
         </Tooltip>
     ) : (
         <Badge size={badgeSize} style={{ backgroundColor: color }} dataTestId="certificate-status">

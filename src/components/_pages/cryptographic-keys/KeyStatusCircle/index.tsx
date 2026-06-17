@@ -12,13 +12,9 @@ function KeyStatusCircle({ status, dataTestId = 'key-status-circle' }: Props) {
 
     return (
         <Tooltip content={text}>
-            <span
-                role="img"
-                aria-label={text}
-                className="w-3 h-3 rounded-full inline-block"
-                style={{ backgroundColor: color }}
-                data-testid={dataTestId}
-            />
+            <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: color }} data-testid={dataTestId}>
+                <span className="sr-only">{text}</span>
+            </span>
         </Tooltip>
     );
 }

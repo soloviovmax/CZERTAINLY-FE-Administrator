@@ -25,7 +25,9 @@ function KeyStateCircle({ state }: Props) {
 
     return (
         <Tooltip content={text}>
-            <span role="img" aria-label={text} className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: color }} />
+            <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: color }}>
+                <span className="sr-only">{text}</span>
+            </span>
         </Tooltip>
     );
 }

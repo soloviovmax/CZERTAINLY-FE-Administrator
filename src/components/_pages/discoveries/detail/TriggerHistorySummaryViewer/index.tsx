@@ -98,24 +98,27 @@ const TriggerHistorySummaryViewer = ({ triggerHistoryObjectSummary }: TriggerHis
         if (!triggerHistoryObjectSummary.matched) {
             return (
                 <Tooltip content="Not Matched">
-                    <span role="img" aria-label="Not Matched">
+                    <span>
                         <X size={16} aria-hidden />
+                        <span className="sr-only">Not Matched</span>
                     </span>
                 </Tooltip>
             );
         } else if (triggerHistoryObjectSummary.matched && !triggerHistoryObjectSummary.ignored) {
             return (
                 <Tooltip content="Matched">
-                    <span role="img" aria-label="Matched">
+                    <span>
                         <Check size={16} aria-hidden />
+                        <span className="sr-only">Matched</span>
                     </span>
                 </Tooltip>
             );
         } else {
             return (
                 <Tooltip content="Ignored">
-                    <span role="img" aria-label="Ignored">
+                    <span>
                         <Ban size={16} aria-hidden />
+                        <span className="sr-only">Ignored</span>
                     </span>
                 </Tooltip>
             );

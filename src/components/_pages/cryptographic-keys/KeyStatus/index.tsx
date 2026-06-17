@@ -20,7 +20,10 @@ function KeyStatus({ status, asIcon = false }: Props) {
 
     return asIcon ? (
         <Tooltip content={text}>
-            <Circle role="img" aria-label={text} size={12} className={`text-${color}`} fill="currentColor" />
+            <span className={`text-${color}`}>
+                <Circle aria-hidden size={12} fill="currentColor" />
+                <span className="sr-only">{text}</span>
+            </span>
         </Tooltip>
     ) : (
         <Badge color={color}>{text}</Badge>

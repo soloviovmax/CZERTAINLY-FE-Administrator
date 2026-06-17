@@ -112,7 +112,10 @@ export function buildCertificateRowColumns(
         certificate.complianceStatus ? <CertificateStatus key="compliance" status={certificate.complianceStatus} asIcon={true} /> : '',
         certificate.privateKeyAvailability ? (
             <Tooltip key="key" content="Private key is available for this certificate">
-                <KeyRound role="img" aria-label="Private key available" size={16} strokeWidth={1.5} />
+                <span>
+                    <KeyRound aria-hidden size={16} strokeWidth={1.5} />
+                    <span className="sr-only">Private key available</span>
+                </span>
             </Tooltip>
         ) : (
             ''
