@@ -1,6 +1,7 @@
 import type React from 'react';
 import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { jsxInnerText } from 'utils/jsxInnerText';
+import { DEFAULT_ITEMS_PER_PAGE_OPTIONS } from 'utils/common-utils';
 import { useDispatch, useSelector } from 'react-redux';
 import { actions as userInterfaceActions } from 'ducks/user-interface';
 import { actions as tablePaginationActions, selectors as tablePaginationSelectors } from 'ducks/table-pagination';
@@ -36,7 +37,7 @@ type Props = {
         pageSize: number;
         loadedPageSize: number;
         totalPages: number;
-        itemsPerPageOptions: number[];
+        itemsPerPageOptions?: number[];
     };
     onCheckedRowsChanged?: (checkedRows: (string | number)[]) => void;
     onPageSizeChanged?: (pageSize: number) => void;
@@ -773,7 +774,7 @@ function CustomTable({
                         {(paginationData ? paginationData.totalItems > 0 : (tblData?.length ?? 0) > 0) && (
                             <Select
                                 id="pageSize"
-                                options={(paginationData?.itemsPerPageOptions || itemsPerPageOptions || [10, 20, 50, 100]).map(
+                                options={(paginationData?.itemsPerPageOptions || itemsPerPageOptions || DEFAULT_ITEMS_PER_PAGE_OPTIONS).map(
                                     (option: number) => ({
                                         label: option.toString(),
                                         value: option.toString(),

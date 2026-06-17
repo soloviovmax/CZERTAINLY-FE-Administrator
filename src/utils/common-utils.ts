@@ -2,6 +2,8 @@ import { Buffer } from 'buffer';
 type InputType = 'text' | 'number' | 'email' | 'password' | 'date' | 'time' | 'datetime-local' | 'textarea' | 'checkbox' | 'radio' | 'file';
 import { AttributeContentType, FilterFieldType } from 'types/openapi';
 
+export const DEFAULT_ITEMS_PER_PAGE_OPTIONS = [10, 20, 50, 100, 200, 500, 1000];
+
 export const removeNullValues = (obj: any): any => {
     if (obj === null || obj === undefined) {
         return null;
