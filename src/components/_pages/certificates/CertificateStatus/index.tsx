@@ -9,6 +9,7 @@ import type {
 import { getCertificateStatusColor, useGetStatusText } from 'utils/certificate';
 import { capitalize } from 'utils/common-utils';
 import Badge from 'components/Badge';
+import Tooltip from 'components/Tooltip';
 
 interface Props {
     status:
@@ -29,12 +30,15 @@ function CertificateStatus({ status, badgeSize = 'small', asIcon = false }: Prop
     const text = getStatusText(status);
 
     return asIcon ? (
-        <span
-            title={capitalize(text)}
-            className="w-3 h-3 rounded-full inline-block"
-            style={{ backgroundColor: color }}
-            data-testid="certificate-status"
-        />
+        <Tooltip content={capitalize(text)}>
+            <span
+                role="img"
+                aria-label={capitalize(text)}
+                className="w-3 h-3 rounded-full inline-block"
+                style={{ backgroundColor: color }}
+                data-testid="certificate-status"
+            />
+        </Tooltip>
     ) : (
         <Badge size={badgeSize} style={{ backgroundColor: color }} dataTestId="certificate-status">
             {capitalize(text)}

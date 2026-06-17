@@ -18,11 +18,14 @@ test.describe('CertificateStatus', () => {
         await expect(component.getByText('Valid')).toBeVisible();
     });
 
-    test('should render as icon when asIcon is true', async ({ mount, page }) => {
-        await mount(<CertificateStatusWithStore status={CertificateState.Issued} asIcon />);
-        const icon = page.getByTitle('Issued');
+    test('should render as icon with a custom tooltip when asIcon is true', async ({ mount, page }) => {
+        const component = await mount(<CertificateStatusWithStore status={CertificateState.Issued} asIcon />);
+        const icon = component.getByTestId('certificate-status');
         await expect(icon).toBeAttached();
-        await expect(icon).toHaveAttribute('title', 'Issued');
+        await expect(icon).toHaveAttribute('aria-label', 'Issued');
+        await expect(icon).not.toHaveAttribute('title');
+        await icon.hover();
+        await expect(page.getByRole('tooltip').filter({ hasText: 'Issued' })).toBeVisible();
     });
 
     test('should support badgeSize', async ({ mount }) => {
