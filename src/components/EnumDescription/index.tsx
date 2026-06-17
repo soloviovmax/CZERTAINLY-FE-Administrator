@@ -38,14 +38,22 @@ type ColumnProps = {
     title: string;
     iconSize?: number;
     dataTestId?: string;
+    /**
+     * Maps an enum value (code) to the color used for its indicator dot in the column.
+     * When provided, the legend lists every value with its color swatch so the dot
+     * colors shown in the rows can be matched to their meaning.
+     */
+    colorResolver?: (code: string) => string | undefined;
 };
 
-export function EnumColumnDescription({ platformEnum, title, iconSize, dataTestId }: Readonly<ColumnProps>) {
+export function EnumColumnDescription({ platformEnum, title, iconSize, dataTestId, colorResolver }: Readonly<ColumnProps>) {
     const enumMap = useSelector(enumSelectors.platformEnum(platformEnum));
 
-    const describedItems = Object.values(enumMap ?? {}).filter((item) => Boolean(item?.description));
+    const allItems = Object.values(enumMap ?? {});
+    // With a color key, list every value so the dot colors map 1:1; otherwise only described values.
+    const items = colorResolver ? allItems : allItems.filter((item) => Boolean(item?.description));
 
-    if (describedItems.length === 0) return null;
+    if (items.length === 0) return null;
 
     return (
         <Toggletip
@@ -57,15 +65,29 @@ export function EnumColumnDescription({ platformEnum, title, iconSize, dataTestI
                 <>
                     <div className="font-semibold mb-2">{title}</div>
                     <dl className="space-y-1.5">
-                        {describedItems.map((item) => (
-                            <div key={item.code}>
-                                <dt className="font-medium inline">{item.label}</dt>
-                                <dd className="inline text-[var(--dark-gray-color)] dark:text-neutral-300">
-                                    {' — '}
-                                    {item.description}
-                                </dd>
-                            </div>
-                        ))}
+                        {items.map((item) => {
+                            const color = colorResolver?.(item.code);
+                            return (
+                                <div key={item.code} className="flex items-baseline gap-1.5">
+                                    {color && (
+                                        <span
+                                            aria-hidden="true"
+                                            className="mt-[3px] inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                                            style={{ backgroundColor: color }}
+                                        />
+                                    )}
+                                    <div className="min-w-0">
+                                        <dt className="font-medium inline">{item.label}</dt>
+                                        {item.description && (
+                                            <dd className="inline text-[var(--dark-gray-color)] dark:text-neutral-300">
+                                                {' — '}
+                                                {item.description}
+                                            </dd>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </dl>
                 </>
             }

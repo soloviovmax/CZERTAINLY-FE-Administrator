@@ -22,7 +22,8 @@ import type { SearchRequestModel } from 'types/certificate';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import { dateFormatter } from 'utils/dateUtil';
 import type { AttributeRequestModel } from '../../../../types/attributes';
-import { PlatformEnum, Resource } from '../../../../types/openapi';
+import { type CertificateState, PlatformEnum, Resource } from '../../../../types/openapi';
+import { getCertificateStatusColor } from 'utils/certificate';
 import CertificateGroupDialog from '../CertificateGroupDialog';
 import CertificateOwnerDialog from '../CertificateOwnerDialog';
 import CertificateRAProfileDialog from '../CertificateRAProfileDialog';
@@ -234,7 +235,11 @@ export default function CertificateList({
                 content: (
                     <span className="inline-flex items-center gap-1">
                         State
-                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateState} title="State" />
+                        <EnumColumnDescription
+                            platformEnum={PlatformEnum.CertificateState}
+                            title="State"
+                            colorResolver={(code) => getCertificateStatusColor(code as CertificateState)}
+                        />
                     </span>
                 ),
                 align: 'center',

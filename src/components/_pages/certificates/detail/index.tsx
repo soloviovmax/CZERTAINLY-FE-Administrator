@@ -41,7 +41,7 @@ import type { AttributeDescriptorModel, AttributeResponseModel } from 'types/att
 import { PlatformEnum, Resource } from 'types/openapi';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { collectFormAttributes } from 'utils/attributes/attributes';
-import { downloadFile } from 'utils/certificate';
+import { downloadFile, getCertificateStatusColor } from 'utils/certificate';
 
 import { dateFormatter } from 'utils/dateUtil';
 import CustomAttributeWidget from '../../../Attributes/CustomAttributeWidget';
@@ -630,7 +630,11 @@ export default function CertificateDetail() {
                 content: (
                     <span className="inline-flex items-center gap-1">
                         State
-                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateState} title="State" />
+                        <EnumColumnDescription
+                            platformEnum={PlatformEnum.CertificateState}
+                            title="State"
+                            colorResolver={(code) => getCertificateStatusColor(code as CertStatus)}
+                        />
                     </span>
                 ),
             },
