@@ -32,6 +32,15 @@ test.describe('Toggletip', () => {
         await expect(page.getByText('Hover description')).toBeVisible();
     });
 
+    test('clicking a hover-opened tip pins it (does not toggle closed)', async ({ mount, page }) => {
+        await mount(<Toggletip content="Pin me" dataTestId="tt" />);
+        await page.getByTestId('tt').hover();
+        await expect(page.getByText('Pin me')).toBeVisible();
+
+        await page.getByTestId('tt').click();
+        await expect(page.getByText('Pin me')).toBeVisible();
+    });
+
     test('the trigger exposes aria-expanded reflecting open state', async ({ mount, page }) => {
         await mount(<Toggletip content="State" dataTestId="tt" ariaLabel="More info" />);
         const trigger = page.getByTestId('tt');

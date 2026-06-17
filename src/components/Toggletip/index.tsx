@@ -1,7 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import cn from 'classnames';
 import { Info, X } from 'lucide-react';
-import { useCallback, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 
 type Props = {
     content: ReactNode;
@@ -39,6 +39,8 @@ function Toggletip({
         closeTimerRef.current = null;
     }, []);
 
+    useEffect(() => () => clearTimers(), [clearTimers]);
+
     const handleOpenChange = useCallback(
         (next: boolean) => {
             clearTimers();
@@ -71,7 +73,13 @@ function Toggletip({
                         triggerClassName,
                     )}
                     data-testid={dataTestId ?? 'toggletip-trigger'}
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (open && !pinnedRef.current) {
+                            e.preventDefault();
+                            pinnedRef.current = true;
+                        }
+                    }}
                     onMouseEnter={hoverOpen}
                     onMouseLeave={hoverClose}
                 >
