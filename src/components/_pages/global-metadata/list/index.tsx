@@ -4,6 +4,7 @@ import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { actions, selectors } from 'ducks/globalMetadata';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -87,7 +88,12 @@ export default function GlobalMetadataList() {
             },
             {
                 id: 'contentType',
-                content: 'Content Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Content Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.AttributeContentType} title="Content Type" />
+                    </span>
+                ),
                 sortable: true,
                 width: '20%',
             },

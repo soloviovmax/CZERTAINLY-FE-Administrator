@@ -3,9 +3,17 @@ import { Link } from 'react-router';
 import Badge from 'components/Badge';
 import { KeyRound } from 'lucide-react';
 import { actions as filterActions, EntityType } from 'ducks/filters';
-import { CertificateType, type CertificateValidationResultDto, CertificateValidationStatus, ComplianceStatus } from 'types/openapi';
+import {
+    CertificateType,
+    type CertificateValidationResultDto,
+    CertificateValidationStatus,
+    ComplianceStatus,
+    PlatformEnum,
+} from 'types/openapi';
 import type { CertificateListResponseModel, CertificateDetailResponseModel } from 'types/certificate';
 import type { TableDataRow } from 'components/CustomTable';
+import { EnumValueDescription } from 'components/EnumDescription';
+import Tooltip from 'components/Tooltip';
 import CertificateStatus from './CertificateStatus';
 import PendingActionButtons from './PendingActionButtons';
 import type { PendingAction } from './PendingActionButtons/types';
@@ -102,7 +110,16 @@ export function buildCertificateRowColumns(
         </React.Fragment>,
         <CertificateStatus key="validationStatus" status={certificate.validationStatus} asIcon={true} />,
         certificate.complianceStatus ? <CertificateStatus key="compliance" status={certificate.complianceStatus} asIcon={true} /> : '',
-        certificate.privateKeyAvailability ? <KeyRound key="key" size={16} aria-hidden="true" strokeWidth={1.5} /> : '',
+        certificate.privateKeyAvailability ? (
+            <Tooltip key="key" content="Private key is available for this certificate">
+                <span>
+                    <KeyRound aria-hidden size={16} strokeWidth={1.5} />
+                    <span className="sr-only">Private key available</span>
+                </span>
+            </Tooltip>
+        ) : (
+            ''
+        ),
         commonNameCell,
         certificate.notBefore ? (
             <span key="notBefore" style={{ whiteSpace: 'nowrap' }}>
@@ -277,7 +294,10 @@ export function buildCertificateDetailBaseRows(
             columns: [
                 'State',
                 <React.Fragment key="state">
-                    <CertificateStatus status={certificate.state} />
+                    <span className="inline-flex items-center gap-1">
+                        <CertificateStatus status={certificate.state} />
+                        <EnumValueDescription platformEnum={PlatformEnum.CertificateState} value={certificate.state} />
+                    </span>
                     <PendingActionButtons certificate={certificate} onAction={onPendingAction} />
                 </React.Fragment>,
             ],
@@ -339,7 +359,14 @@ export function buildCertificateDetailBaseRows(
             id: 'subjectType',
             columns: [
                 'Subject Type',
-                certificate.subjectType ? <CertificateStatus key="subjectType" status={certificate.subjectType} /> : <>n/a</>,
+                certificate.subjectType ? (
+                    <span key="subjectType" className="inline-flex items-center gap-1">
+                        <CertificateStatus status={certificate.subjectType} />
+                        <EnumValueDescription platformEnum={PlatformEnum.CertificateSubjectType} value={certificate.subjectType} />
+                    </span>
+                ) : (
+                    <>n/a</>
+                ),
             ],
         },
         {

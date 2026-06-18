@@ -3,6 +3,7 @@ import { attributeFieldNameTransform, getAttributeContent } from 'utils/attribut
 
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import { useSelector } from 'react-redux';
 import { type AttributeDescriptorModel, isDataAttributeModel, isInfoAttributeModel } from 'types/attributes';
 import { AttributeConstraintType, PlatformEnum } from 'types/openapi';
@@ -95,7 +96,13 @@ export default function AttributeDescriptorViewer({ attributeDescriptors }: Read
                     { id: 'group', columns: [<b key="label">Group</b>, attr.properties.group || 'Not set'] },
                     {
                         id: 'contentType',
-                        columns: [<b key="label">Content Type</b>, getEnumLabel(attributeContentTypeEnum, attr.contentType)],
+                        columns: [
+                            <b key="label">Content Type</b>,
+                            <span key="contentType-value" className="inline-flex items-center gap-1">
+                                {getEnumLabel(attributeContentTypeEnum, attr.contentType)}
+                                <EnumValueDescription platformEnum={PlatformEnum.AttributeContentType} value={attr.contentType} />
+                            </span>,
+                        ],
                     },
                     ...columns,
                     { id: 'defaults', columns: [<b key="label">Defaults</b>, getAttributeContent(attr.contentType, attr.content)] },

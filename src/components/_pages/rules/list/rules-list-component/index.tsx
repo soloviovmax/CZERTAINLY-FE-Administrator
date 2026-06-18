@@ -15,6 +15,7 @@ import { PlatformEnum, type Resource } from 'types/openapi';
 import { useRuleEvaluatorResourceOptions } from 'utils/rules';
 import { useResourceFilterButtons } from '../useResourceFilterButtons';
 import RulesForm from '../../form';
+import { EnumColumnDescription } from 'components/EnumDescription';
 
 const LIST_FILTER_KEY = WorkflowListKey.rules;
 
@@ -83,7 +84,12 @@ const RulesList = () => {
                 sortable: true,
             },
             {
-                content: 'Resource',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Resource
+                        <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                    </span>
+                ),
                 align: 'left',
                 id: 'resource',
                 width: '30%',

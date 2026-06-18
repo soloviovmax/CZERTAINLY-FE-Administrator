@@ -1,6 +1,6 @@
 import Select from 'components/Select';
 import Label from 'components/Label';
-import { getEnumLabel } from 'ducks/enums';
+import { getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { useMemo } from 'react';
 import type { EnumItemModel } from 'types/enums';
 import { KeyType, KeyUsage } from 'types/openapi';
@@ -25,11 +25,15 @@ export default function KeyUsageSelect({ value, onChange, keyUsageEnum, keyType,
     const allowedUsages = keyType ? KEY_TYPE_ALLOWED_USAGES[keyType] : undefined;
 
     const options = useMemo(() => {
-        const list: { value: KeyUsage; label: string }[] = [];
+        const list: { value: KeyUsage; label: string; description?: string }[] = [];
         for (const suit in KeyUsage) {
             const usage = KeyUsage[suit as keyof typeof KeyUsage];
             if (allowedUsages && !allowedUsages.includes(usage)) continue;
-            list.push({ value: usage, label: getEnumLabel(keyUsageEnum, usage) });
+            list.push({
+                value: usage,
+                label: getEnumLabel(keyUsageEnum, usage),
+                description: getEnumDescription(keyUsageEnum, usage),
+            });
         }
         return list;
     }, [keyUsageEnum, allowedUsages]);
@@ -56,6 +60,7 @@ export default function KeyUsageSelect({ value, onChange, keyUsageEnum, keyType,
                 value={selectValue}
                 onChange={(values) => onChange((values || []).map((item) => item.value as KeyUsage))}
                 isClearable={true}
+                showOptionDescriptionInDropdown
             />
         </div>
     );

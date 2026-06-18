@@ -2,6 +2,7 @@ import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { useDispatch, useSelector } from 'react-redux';
 
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Dialog from 'components/Dialog';
 import Widget from 'components/Widget';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
@@ -83,7 +84,12 @@ const ActionsList = () => {
                 sortable: true,
             },
             {
-                content: 'Resource',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Resource
+                        <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                    </span>
+                ),
                 align: 'left',
                 id: 'resource',
                 width: '30%',

@@ -1,6 +1,7 @@
 import Button from 'components/Button';
-import type { TableDataRow } from 'components/CustomTable';
+import type { TableDataRow, TableHeader } from 'components/CustomTable';
 import PagedCustomTable from 'components/CustomTable/PagedCustomTable';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Widget from 'components/Widget';
 import EvaluationDetailsDialog from 'components/_pages/notifications/events-settings/EvaluationDetailsDialog';
 import { objectEventHistoryHeaders } from 'components/_pages/notifications/events-settings/tableHeaders';
@@ -32,6 +33,24 @@ export default function ObjectEventHistoryWidget({ resource, uuid }: Readonly<Pr
     const resourceEventEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.ResourceEvent));
 
     const [selectedEntry, setSelectedEntry] = useState<ObjectEventHistoryDto | undefined>(undefined);
+
+    const headers: TableHeader[] = useMemo(
+        () =>
+            objectEventHistoryHeaders.map((header) =>
+                header.id === 'event'
+                    ? {
+                          ...header,
+                          content: (
+                              <span className="inline-flex items-center gap-1">
+                                  {header.content}
+                                  <EnumColumnDescription platformEnum={PlatformEnum.ResourceEvent} title="Event" />
+                              </span>
+                          ),
+                      }
+                    : header,
+            ),
+        [],
+    );
 
     const onReloadData = useCallback(
         (pageSize: number, pageNumber: number) => {
@@ -91,7 +110,7 @@ export default function ObjectEventHistoryWidget({ resource, uuid }: Readonly<Pr
         <Widget title="Event History" titleSize="large">
             <PagedCustomTable
                 key={`${resource}-${uuid}`}
-                headers={objectEventHistoryHeaders}
+                headers={headers}
                 data={data}
                 totalItems={objectEventHistory?.totalItems}
                 onReloadData={onReloadData}

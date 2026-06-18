@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
@@ -109,7 +110,12 @@ const TriggerList = () => {
                 sortable: true,
             },
             {
-                content: 'Event Name',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Event Name
+                        <EnumColumnDescription platformEnum={PlatformEnum.ResourceEvent} title="Event Name" />
+                    </span>
+                ),
                 align: 'left',
                 id: 'eventName',
                 width: '15%',

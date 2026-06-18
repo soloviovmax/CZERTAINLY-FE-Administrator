@@ -7,6 +7,7 @@ import { actions as resourceActions, selectors as resourceSelectors } from 'duck
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Select from 'components/Select';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router';
 import { PlatformEnum, type Resource } from 'types/openapi';
@@ -76,7 +77,12 @@ const EventsList = () => {
         () => [
             {
                 id: 'eventName',
-                content: 'Event Name',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Event Name
+                        <EnumColumnDescription platformEnum={PlatformEnum.ResourceEvent} title="Event Name" />
+                    </span>
+                ),
                 sortable: true,
             },
             {

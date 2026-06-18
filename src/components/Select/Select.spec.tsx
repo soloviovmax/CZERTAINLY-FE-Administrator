@@ -179,6 +179,23 @@ test.describe('Select', () => {
         await expect(page.getByText('First letter description')).toBeVisible();
     });
 
+    test('showSelectedDescriptionAsHelp renders the selected option description beneath the field', async ({ mount, page }) => {
+        const opts = [
+            { value: 'a', label: 'Alpha', description: 'First letter description' },
+            { value: 'b', label: 'Beta', description: 'Second letter description' },
+        ];
+        await mount(<Select id="dd" value="b" onChange={() => {}} options={opts} showSelectedDescriptionAsHelp dataTestId="sel" />);
+        const help = page.getByTestId('sel-selected-description');
+        await expect(help).toBeVisible();
+        await expect(help).toHaveText('Second letter description');
+    });
+
+    test('showSelectedDescriptionAsHelp renders nothing when no value is selected', async ({ mount, page }) => {
+        const opts = [{ value: 'a', label: 'Alpha', description: 'First letter description' }];
+        await mount(<Select id="dd" value="" onChange={() => {}} options={opts} showSelectedDescriptionAsHelp dataTestId="sel" />);
+        await expect(page.getByTestId('sel-selected-description')).toHaveCount(0);
+    });
+
     test('"+ Add new" option gets blue medium-weight styling', async ({ mount, page }) => {
         const opts = [
             { value: '1', label: 'One' },

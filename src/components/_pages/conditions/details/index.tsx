@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 import Container from 'components/Container';
 import { PlatformEnum, Resource } from 'types/openapi';
+import { EnumValueDescription } from 'components/EnumDescription';
 
 const ConditionDetails = () => {
     const { id } = useParams();
@@ -80,11 +81,25 @@ const ConditionDetails = () => {
                       },
                       {
                           id: 'type',
-                          columns: ['Type', getEnumLabel(conditionTypeEnum, conditionDetails.type), ''],
+                          columns: [
+                              'Type',
+                              <span key="type" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(conditionTypeEnum, conditionDetails.type)}
+                                  <EnumValueDescription platformEnum={PlatformEnum.ConditionType} value={conditionDetails.type} />
+                              </span>,
+                              '',
+                          ],
                       },
                       {
                           id: 'resource',
-                          columns: ['Resource', getEnumLabel(resourceTypeEnum, conditionDetails.resource), ''],
+                          columns: [
+                              'Resource',
+                              <span key="resource" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(resourceTypeEnum, conditionDetails.resource)}
+                                  <EnumValueDescription platformEnum={PlatformEnum.Resource} value={conditionDetails.resource} />
+                              </span>,
+                              '',
+                          ],
                       },
                       {
                           id: 'description',

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { actions as actionGroupsActions, selectors as rulesSelectors } from 'ducks/rules';
@@ -64,7 +65,12 @@ const ExecutionsList = () => {
                 sortable: true,
             },
             {
-                content: 'Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.ExecutionType} title="Type" />
+                    </span>
+                ),
                 align: 'left',
                 id: 'type',
                 width: '25%',

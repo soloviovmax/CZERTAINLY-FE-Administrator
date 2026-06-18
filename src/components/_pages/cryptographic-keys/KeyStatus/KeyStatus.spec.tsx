@@ -42,6 +42,7 @@ test.describe('KeyStatus', () => {
 
         const icon = component.locator('svg');
         await expect(icon).toBeVisible();
-        await expect(icon).toHaveAttribute('title', 'Success');
+        // accessible name provided via visually-hidden text alongside the icon
+        await expect(component.getByText('Success')).toBeAttached();
     });
 });

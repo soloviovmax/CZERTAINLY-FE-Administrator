@@ -11,6 +11,7 @@ import { useParams } from 'react-router';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import { OidCategory, PlatformEnum, Resource } from 'types/openapi';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import { getEditAndDeleteWidgetButtons, createWidgetDetailHeaders, createTableDataRow } from 'utils/widget';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
@@ -87,7 +88,13 @@ export default function CustomOIDDetail() {
                       createTableDataRow('OID', oid.oid),
                       createTableDataRow('Display Name', oid.displayName),
                       createTableDataRow('Description', oid.description),
-                      createTableDataRow('Category', oidCategoryEnum[oid.category]?.label),
+                      createTableDataRow(
+                          'Category',
+                          <span className="inline-flex items-center gap-1">
+                              {oidCategoryEnum[oid.category]?.label}
+                              <EnumValueDescription platformEnum={PlatformEnum.OidCategory} value={oid.category} />
+                          </span>,
+                      ),
                   ]
                 : [],
         [oid, oidCategoryEnum],

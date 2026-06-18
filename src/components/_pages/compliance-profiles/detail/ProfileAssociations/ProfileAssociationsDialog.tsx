@@ -6,7 +6,7 @@ import Select from 'components/Select';
 import { useDispatch, useSelector } from 'react-redux';
 import { buildValidationRules } from 'utils/validators-helper';
 import { validateRequired } from 'utils/validators';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { actions as resourceActions, selectors as resourceSelectors } from 'ducks/resource';
 import { actions as raActions, selectors as raSelectors } from 'ducks/ra-profiles';
 import { actions as tokenProfileActions, selectors as tokenProfileSelectors } from 'ducks/token-profiles';
@@ -37,6 +37,7 @@ export default function ProfileAssociationsDialog({ isOpen, onClose, profile, as
             resourcesList.map((resource) => ({
                 value: resource.resource,
                 label: getEnumLabel(resourceEnum, resource.resource),
+                description: getEnumDescription(resourceEnum, resource.resource),
             })),
         [resourcesList, resourceEnum],
     );
@@ -146,6 +147,8 @@ export default function ProfileAssociationsDialog({ isOpen, onClose, profile, as
                                             setValue('tokenProfiles' as any, undefined);
                                         }}
                                         placeholder="Select the resource to be associated"
+                                        showOptionDescriptionInDropdown
+                                        showSelectedDescriptionAsHelp
                                         className={cn({
                                             'border-red-500': fieldState.error && fieldState.isTouched,
                                         })}

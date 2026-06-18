@@ -4,6 +4,7 @@ import Dialog from 'components/Dialog';
 import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import { actions, selectors } from 'ducks/scheduler';
 import { actions as userInterfaceActions } from 'ducks/user-interface';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -268,17 +269,22 @@ export default function SchedulerJobDetail() {
                           id: 'status',
                           columns: [
                               'Last Execution Status',
-                              <Badge
-                                  key="lastExecutionStatus"
-                                  color={(() => {
-                                      if (schedulerJob.lastExecutionStatus === SchedulerJobExecutionStatus.Failed) return 'danger';
-                                      return schedulerJob.lastExecutionStatus === SchedulerJobExecutionStatus.Succeeded
-                                          ? 'success'
-                                          : 'primary';
-                                  })()}
-                              >
-                                  {getEnumLabel(schedulerJobExecutionStatusEnum, schedulerJob.lastExecutionStatus)}
-                              </Badge>,
+                              <span key="lastExecutionStatus" className="inline-flex items-center gap-1">
+                                  <Badge
+                                      color={(() => {
+                                          if (schedulerJob.lastExecutionStatus === SchedulerJobExecutionStatus.Failed) return 'danger';
+                                          return schedulerJob.lastExecutionStatus === SchedulerJobExecutionStatus.Succeeded
+                                              ? 'success'
+                                              : 'primary';
+                                      })()}
+                                  >
+                                      {getEnumLabel(schedulerJobExecutionStatusEnum, schedulerJob.lastExecutionStatus)}
+                                  </Badge>
+                                  <EnumValueDescription
+                                      platformEnum={PlatformEnum.SchedulerJobExecutionStatus}
+                                      value={schedulerJob.lastExecutionStatus}
+                                  />
+                              </span>,
                           ],
                       },
                       {

@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { actions, selectors } from 'ducks/scheduler';
 
 import type { TableDataRow, TableHeader } from 'components/CustomTable';
@@ -52,7 +53,12 @@ function SchedulerJobHistory({ uuid }: Props) {
                 width: 'auto',
             },
             {
-                content: 'Status',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Status
+                        <EnumColumnDescription platformEnum={PlatformEnum.SchedulerJobExecutionStatus} title="Status" />
+                    </span>
+                ),
                 sortable: true,
                 id: 'status',
                 width: 'auto',

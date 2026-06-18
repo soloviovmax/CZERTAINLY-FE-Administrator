@@ -41,7 +41,7 @@ import type { AttributeDescriptorModel, AttributeResponseModel } from 'types/att
 import { PlatformEnum, Resource } from 'types/openapi';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { collectFormAttributes } from 'utils/attributes/attributes';
-import { downloadFile } from 'utils/certificate';
+import { downloadFile, getCertificateStatusColor } from 'utils/certificate';
 
 import { dateFormatter } from 'utils/dateUtil';
 import CustomAttributeWidget from '../../../Attributes/CustomAttributeWidget';
@@ -58,6 +58,7 @@ import CertificateList from 'components/_pages/certificates/list';
 import { capitalize } from 'utils/common-utils';
 import ComplianceCheckResultWidget from 'components/_pages/certificates/ComplianceCheckResultWidget/ComplianceCheckResultWidget';
 import Badge from 'components/Badge';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
 import CertificateDetailsContent from './CertificateDetailsContent';
@@ -615,8 +616,28 @@ export default function CertificateDetail() {
                 id: 'relation',
                 content: 'Relation',
             },
-            { id: 'relationType', content: 'Relation Type' },
-            { id: 'state', content: 'State' },
+            {
+                id: 'relationType',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Relation Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateRelationType} title="Relation Type" />
+                    </span>
+                ),
+            },
+            {
+                id: 'state',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        State
+                        <EnumColumnDescription
+                            platformEnum={PlatformEnum.CertificateState}
+                            title="State"
+                            colorResolver={(code) => getCertificateStatusColor(code as CertStatus)}
+                        />
+                    </span>
+                ),
+            },
             { id: 'serialNumber', content: 'Serial Number' },
             { id: 'valid', content: 'Valid From' },
             { id: 'expires', content: 'Expires At' },

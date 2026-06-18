@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import Badge from 'components/Badge';
 
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { EntityType } from 'ducks/filters';
 import { selectors as pagingSelectors } from 'ducks/paging';
 import { actions, selectors } from 'ducks/scheduler';
@@ -80,7 +81,12 @@ function SchedulerJobsList() {
                 width: '60%',
             },
             {
-                content: 'Last Execution Status',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Last Execution Status
+                        <EnumColumnDescription platformEnum={PlatformEnum.SchedulerJobExecutionStatus} title="Last Execution Status" />
+                    </span>
+                ),
                 sortable: true,
                 sort: 'asc',
                 id: 'status',

@@ -16,6 +16,7 @@ import { Link, useParams } from 'react-router';
 import Button from 'components/Button';
 import Container from 'components/Container';
 import { PlatformEnum, Resource } from 'types/openapi';
+import { EnumColumnDescription, EnumValueDescription } from 'components/EnumDescription';
 import { Trash2 } from 'lucide-react';
 
 interface SelectChangeValue {
@@ -143,7 +144,14 @@ const RuleDetails = () => {
                       },
                       {
                           id: 'resource',
-                          columns: ['Resource', getEnumLabel(resourceTypeEnum, ruleDetails.resource), ''],
+                          columns: [
+                              'Resource',
+                              <span key="resource" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(resourceTypeEnum, ruleDetails.resource)}
+                                  <EnumValueDescription platformEnum={PlatformEnum.Resource} value={ruleDetails.resource} />
+                              </span>,
+                              '',
+                          ],
                       },
                       {
                           id: 'description',
@@ -161,7 +169,12 @@ const RuleDetails = () => {
             },
             {
                 id: 'type',
-                content: 'Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.ConditionType} title="Type" />
+                    </span>
+                ),
             },
             {
                 id: 'description',

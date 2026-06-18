@@ -2,6 +2,7 @@ import DetailPageSkeleton from 'components/DetailPageSkeleton';
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import EditNameDescriptionDialog from 'components/EditNameDescriptionDialog';
+import { EnumValueDescription } from 'components/EnumDescription';
 import FlowChart from 'components/FlowChart';
 import TabLayout from 'components/Layout/TabLayout';
 import Switch from 'components/Switch';
@@ -274,7 +275,14 @@ const TriggerDetails = () => {
                       },
                       {
                           id: 'eventName',
-                          columns: ['Event Name', getEnumLabel(eventNameEnum, triggerDetails.event ?? ''), ''],
+                          columns: [
+                              'Event Name',
+                              <span key="eventName" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(eventNameEnum, triggerDetails.event ?? '')}
+                                  <EnumValueDescription platformEnum={PlatformEnum.ResourceEvent} value={triggerDetails.event} />
+                              </span>,
+                              '',
+                          ],
                       },
                       {
                           id: 'resource',

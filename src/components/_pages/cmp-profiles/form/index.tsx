@@ -5,7 +5,7 @@ import Widget from 'components/Widget';
 import { actions as cmpProfileActions, selectors as cmpProfileSelectors } from 'ducks/cmp-profiles';
 import { actions as connectorActions } from 'ducks/connectors';
 import { actions as customAttributesActions, selectors as customAttributesSelectors } from 'ducks/customAttributes';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { actions as raProfileActions, selectors as raProfileSelectors } from 'ducks/ra-profiles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
@@ -106,14 +106,17 @@ export default function CmpProfileForm({ cmpProfileId, onCancel, onSuccess }: Cm
             {
                 value: CmpProfileRequestDtoVariantEnum.V2,
                 label: getEnumLabel(cmpCmpProfileVariantEnum, CmpProfileRequestDtoVariantEnum.V2),
+                description: getEnumDescription(cmpCmpProfileVariantEnum, CmpProfileRequestDtoVariantEnum.V2),
             },
             {
                 value: CmpProfileRequestDtoVariantEnum.V3,
                 label: getEnumLabel(cmpCmpProfileVariantEnum, CmpProfileRequestDtoVariantEnum.V3),
+                description: getEnumDescription(cmpCmpProfileVariantEnum, CmpProfileRequestDtoVariantEnum.V3),
             },
             {
                 value: CmpProfileRequestDtoVariantEnum.V23gpp,
                 label: getEnumLabel(cmpCmpProfileVariantEnum, CmpProfileRequestDtoVariantEnum.V23gpp),
+                description: getEnumDescription(cmpCmpProfileVariantEnum, CmpProfileRequestDtoVariantEnum.V23gpp),
             },
         ],
         [cmpCmpProfileVariantEnum],
@@ -600,7 +603,7 @@ export default function CmpProfileForm({ cmpProfileId, onCancel, onSuccess }: Cm
                                         <label
                                             id="variant-label"
                                             htmlFor="variant-0"
-                                            className="block text-sm font-medium mb-2 text-gray-700 dark:text-white"
+                                            className="block text-sm font-medium mb-2 text-[var(--dark-gray-color)] dark:text-white"
                                         >
                                             Variant <span className="text-red-500">*</span>
                                         </label>
@@ -610,9 +613,9 @@ export default function CmpProfileForm({ cmpProfileId, onCancel, onSuccess }: Cm
                                             rules={buildValidationRules([validateRequired()])}
                                             render={({ field, fieldState }) => (
                                                 <>
-                                                    <div className="flex flex-wrap gap-4" role="radiogroup" aria-labelledby="variant-label">
+                                                    <div className="flex flex-col gap-3" role="radiogroup" aria-labelledby="variant-label">
                                                         {cmpProfileVariantOptions.map((option, index) => (
-                                                            <label key={option.value} className="flex items-center cursor-pointer">
+                                                            <label key={option.value} className="flex items-start cursor-pointer">
                                                                 <input
                                                                     id={index === 0 ? 'variant-0' : undefined}
                                                                     type="radio"
@@ -622,8 +625,15 @@ export default function CmpProfileForm({ cmpProfileId, onCancel, onSuccess }: Cm
                                                                     onChange={() => field.onChange(option.value)}
                                                                     className="shrink-0 mt-0.5 border-gray-200 rounded-full text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-800 dark:border-neutral-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
                                                                 />
-                                                                <span className="ml-2 text-sm text-gray-700 dark:text-neutral-400">
-                                                                    {option.label}
+                                                                <span className="ml-2">
+                                                                    <span className="block text-sm text-[var(--dark-gray-color)] dark:text-white">
+                                                                        {option.label}
+                                                                    </span>
+                                                                    {option.description && (
+                                                                        <span className="block text-xs text-[var(--dark-gray-color)] dark:text-neutral-500">
+                                                                            {option.description}
+                                                                        </span>
+                                                                    )}
                                                                 </span>
                                                             </label>
                                                         ))}
