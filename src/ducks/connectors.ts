@@ -249,6 +249,7 @@ export const slice = createSlice({
         },
 
         clearConnectorAuthAttributesDescriptors: (state) => {
+            state.isFetchingAuthAttributes = false;
             state.connectorAuthAttributes = undefined;
         },
 

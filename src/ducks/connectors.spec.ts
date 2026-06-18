@@ -541,11 +541,12 @@ describe('connectors selectors', () => {
         expect(next.isFetchingAuthAttributes).toBe(false);
     });
 
-    test('clearConnectorAuthAttributesDescriptors clears descriptors', () => {
+    test('clearConnectorAuthAttributesDescriptors clears descriptors and fetching flag', () => {
         const next = reducer(
-            { ...initialState, connectorAuthAttributes: [{ name: 'username' }] as any },
+            { ...initialState, connectorAuthAttributes: [{ name: 'username' }] as any, isFetchingAuthAttributes: true },
             actions.clearConnectorAuthAttributesDescriptors(),
         );
         expect(next.connectorAuthAttributes).toBeUndefined();
+        expect(next.isFetchingAuthAttributes).toBe(false);
     });
 });

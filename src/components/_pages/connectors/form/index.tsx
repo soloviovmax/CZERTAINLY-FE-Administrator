@@ -143,13 +143,13 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
             return authAttributeDescriptors
                 .filter((descriptor) => {
                     const value = formValues[descriptor.name];
-                    return value !== undefined && value !== '';
+                    return typeof value === 'string' && value !== '';
                 })
                 .map((descriptor) => {
                     const contentItem = getAttributeFormValue(descriptor.contentType, descriptor.content, formValues[descriptor.name]);
                     const contentArray = Array.isArray(contentItem) ? contentItem : [contentItem];
-                    const version = resolveAttributeVersion(descriptor as any);
-                    return buildAttributeRequestModel(descriptor.name, contentArray, descriptor as any, version);
+                    const version = resolveAttributeVersion(descriptor);
+                    return buildAttributeRequestModel(descriptor.name, contentArray, descriptor, version);
                 });
         },
         [authAttributeDescriptors],
