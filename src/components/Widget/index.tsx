@@ -114,6 +114,7 @@ function Widget({
                 data-testid="refresh-icon"
                 variant="transparent"
                 title="Refresh"
+                aria-label="Refresh"
                 disabled={busy || !!widgetLock}
             >
                 <RefreshCw size={16} />
@@ -127,6 +128,7 @@ function Widget({
                 data-testid="reset-view-icon"
                 variant="transparent"
                 title="Reset filters, sorting and pagination"
+                aria-label="Reset filters, sorting and pagination"
                 disabled={busy || !!widgetLock}
             >
                 <ListRestart size={16} />

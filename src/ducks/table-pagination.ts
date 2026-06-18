@@ -69,13 +69,15 @@ export const slice = createSlice({
         clearPaginationByRootRoute: (state, action: PayloadAction<{ rootRoute: string }>) => {
             const rootRoutePrefix = `/${action.payload.rootRoute}`;
 
-            state.byKey = Object.fromEntries(
-                Object.entries(state.byKey).filter(
-                    ([key]) =>
-                        !key.startsWith(`custom-table-pagination:${rootRoutePrefix}`) &&
-                        !key.startsWith(`paged-custom-table-pagination:${rootRoutePrefix}`),
-                ),
-            );
+            for (const key of Object.keys(state.byKey)) {
+                if (
+                    key.startsWith(`custom-table-pagination:${rootRoutePrefix}`) ||
+                    key.startsWith(`paged-custom-table-pagination:${rootRoutePrefix}`)
+                ) {
+                    delete state.byKey[key];
+                    bumpResetVersion(state, key);
+                }
+            }
         },
 
         clearPaginationByPath: (state, action: PayloadAction<{ pathname: string }>) => {

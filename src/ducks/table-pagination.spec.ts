@@ -70,6 +70,9 @@ describe('table-pagination slice', () => {
         expect(next.byKey['custom-table-pagination:/roles:roles-table']).toBeUndefined();
         expect(next.byKey['paged-custom-table-pagination:/roles:history-table']).toBeUndefined();
         expect(next.byKey['custom-table-pagination:/users:users-table']).toEqual({ page: 2, pageSize: 20 });
+        // bumps reset version of cleared keys so mounted tables reset their local state
+        expect(next.resetVersionByKey['custom-table-pagination:/roles:roles-table']).toBe(1);
+        expect(next.resetVersionByKey['custom-table-pagination:/users:users-table']).toBeUndefined();
     });
 
     test('setSearch stores search and defaults page/pageSize when key is new', () => {
