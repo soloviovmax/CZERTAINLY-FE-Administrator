@@ -16,6 +16,7 @@ import { LockWidgetNameEnum } from 'types/user-interface';
 import { acmeAccountStatus } from '../acmeAccountStatus';
 import { createWidgetDetailHeaders } from 'utils/widget';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Badge from 'components/Badge';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
@@ -143,9 +144,10 @@ export default function AcmeAccountDetail() {
                 id: 'accountStatus',
                 columns: [
                     'Account Status',
-                    <Badge key="status" color={accountStatus[1]}>
-                        {accountStatus[0]}
-                    </Badge>,
+                    <span key="status" className="inline-flex items-center gap-1">
+                        <Badge color={accountStatus[1]}>{accountStatus[0]}</Badge>
+                        <EnumValueDescription platformEnum={PlatformEnum.AccountStatus} value={acmeAccount.status} />
+                    </span>,
                 ],
             },
             {

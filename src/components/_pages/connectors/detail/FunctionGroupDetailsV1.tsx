@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import Select from 'components/Select';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Container from 'components/Container';
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Widget from 'components/Widget';
@@ -89,7 +90,12 @@ export default function FunctionGroupDetailsV1({
         () => [
             {
                 id: 'functionGroup',
-                content: 'Function Group',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Function Group
+                        <EnumColumnDescription platformEnum={PlatformEnum.FunctionGroupCode} title="Function Group" />
+                    </span>
+                ),
             },
             {
                 id: 'kind',

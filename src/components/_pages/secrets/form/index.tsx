@@ -22,7 +22,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { KeyStoreType, PlatformEnum, Resource, type SecretDetailDto, SecretType } from 'types/openapi';
 import { collectFormAttributes } from 'utils/attributes/attributes';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { validateAlphaNumericWithSpecialChars, validateRequired } from 'utils/validators';
 import { buildValidationRules, getFieldErrorMessage } from 'utils/validators-helper';
 import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
@@ -30,6 +30,7 @@ import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
 interface SelectOption {
     value: string;
     label: string;
+    description?: string;
 }
 
 type SecretFormProps = Readonly<{
@@ -120,6 +121,7 @@ export default function SecretForm({ onCancel, onSuccess, initialSecret }: Secre
             options.push({
                 value,
                 label: getEnumLabel(secretTypeEnum, value),
+                description: getEnumDescription(secretTypeEnum, value),
             });
         }
         return options;
@@ -433,6 +435,8 @@ export default function SecretForm({ onCancel, onSuccess, initialSecret }: Secre
                                                 value={field.value || ''}
                                                 onChange={field.onChange}
                                                 error={getFieldErrorMessage(fieldState)}
+                                                showOptionDescriptionInDropdown
+                                                showSelectedDescriptionAsHelp
                                                 required
                                             />
                                         )}

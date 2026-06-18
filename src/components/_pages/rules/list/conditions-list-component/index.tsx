@@ -14,6 +14,7 @@ import { PlatformEnum, type Resource } from 'types/openapi';
 import { useRuleEvaluatorResourceOptions } from 'utils/rules';
 import { useResourceFilterButtons } from '../useResourceFilterButtons';
 import ConditionForm from '../../../conditions/form';
+import { EnumColumnDescription } from 'components/EnumDescription';
 
 const LIST_FILTER_KEY = WorkflowListKey.conditions;
 
@@ -82,13 +83,23 @@ const ConditionsList = () => {
                 sortable: true,
             },
             {
-                content: 'Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.ConditionType} title="Type" />
+                    </span>
+                ),
                 align: 'left',
                 id: 'type',
                 width: '20%',
             },
             {
-                content: 'Resource',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Resource
+                        <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                    </span>
+                ),
                 align: 'left',
                 id: 'resource',
                 width: '20%',

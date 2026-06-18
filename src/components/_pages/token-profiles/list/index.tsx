@@ -14,6 +14,7 @@ import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import TokenStatusBadge from 'components/_pages/tokens/TokenStatusBadge';
 import { selectors as enumSelectors } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import KeyUsageSelect from '../../cryptographic-keys/KeyUsageSelect';
 import { type KeyUsage, PlatformEnum } from 'types/openapi';
 import type { TokenProfileResponseModel } from 'types/token-profiles';
@@ -171,7 +172,12 @@ function TokenProfileList() {
             {
                 id: 'usages',
                 align: 'center',
-                content: 'Usages',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Usages
+                        <EnumColumnDescription platformEnum={PlatformEnum.KeyUsage} title="Key Usages" />
+                    </span>
+                ),
             },
             {
                 id: 'token',

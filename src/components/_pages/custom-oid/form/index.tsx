@@ -15,7 +15,7 @@ import Select from 'components/Select';
 import Button from 'components/Button';
 import Container from 'components/Container';
 import ProgressButton from 'components/ProgressButton';
-import { selectors as enumSelectors } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumAsSelectOptions } from 'ducks/enums';
 import MultipleValueTextInput from 'components/Input/MultipleValueTextInput';
 import TextInput from 'components/TextInput';
 import TextArea from 'components/TextArea';
@@ -68,14 +68,15 @@ export default function CustomOIDForm({ oidId, onCancel, onSuccess }: CustomOIDF
 
     const oidCategoryEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.OidCategory));
 
-    const [categoryList, setCategoryList] = useState<{ label: string; value: OidCategory }[]>([]);
+    const [categoryList, setCategoryList] = useState<{ label: string; value: OidCategory; description?: string }[]>([]);
 
     useEffect(() => {
         if (oidCategoryEnum)
             setCategoryList(
-                Object.values(oidCategoryEnum)?.map(({ code, label }) => ({
+                getEnumAsSelectOptions(oidCategoryEnum).map(({ value, label, description }) => ({
                     label,
-                    value: code as OidCategory,
+                    value: value as OidCategory,
+                    description,
                 })),
             );
     }, [oidCategoryEnum]);
@@ -219,10 +220,12 @@ export default function CustomOIDForm({ oidId, onCancel, onSuccess }: CustomOIDF
                                         onChange={(value) => {
                                             field.onChange(value);
                                         }}
-                                        options={categoryList.map((c) => ({ value: c.value, label: c.label }))}
+                                        options={categoryList.map((c) => ({ value: c.value, label: c.label, description: c.description }))}
                                         placeholder="Select Category"
                                         isDisabled={editMode}
                                         placement="bottom"
+                                        showOptionDescriptionInDropdown
+                                        showSelectedDescriptionAsHelp
                                     />
                                     {fieldState.error && fieldState.isTouched && (
                                         <p className="mt-1 text-sm text-red-600">

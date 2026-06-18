@@ -1,5 +1,5 @@
 import Widget from 'components/Widget';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { useCallback, useEffect, useMemo } from 'react';
 import { useAreDefaultValuesSame, useRunOnSuccessfulFinish } from 'utils/common-hooks';
@@ -186,8 +186,9 @@ const TriggerForm = ({ onCancel, onSuccess }: TriggerFormProps = {}) => {
         return getResourceEventNameOptions(watchedResource as Resource).map((opt) => ({
             value: opt.value.event,
             label: opt.label,
+            description: getEnumDescription(resourceEventEnum, opt.value.event),
         }));
-    }, [watchedResource, getResourceEventNameOptions]);
+    }, [watchedResource, getResourceEventNameOptions, resourceEventEnum]);
 
     return (
         <FormProvider {...methods}>
@@ -313,6 +314,8 @@ const TriggerForm = ({ onCancel, onSuccess }: TriggerFormProps = {}) => {
                                                 options={getEventOptions}
                                                 placeholder="Select Event"
                                                 placement="bottom"
+                                                showOptionDescriptionInDropdown
+                                                showSelectedDescriptionAsHelp
                                             />
                                             {fieldState.error && fieldState.isTouched && (
                                                 <p className="mt-1 text-sm text-red-600">

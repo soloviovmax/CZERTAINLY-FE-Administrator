@@ -1,7 +1,7 @@
 import ProgressButton from 'components/ProgressButton';
 import Widget from 'components/Widget';
 
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { actions, selectors } from 'ducks/globalMetadata';
 import { useCallback, useEffect, useMemo } from 'react';
 import { Controller, FormProvider, useForm } from 'react-hook-form';
@@ -97,6 +97,7 @@ export default function GlobalMetadataForm({ globalMetadataId, onCancel, onSucce
             Object.values(AttributeContentType).map((contentType) => ({
                 value: contentType,
                 label: getEnumLabel(attributeContentTypeEnum, contentType),
+                description: getEnumDescription(attributeContentTypeEnum, contentType),
             })),
         [attributeContentTypeEnum],
     );
@@ -177,6 +178,8 @@ export default function GlobalMetadataForm({ globalMetadataId, onCancel, onSucce
                                             placeholder="Content Type"
                                             disabled={editMode}
                                             placement="bottom"
+                                            showOptionDescriptionInDropdown
+                                            showSelectedDescriptionAsHelp
                                         />
                                         {fieldState.error && fieldState.isTouched && (
                                             <p className="mt-1 text-sm text-red-600">

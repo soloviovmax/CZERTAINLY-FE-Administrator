@@ -22,6 +22,7 @@ import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
 import { inventoryStatus } from 'utils/connector';
 import { featureFlags } from 'utils/feature-flags';
 
+import { EnumValueDescription } from 'components/EnumDescription';
 import CustomAttributeWidget from '../../../Attributes/CustomAttributeWidget';
 import ConnectorForm from '../form';
 import FunctionGroupDetailsV1 from './FunctionGroupDetailsV1';
@@ -261,7 +262,13 @@ export default function ConnectorDetail() {
             },
             {
                 id: 'authType',
-                columns: ['Auth Type', getEnumLabel(authTypeEnum, connector.authType)],
+                columns: [
+                    'Auth Type',
+                    <span key="authType" className="inline-flex items-center gap-1">
+                        {getEnumLabel(authTypeEnum, connector.authType)}
+                        <EnumValueDescription platformEnum={PlatformEnum.AuthType} value={connector.authType} />
+                    </span>,
+                ],
             },
             {
                 id: 'status',

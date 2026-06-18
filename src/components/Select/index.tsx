@@ -59,6 +59,7 @@ interface BaseProps {
     dataTestId?: string;
     colorizeVersionLabel?: boolean;
     showOptionDescriptionInDropdown?: boolean;
+    showSelectedDescriptionAsHelp?: boolean;
 }
 
 interface SingleSelectProps extends BaseProps {
@@ -169,6 +170,7 @@ function Select({
     dataTestId,
     colorizeVersionLabel = false,
     showOptionDescriptionInDropdown = false,
+    showSelectedDescriptionAsHelp = false,
 }: Props) {
     const searchInputRef = useRef<HTMLInputElement>(null);
     const triggerRef = useRef<HTMLButtonElement>(null);
@@ -204,6 +206,11 @@ function Select({
     }, [isMulti, value]);
 
     const multiValues = isMulti ? (value as MultiSelectProps['value']) : undefined;
+
+    const selectedDescription = useMemo(() => {
+        if (isMulti || !showSelectedDescriptionAsHelp || singleRawValue == null || singleRawValue === '') return undefined;
+        return optionsProp.find((opt) => valuesMatch(opt.value, singleRawValue))?.description;
+    }, [isMulti, showSelectedDescriptionAsHelp, singleRawValue, optionsProp]);
 
     const hasValue = isMulti
         ? Array.isArray(multiValues) && multiValues.length > 0
@@ -386,7 +393,7 @@ function Select({
             return (
                 <span className={OPTION_LABEL_WRAP_CLASSES} title={`${opt.label} ${opt.description}`}>
                     <span className="block leading-5">{opt.label}</span>
-                    <span className="block text-xs text-gray-500 leading-4">{opt.description}</span>
+                    <span className="block truncate text-xs text-gray-500 leading-4 dark:text-neutral-500">{opt.description}</span>
                 </span>
             );
         }
@@ -589,6 +596,14 @@ function Select({
                 )}
             </div>
             {error && <div className="text-red-500 mt-1">{error}</div>}
+            {selectedDescription && (
+                <div
+                    className="mt-2 rounded-r border-l-4 border-blue-300 bg-blue-50/50 px-3 py-2 text-sm text-[var(--dark-gray-color)] dark:border-blue-400 dark:bg-neutral-800/50 dark:text-neutral-300"
+                    data-testid={dataTestId ? `${dataTestId}-selected-description` : `select-${id}-selected-description`}
+                >
+                    {selectedDescription}
+                </div>
+            )}
         </div>
     );
 }

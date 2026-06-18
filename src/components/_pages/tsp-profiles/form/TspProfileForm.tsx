@@ -13,7 +13,7 @@ import TextInput from 'components/TextInput';
 import Widget from 'components/Widget';
 
 import { actions as customAttributesActions, selectors as customAttributesSelectors } from 'ducks/customAttributes';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { actions as signingProfileActions, selectors as signingProfileSelectors } from 'ducks/signing-profiles';
 import { actions as tspActions, selectors as tspSelectors } from 'ducks/tsp-profiles';
 import { actions as vaultProfileActions, selectors as vaultProfileSelectors } from 'ducks/vault-profiles';
@@ -98,6 +98,7 @@ export const TspProfileForm = () => {
             Object.values(TspAuthenticationMethod).map((method) => ({
                 value: method,
                 label: getEnumLabel(authenticationMethodEnum, method),
+                description: getEnumDescription(authenticationMethodEnum, method),
             })),
         [authenticationMethodEnum],
     );
@@ -301,6 +302,7 @@ export const TspProfileForm = () => {
                                         options={authenticationMethodOptions}
                                         placeholder="Select authentication methods"
                                         placement="bottom"
+                                        showOptionDescriptionInDropdown
                                         error={fieldState.error?.message}
                                     />
                                 )}

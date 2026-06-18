@@ -31,6 +31,7 @@ const CopyUrlCell = ({ children: url, label }: Props) => {
                 color="primary"
                 title={`Copy ${label}`}
                 aria-label={`Copy ${label}`}
+                className="!p-1"
                 onClick={(e) => {
                     e.stopPropagation();
                     copyToClipboard(url, `${label} was copied to clipboard`, `Failed to copy ${label} to clipboard`);

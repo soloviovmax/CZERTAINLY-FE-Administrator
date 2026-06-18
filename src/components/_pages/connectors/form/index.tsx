@@ -3,7 +3,7 @@ import Widget from 'components/Widget';
 import cn from 'classnames';
 
 import { actions as connectorActions, selectors as connectorSelectors } from 'ducks/connectors';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -63,19 +63,22 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
 
     const editMode = useMemo(() => !!id, [id]);
 
-    const optionsForAuth: { label: string; value: AuthType }[] = useMemo(
+    const optionsForAuth: { label: string; value: AuthType; description?: string }[] = useMemo(
         () => [
             {
                 label: getEnumLabel(authTypeEnum, AuthType.None),
                 value: AuthType.None,
+                description: getEnumDescription(authTypeEnum, AuthType.None),
             },
             {
                 label: getEnumLabel(authTypeEnum, AuthType.Basic),
                 value: AuthType.Basic,
+                description: getEnumDescription(authTypeEnum, AuthType.Basic),
             },
             {
                 label: getEnumLabel(authTypeEnum, AuthType.Certificate),
                 value: AuthType.Certificate,
+                description: getEnumDescription(authTypeEnum, AuthType.Certificate),
             },
         ],
         [authTypeEnum],
@@ -361,9 +364,15 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                                         onChange={(value) => {
                                             field.onChange(value);
                                         }}
-                                        options={optionsForAuth.map((opt) => ({ value: opt.value, label: opt.label }))}
+                                        options={optionsForAuth.map((opt) => ({
+                                            value: opt.value,
+                                            label: opt.label,
+                                            description: opt.description,
+                                        }))}
                                         placeholder="Select Auth Type"
                                         placement="bottom"
+                                        showOptionDescriptionInDropdown
+                                        showSelectedDescriptionAsHelp
                                     />
                                     {fieldState.error && fieldState.isTouched && (
                                         <p className="mt-1 text-sm text-red-600">

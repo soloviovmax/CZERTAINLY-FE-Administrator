@@ -10,6 +10,7 @@ import { LockWidgetNameEnum } from 'types/user-interface';
 import { actions, selectors } from 'ducks/compliance-profiles';
 import ProfileAssociationsDialog from 'components/_pages/compliance-profiles/detail/ProfileAssociations/ProfileAssociationsDialog';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 
 type Props = Readonly<{
     profile: ComplianceProfileDtoV2 | undefined;
@@ -43,7 +44,15 @@ export default function ProfileAssociations({ profile }: Props) {
                 id: 'raProfileName',
                 content: 'Name',
             },
-            { id: 'resource', content: 'Resource' },
+            {
+                id: 'resource',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Resource
+                        <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                    </span>
+                ),
+            },
             { id: 'object', content: 'Object' },
             {
                 id: 'action',

@@ -7,6 +7,7 @@ import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 
 import { actions, selectors } from 'ducks/discoveries';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { PlatformEnum, Resource } from 'types/openapi';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -185,7 +186,12 @@ export default function DiscoveryDetail() {
         },
         {
             id: 'triggerType',
-            content: 'Trigger Type',
+            content: (
+                <span className="inline-flex items-center gap-1">
+                    Trigger Type
+                    <EnumColumnDescription platformEnum={PlatformEnum.TriggerType} title="Trigger Type" />
+                </span>
+            ),
         },
         {
             id: 'ignoreTrigger',
@@ -193,11 +199,21 @@ export default function DiscoveryDetail() {
         },
         {
             id: 'eventName',
-            content: 'Event Name',
+            content: (
+                <span className="inline-flex items-center gap-1">
+                    Event Name
+                    <EnumColumnDescription platformEnum={PlatformEnum.ResourceEvent} title="Event Name" />
+                </span>
+            ),
         },
         {
             id: 'resource',
-            content: 'Resource',
+            content: (
+                <span className="inline-flex items-center gap-1">
+                    Resource
+                    <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                </span>
+            ),
         },
         {
             id: 'description',

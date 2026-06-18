@@ -3,6 +3,7 @@ import { SendNotificationExecutionItems } from 'components/_pages/executions/Sen
 import ConditionAndSetFieldExecutionItemsViewer from 'components/ConditionAndSetFieldExecutionItemsViewer';
 import CustomTable, { type TableDataRow } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Breadcrumb from 'components/Breadcrumb';
 import Widget from 'components/Widget';
 import EditNameDescriptionDialog from 'components/EditNameDescriptionDialog';
@@ -97,7 +98,14 @@ const ExecutionDetails = () => {
                       },
                       {
                           id: 'type',
-                          columns: ['Type', getEnumLabel(executionTypeEnum, executionDetails.type), ''],
+                          columns: [
+                              'Type',
+                              <span key="type" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(executionTypeEnum, executionDetails.type)}
+                                  <EnumValueDescription platformEnum={PlatformEnum.ExecutionType} value={executionDetails.type} />
+                              </span>,
+                              '',
+                          ],
                       },
                       {
                           id: 'resource',

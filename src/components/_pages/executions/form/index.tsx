@@ -12,7 +12,7 @@ import Breadcrumb from 'components/Breadcrumb';
 import ConditionFormFilter from 'components/ConditionFormFilter';
 import ProgressButton from 'components/ProgressButton';
 import TextInput from 'components/TextInput';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import { ExecutionType, PlatformEnum, Resource } from 'types/openapi';
 import type { ExecutionItemRequestModel } from 'types/rules';
 import { useAreDefaultValuesSame } from 'utils/common-hooks';
@@ -42,8 +42,16 @@ const ExecutionForm = () => {
 
     const executionTypeOptions = useMemo(() => {
         return [
-            { value: ExecutionType.SetField, label: getEnumLabel(executionTypeEnum, ExecutionType.SetField) },
-            { value: ExecutionType.SendNotification, label: getEnumLabel(executionTypeEnum, ExecutionType.SendNotification) },
+            {
+                value: ExecutionType.SetField,
+                label: getEnumLabel(executionTypeEnum, ExecutionType.SetField),
+                description: getEnumDescription(executionTypeEnum, ExecutionType.SetField),
+            },
+            {
+                value: ExecutionType.SendNotification,
+                label: getEnumLabel(executionTypeEnum, ExecutionType.SendNotification),
+                description: getEnumDescription(executionTypeEnum, ExecutionType.SendNotification),
+            },
         ];
     }, [executionTypeEnum]);
 
@@ -192,6 +200,8 @@ const ExecutionForm = () => {
                                             placeholder="Select Execution Type"
                                             isClearable
                                             placement="bottom"
+                                            showOptionDescriptionInDropdown
+                                            showSelectedDescriptionAsHelp
                                         />
                                         {fieldState.error && fieldState.isTouched && (
                                             <p className="mt-1 text-sm text-red-600">

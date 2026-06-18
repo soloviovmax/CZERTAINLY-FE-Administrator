@@ -7,6 +7,7 @@ import Container from 'components/Container';
 interface DropDownOptions {
     label: string;
     value: string | number;
+    description?: string;
 }
 
 interface DropDownOptionsData {
@@ -14,6 +15,8 @@ interface DropDownOptionsData {
     formValue: string;
     options: DropDownOptions[];
     placement?: 'top' | 'bottom';
+    showOptionDescriptionInDropdown?: boolean;
+    showSelectedDescriptionAsHelp?: boolean;
 }
 
 interface Props {
@@ -54,6 +57,8 @@ const DropDownListForm = ({ onSubmit, onClose, dropDownOptionsList, isBusy = fal
                                     value={field.value}
                                     onChange={field.onChange}
                                     placement={dropDownOptionsListItem.placement}
+                                    showOptionDescriptionInDropdown={dropDownOptionsListItem.showOptionDescriptionInDropdown}
+                                    showSelectedDescriptionAsHelp={dropDownOptionsListItem.showSelectedDescriptionAsHelp}
                                 />
                             );
                         }}

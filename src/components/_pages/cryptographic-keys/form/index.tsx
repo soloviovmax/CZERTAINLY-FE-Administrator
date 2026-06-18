@@ -24,7 +24,7 @@ import { actions as userInterfaceActions } from '../../../../ducks/user-interfac
 
 import { collectFormAttributes } from 'utils/attributes/attributes';
 
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { validateAlphaNumericWithSpecialChars, validateLength, validateRequired } from 'utils/validators';
 import { buildValidationRules, getFieldErrorMessage } from 'utils/validators-helper';
 import { actions as customAttributesActions, selectors as customAttributesSelectors } from '../../../../ducks/customAttributes';
@@ -281,11 +281,12 @@ export default function CryptographicKeyForm({ keyId, onSuccess, onCancel, usesG
     useRunOnSuccessfulFinish(isUpdating, updateCryptographicKeySucceeded, handleUpdateSuccess);
 
     const optionsForType = () => {
-        const options: { value: string; label: string }[] = [];
+        const options: { value: string; label: string; description?: string }[] = [];
         for (const key in KeyRequestType) {
             options.push({
                 value: KeyRequestType[key as keyof typeof KeyRequestType],
                 label: getEnumLabel(keyRequestTypeEnum, KeyRequestType[key as keyof typeof KeyRequestType]),
+                description: getEnumDescription(keyRequestTypeEnum, KeyRequestType[key as keyof typeof KeyRequestType]),
             });
         }
         return options;
@@ -546,6 +547,8 @@ export default function CryptographicKeyForm({ keyId, onSuccess, onCancel, usesG
                                             options={optionsForType()}
                                             placeholder="Select to change Key Type"
                                             placement="bottom"
+                                            showOptionDescriptionInDropdown
+                                            showSelectedDescriptionAsHelp
                                         />
                                     </div>
                                     {fieldState.error && fieldState.isTouched && (

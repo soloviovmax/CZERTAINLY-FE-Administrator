@@ -1,4 +1,5 @@
-import Badge from 'components/Badge';
+import Badge, { type BadgeColor } from 'components/Badge';
+import Tooltip from 'components/Tooltip';
 import { Circle } from 'lucide-react';
 import { CertificateEventHistoryDtoStatusEnum, type KeyEventHistoryDtoStatusEnum } from 'types/openapi';
 
@@ -8,16 +9,25 @@ interface Props {
 }
 
 function KeyStatus({ status, asIcon = false }: Props) {
-    const statusMap: { [key in KeyEventHistoryDtoStatusEnum]: { color: string; text: string } } = {
+    const statusMap: { [key in KeyEventHistoryDtoStatusEnum]: { color: BadgeColor; text: string } } = {
         [CertificateEventHistoryDtoStatusEnum.Success]: { color: 'success', text: 'Success' },
         [CertificateEventHistoryDtoStatusEnum.Failed]: { color: 'danger', text: 'Failed' },
     };
 
-    const _default = { color: 'secondary', text: 'Unknown' };
+    const _default: { color: BadgeColor; text: string } = { color: 'secondary', text: 'Unknown' };
 
     const { color, text } = status ? statusMap[status] || _default : _default;
 
-    return asIcon ? <Circle size={12} title={text} className={`text-${color}`} fill="currentColor" /> : <Badge color={color}>{text}</Badge>;
+    return asIcon ? (
+        <Tooltip content={text}>
+            <span className={`text-${color}`}>
+                <Circle aria-hidden size={12} fill="currentColor" />
+                <span className="sr-only">{text}</span>
+            </span>
+        </Tooltip>
+    ) : (
+        <Badge color={color}>{text}</Badge>
+    );
 }
 
 export default KeyStatus;

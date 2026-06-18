@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Select from 'components/Select';
 
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Badge from 'components/Badge';
 import type { CryptographicKeyHistoryModel, CryptographicKeyItemDetailResponseModel } from 'types/cryptographic-keys';
 import { KeyCompromiseReason, KeyState, KeyUsage, PlatformEnum } from 'types/openapi';
@@ -292,20 +293,40 @@ export default function CryptographicKeyItem({ keyUuid, tokenInstanceUuid, token
                       },
                       {
                           id: 'Type',
-                          columns: ['Type', getEnumLabel(keyTypeEnum, keyItem.type)],
+                          columns: [
+                              'Type',
+                              <span key="type" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(keyTypeEnum, keyItem.type)}
+                                  <EnumValueDescription platformEnum={PlatformEnum.KeyType} value={keyItem.type} />
+                              </span>,
+                          ],
                       },
                       {
                           id: 'keyAlgorithm',
-                          columns: ['Key Algorithm', keyItem.keyAlgorithm],
+                          columns: [
+                              'Key Algorithm',
+                              <span key="keyAlgorithm" className="inline-flex items-center gap-1">
+                                  {keyItem.keyAlgorithm}
+                                  <EnumValueDescription platformEnum={PlatformEnum.KeyAlgorithm} value={keyItem.keyAlgorithm} />
+                              </span>,
+                          ],
                       },
                       {
                           id: 'format',
                           columns: [
                               'Key Format',
                               <div key="format-actions" className="flex items-center gap-2">
-                                  {keyItem.format}
-                                  <Button variant="transparent" onClick={() => setDisplayKeyData(true)} title="Show Additional Information">
-                                      <Info size={16} />
+                                  <span className="inline-flex items-center gap-1">
+                                      {keyItem.format}
+                                      <EnumValueDescription platformEnum={PlatformEnum.KeyFormat} value={keyItem.format} />
+                                  </span>
+                                  <Button
+                                      variant="transparent"
+                                      onClick={() => setDisplayKeyData(true)}
+                                      title="Show Key Data"
+                                      className="!px-2 !py-0 text-sm text-[var(--primary-blue-color)]"
+                                  >
+                                      Key data
                                   </Button>
                               </div>,
                           ],
@@ -316,9 +337,10 @@ export default function CryptographicKeyItem({ keyUuid, tokenInstanceUuid, token
                               'Key Usages',
                               <Container key="usages" className="flex-row" gap={1}>
                                   {keyItem.usage?.map((usage) => (
-                                      <Badge key={usage} color="secondary">
-                                          {usage}
-                                      </Badge>
+                                      <span key={usage} className="inline-flex items-center gap-1">
+                                          <Badge color="secondary">{usage}</Badge>
+                                          <EnumValueDescription platformEnum={PlatformEnum.KeyUsage} value={usage} />
+                                      </span>
                                   )) ?? 'None'}
                               </Container>,
                           ],

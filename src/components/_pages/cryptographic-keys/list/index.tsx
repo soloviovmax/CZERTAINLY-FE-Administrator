@@ -21,6 +21,7 @@ import KeyStateCircle from '../KeyStateCircle';
 import KeyStatusCircle from '../KeyStatusCircle';
 import KeyUsageSelect from '../KeyUsageSelect';
 import Badge from 'components/Badge';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import CryptographicKeyForm from '../form';
 
 function CryptographicKeyList() {
@@ -152,13 +153,23 @@ function CryptographicKeyList() {
             },
             {
                 id: 'type',
-                content: 'Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.KeyType} title="Type" />
+                    </span>
+                ),
                 width: '15%',
             },
             {
                 id: 'algorithm',
                 align: 'center',
-                content: 'Algorithm',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Algorithm
+                        <EnumColumnDescription platformEnum={PlatformEnum.KeyAlgorithm} title="Algorithm" />
+                    </span>
+                ),
                 width: '15%',
             },
             {
@@ -170,7 +181,12 @@ function CryptographicKeyList() {
             {
                 id: 'format',
                 align: 'center',
-                content: 'Format',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Format
+                        <EnumColumnDescription platformEnum={PlatformEnum.KeyFormat} title="Format" />
+                    </span>
+                ),
                 width: '15%',
             },
             {

@@ -1,4 +1,5 @@
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { type ReactNode, useCallback, useMemo, useState } from 'react';
 import * as ReactHookForm from 'react-hook-form';
@@ -124,7 +125,12 @@ export default function AttributeViewer({
                 },
                 {
                     id: 'contentType',
-                    content: 'Content Type',
+                    content: (
+                        <span className="inline-flex items-center gap-1">
+                            Content Type
+                            <EnumColumnDescription platformEnum={PlatformEnum.AttributeContentType} title="Content Type" />
+                        </span>
+                    ),
                     sortable: true,
                     width: '20%',
                 },
