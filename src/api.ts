@@ -15,6 +15,7 @@ import {
     ComplianceManagementV2Api,
     ComplianceProfileManagementV2Api,
     Configuration,
+    ConnectorAuthenticationApi,
     ConnectorManagementApi,
     ConnectorManagementV2Api,
     CredentialManagementApi,
@@ -82,6 +83,7 @@ export interface ApiClients {
     credentials: CredentialManagementApi;
     connectors: ConnectorManagementApi;
     connectorsV2: ConnectorManagementV2Api;
+    connectorAuthentication: ConnectorAuthenticationApi;
     proxies: ProxyManagementApi;
     callback: CallbackApi;
     statisticsDashboard: StatisticsDashboardApi;
@@ -154,6 +156,7 @@ const factories: Partial<{ [K in ApiClientKey]: () => ApiClients[K] }> = {
     notificationProfiles: () => new NotificationProfileInventoryApi(configuration),
     connectors: () => new ConnectorManagementApi(configuration),
     connectorsV2: () => new ConnectorManagementV2Api(configuration),
+    connectorAuthentication: () => new ConnectorAuthenticationApi(configuration),
     proxies: () => new ProxyManagementApi(configuration),
     callback: () => new CallbackApi(configuration),
     statisticsDashboard: () => new StatisticsDashboardApi(configuration),

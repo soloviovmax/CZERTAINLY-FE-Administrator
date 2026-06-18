@@ -13,10 +13,17 @@ import Select from 'components/Select';
 import Button from 'components/Button';
 import Container from 'components/Container';
 import TextInput from 'components/TextInput';
+import Label from 'components/Label';
+import type { AttributeRequestModel } from 'types/attributes';
 import type { ConnectorResponseModel } from 'types/connectors';
 import { AuthType, ConnectorStatus, ConnectorVersion, PlatformEnum, Resource } from 'types/openapi';
 
-import { collectFormAttributes } from 'utils/attributes/attributes';
+import {
+    buildAttributeRequestModel,
+    collectFormAttributes,
+    getAttributeFormValue,
+    resolveAttributeVersion,
+} from 'utils/attributes/attributes';
 import { featureFlags } from 'utils/feature-flags';
 
 import { validateAlphaNumericWithSpecialChars, validateRequired, validateRoutelessUrl } from 'utils/validators';
@@ -24,7 +31,6 @@ import { buildValidationRules, getFieldErrorMessage } from 'utils/validators-hel
 import { actions as customAttributesActions, selectors as customAttributesSelectors } from '../../../../ducks/customAttributes';
 import AttributeEditor from '../../../Attributes/AttributeEditor';
 import TabLayout from '../../../Layout/TabLayout';
-import Label from 'components/Label';
 import ConnectionDetailsV1 from './ConnectionDetailsV1';
 import ConnectionDetailsV2 from './ConnectionDetailsV2';
 import Switch from 'components/Switch';
@@ -79,12 +85,14 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
     );
 
     const resourceCustomAttributes = useSelector(customAttributesSelectors.resourceCustomAttributes);
+    const authAttributeDescriptors = useSelector(connectorSelectors.connectorAuthAttributes);
 
     const isFetching = useSelector(connectorSelectors.isFetchingDetail);
     const isCreating = useSelector(connectorSelectors.isCreating);
     const isUpdating = useSelector(connectorSelectors.isUpdating);
     const isConnecting = useSelector(connectorSelectors.isConnecting);
     const isReconnecting = useSelector(connectorSelectors.isReconnecting);
+    const isFetchingAuthAttributes = useSelector(connectorSelectors.isFetchingAuthAttributes);
 
     const connectorSelector = useSelector(connectorSelectors.connector);
     const connectionDetails = useSelector(connectorSelectors.connectorConnectInfo);
@@ -131,6 +139,25 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
         }
     }, [id, connectorUuid, connectorSelector, dispatch]);
 
+    const buildAuthAttributes = useCallback(
+        (values: FormValues): AttributeRequestModel[] => {
+            if (!authAttributeDescriptors?.length) return [];
+            const formValues = values as Record<string, unknown>;
+            return authAttributeDescriptors
+                .filter((descriptor) => {
+                    const value = formValues[descriptor.name];
+                    return typeof value === 'string' && value !== '';
+                })
+                .map((descriptor) => {
+                    const contentItem = getAttributeFormValue(descriptor.contentType, descriptor.content, formValues[descriptor.name]);
+                    const contentArray = Array.isArray(contentItem) ? contentItem : [contentItem];
+                    const version = resolveAttributeVersion(descriptor);
+                    return buildAttributeRequestModel(descriptor.name, contentArray, descriptor, version);
+                });
+        },
+        [authAttributeDescriptors],
+    );
+
     const onSubmit = useCallback(
         (values: FormValues) => {
             if (editMode) {
@@ -141,6 +168,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         connectorUpdateRequest: {
                             url: values.url,
                             authType: values.authenticationType as AuthType,
+                            authAttributes: buildAuthAttributes(values),
                             customAttributes: collectFormAttributes('customConnector', resourceCustomAttributes, values),
                         },
                     } as any),
@@ -151,13 +179,14 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         name: values.name,
                         url: values.url,
                         authType: values.authenticationType as AuthType,
+                        authAttributes: buildAuthAttributes(values),
                         customAttributes: collectFormAttributes('customConnector', resourceCustomAttributes, values),
                         version: values.version,
                     } as any),
                 );
             }
         },
-        [editMode, connector, dispatch, resourceCustomAttributes],
+        [editMode, connector, dispatch, resourceCustomAttributes, buildAuthAttributes],
     );
 
     const handleCancel = useCallback(() => {
@@ -166,6 +195,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
 
     const onConnectClick = useCallback(
         (values: FormValues) => {
+            const authAttributes = buildAuthAttributes(values);
             if (editMode) {
                 if (!connector?.uuid) return;
                 dispatch(
@@ -173,13 +203,20 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         uuid: connector.uuid,
                         url: values.url,
                         authType: values.authenticationType as AuthType,
+                        authAttributes,
                     }),
                 );
             } else {
-                dispatch(connectorActions.connectConnector({ url: values.url, authType: values.authenticationType as AuthType }));
+                dispatch(
+                    connectorActions.connectConnector({
+                        url: values.url,
+                        authType: values.authenticationType as AuthType,
+                        authAttributes,
+                    }),
+                );
             }
         },
-        [connector, dispatch, editMode],
+        [connector, dispatch, editMode, buildAuthAttributes],
     );
 
     const defaultValues: FormValues = useMemo(
@@ -213,6 +250,14 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
         control,
         name: 'authenticationType',
     });
+
+    useEffect(() => {
+        if (watchedAuthType === AuthType.Basic || watchedAuthType === AuthType.Certificate) {
+            dispatch(connectorActions.getConnectorAuthAttributesDescriptors({ authType: watchedAuthType }));
+        } else {
+            dispatch(connectorActions.clearConnectorAuthAttributesDescriptors());
+        }
+    }, [watchedAuthType, dispatch]);
 
     const watchedUseProxy = useWatch({
         control,
@@ -445,7 +490,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         <Button
                             variant="outline"
                             onClick={() => onConnectClick(getValues())}
-                            disabled={isSubmitting || isConnecting || isReconnecting || !watchedUrl || !isValid}
+                            disabled={isSubmitting || isConnecting || isReconnecting || isFetchingAuthAttributes || !watchedUrl || !isValid}
                             type="button"
                         >
                             {isConnecting || isReconnecting ? connectProgressTitle : connectTitle}
@@ -554,7 +599,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                                 title={submitTitle}
                                 inProgressTitle={inProgressTitle}
                                 inProgress={isUpdating || isCreating}
-                                disabled={!isDirty || (!editMode && !!selectedVersionErrorMessage)}
+                                disabled={!isDirty || isFetchingAuthAttributes || (!editMode && !!selectedVersionErrorMessage)}
                                 type="submit"
                             />
                         </Container>
