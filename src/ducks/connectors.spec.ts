@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import reducer, { actions, initialState, selectors } from './connectors';
-import { ConnectorStatus } from 'types/openapi';
+import { AuthType, ConnectorStatus } from 'types/openapi';
 
 describe('connectors slice', () => {
     test('returns initial state for unknown action', () => {
@@ -460,6 +460,8 @@ describe('connectors selectors', () => {
             connector: { uuid: 'c-1' } as any,
             connectorHealth: { status: 'Up' } as any,
             connectorAttributes: { group: 'g' } as any,
+            connectorAuthAttributes: [{ name: 'username' }] as any,
+            isFetchingAuthAttributes: true,
             connectorConnectionDetails: [{ code: 'FG' }] as any,
             connectInfo: [{ foo: 'bar' }],
             connectorInfoV2: { info: true },
@@ -493,6 +495,8 @@ describe('connectors selectors', () => {
         expect(selectors.connector(state)).toEqual(connectorsState.connector);
         expect(selectors.connectorHealth(state)).toEqual(connectorsState.connectorHealth);
         expect(selectors.connectorAttributes(state)).toEqual(connectorsState.connectorAttributes);
+        expect(selectors.connectorAuthAttributes(state)).toEqual(connectorsState.connectorAuthAttributes);
+        expect(selectors.isFetchingAuthAttributes(state)).toBe(connectorsState.isFetchingAuthAttributes);
         expect(selectors.connectorConnectionDetails(state)).toEqual(connectorsState.connectorConnectionDetails);
         expect(selectors.connectorConnectInfo(state)).toEqual(connectorsState.connectInfo);
         expect(selectors.connectorInfoV2(state)).toEqual(connectorsState.connectorInfoV2);
@@ -518,5 +522,30 @@ describe('connectors selectors', () => {
         expect(selectors.isAuthorizing(state)).toBe(true);
         expect(selectors.isBulkAuthorizing(state)).toBe(true);
         expect(selectors.isRunningCallback(state)).toEqual({ cb: true });
+    });
+
+    test('getConnectorAuthAttributesDescriptors / success / failure update auth attribute state', () => {
+        let next = reducer(
+            { ...initialState, connectorAuthAttributes: [{ name: 'stale' }] as any },
+            actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.Basic }),
+        );
+        expect(next.isFetchingAuthAttributes).toBe(true);
+        expect(next.connectorAuthAttributes).toBeUndefined();
+
+        const attributes = [{ name: 'username' }, { name: 'password' }] as any;
+        next = reducer(next, actions.getConnectorAuthAttributesDescriptorsSuccess({ attributes }));
+        expect(next.isFetchingAuthAttributes).toBe(false);
+        expect(next.connectorAuthAttributes).toEqual(attributes);
+
+        next = reducer({ ...next, isFetchingAuthAttributes: true }, actions.getConnectorAuthAttributesDescriptorsFailure());
+        expect(next.isFetchingAuthAttributes).toBe(false);
+    });
+
+    test('clearConnectorAuthAttributesDescriptors clears descriptors', () => {
+        const next = reducer(
+            { ...initialState, connectorAuthAttributes: [{ name: 'username' }] as any },
+            actions.clearConnectorAuthAttributesDescriptors(),
+        );
+        expect(next.connectorAuthAttributes).toBeUndefined();
     });
 });
