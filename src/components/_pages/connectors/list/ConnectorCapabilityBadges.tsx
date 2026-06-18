@@ -24,14 +24,14 @@ export default function ConnectorCapabilityBadges({ labels, color, testIdPrefix,
     );
 
     if (!hasOverflow) {
-        return <div className="flex flex-wrap items-center gap-1">{visible.map(renderBadge)}</div>;
+        return <div className="flex flex-wrap items-center gap-1">{visible.map((label, index) => renderBadge(label, index))}</div>;
     }
 
     const lastIndex = visible.length - 1;
 
     return (
         <div className="flex flex-wrap items-center gap-1">
-            {visible.slice(0, lastIndex).map(renderBadge)}
+            {visible.slice(0, lastIndex).map((label, index) => renderBadge(label, index))}
             {/* Keep the last badge and the +N trigger on the same line so +N never wraps alone */}
             <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 {renderBadge(visible[lastIndex], lastIndex)}
