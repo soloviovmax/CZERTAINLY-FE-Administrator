@@ -536,6 +536,8 @@ models/SigningRecordListDto.ts
 models/SigningRecordPersistenceMode.ts
 models/SigningRecordPolicyDto.ts
 models/SigningRecordPolicyRequestDto.ts
+models/SigningRecordStatisticsDto.ts
+models/SigningRecordStatisticsPeriod.ts
 models/SigningScheme.ts
 models/SigningSchemeInterface.ts
 models/SigningSchemeRequestInterface.ts
