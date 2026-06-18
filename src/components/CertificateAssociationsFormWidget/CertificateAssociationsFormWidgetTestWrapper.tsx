@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useMemo, useState } from 'react';
 import usersReducer, { actions as usersActions } from 'ducks/users';
@@ -62,17 +63,19 @@ export default function CertificateAssociationsFormWidgetTestWrapper({
 
     return (
         <Provider store={store}>
-            <FormProvider {...methods}>
-                <CertificateAssociationsFormWidget
-                    renderCustomAttributes={renderCustomAttributes}
-                    userOptions={userOptions}
-                    groupOptions={groupOptions}
-                    setUserOptions={setUserOptions}
-                    setGroupOptions={setGroupOptions}
-                />
-                <div data-testid="owner-value">{String(owner)}</div>
-                <div data-testid="groups-value">{JSON.stringify(selectedGroups)}</div>
-            </FormProvider>
+            <MemoryRouter>
+                <FormProvider {...methods}>
+                    <CertificateAssociationsFormWidget
+                        renderCustomAttributes={renderCustomAttributes}
+                        userOptions={userOptions}
+                        groupOptions={groupOptions}
+                        setUserOptions={setUserOptions}
+                        setGroupOptions={setGroupOptions}
+                    />
+                    <div data-testid="owner-value">{String(owner)}</div>
+                    <div data-testid="groups-value">{JSON.stringify(selectedGroups)}</div>
+                </FormProvider>
+            </MemoryRouter>
         </Provider>
     );
 }

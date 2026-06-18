@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router';
 import { of } from 'rxjs';
 import { createMockStore } from 'utils/test-helpers';
 import FilterWidgetRuleAction from './index';
@@ -95,17 +96,19 @@ export function FilterWidgetRuleActionTestWrapper({
 
     return (
         <Provider store={store}>
-            <FilterWidgetRuleAction
-                title={title}
-                entity={entity}
-                sourceEntity={sourceEntity}
-                getAvailableFiltersApi={getAvailableFiltersApi}
-                getSourceAvailableFiltersApi={getSourceAvailableFiltersApi}
-                onActionsUpdate={onActionsUpdate}
-                ExecutionsList={ExecutionsList}
-                disableBadgeRemove={disableBadgeRemove}
-                busyBadges={busyBadges}
-            />
+            <MemoryRouter>
+                <FilterWidgetRuleAction
+                    title={title}
+                    entity={entity}
+                    sourceEntity={sourceEntity}
+                    getAvailableFiltersApi={getAvailableFiltersApi}
+                    getSourceAvailableFiltersApi={getSourceAvailableFiltersApi}
+                    onActionsUpdate={onActionsUpdate}
+                    ExecutionsList={ExecutionsList}
+                    disableBadgeRemove={disableBadgeRemove}
+                    busyBadges={busyBadges}
+                />
+            </MemoryRouter>
         </Provider>
     );
 }
