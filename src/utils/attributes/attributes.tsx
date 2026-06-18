@@ -214,7 +214,7 @@ export const getCodeBlockLanguage = (
     return ProgrammingLanguageEnum.Javascript;
 };
 
-const resolveAttributeVersion = (descriptor: DataAttributeModel | CustomAttributeModel): AttributeVersion => {
+export const resolveAttributeVersion = (descriptor: DataAttributeModel | CustomAttributeModel): AttributeVersion => {
     const schemaVersion = (descriptor as any).schemaVersion;
     if (schemaVersion === AttributeVersion.V2 || schemaVersion === AttributeVersion.V3) {
         return schemaVersion;
@@ -241,7 +241,7 @@ const resolveFinalAttributeVersion = (
     return AttributeVersion.V2;
 };
 
-const buildAttributeRequestModel = (
+export const buildAttributeRequestModel = (
     attributeName: string,
     contentArray: any[],
     descriptor: DataAttributeModel | CustomAttributeModel,

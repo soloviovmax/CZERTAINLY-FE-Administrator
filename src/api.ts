@@ -15,6 +15,7 @@ import {
     ComplianceManagementV2Api,
     ComplianceProfileManagementV2Api,
     Configuration,
+    ConnectorAuthenticationApi,
     ConnectorManagementApi,
     ConnectorManagementV2Api,
     CredentialManagementApi,
@@ -54,6 +55,7 @@ import {
     TSPProfileManagementApi,
     TSPProfileBasicCredentialManagementApi,
     SigningProfileManagementApi,
+    SigningRecordManagementApi,
 } from 'types/openapi';
 // Deep import: the openapi barrel only re-exports TokenInstanceManagementApi because
 // both modules export overlapping request interfaces that would collide via `export *`.
@@ -82,6 +84,7 @@ export interface ApiClients {
     credentials: CredentialManagementApi;
     connectors: ConnectorManagementApi;
     connectorsV2: ConnectorManagementV2Api;
+    connectorAuthentication: ConnectorAuthenticationApi;
     proxies: ProxyManagementApi;
     callback: CallbackApi;
     statisticsDashboard: StatisticsDashboardApi;
@@ -129,6 +132,7 @@ export interface ApiClients {
     tspProfiles: TSPProfileManagementApi;
     tspProfileBasicCredentials: TSPProfileBasicCredentialManagementApi;
     signingProfiles: SigningProfileManagementApi;
+    signingRecords: SigningRecordManagementApi;
 }
 
 type ApiClientKey = keyof ApiClients;
@@ -154,6 +158,7 @@ const factories: Partial<{ [K in ApiClientKey]: () => ApiClients[K] }> = {
     notificationProfiles: () => new NotificationProfileInventoryApi(configuration),
     connectors: () => new ConnectorManagementApi(configuration),
     connectorsV2: () => new ConnectorManagementV2Api(configuration),
+    connectorAuthentication: () => new ConnectorAuthenticationApi(configuration),
     proxies: () => new ProxyManagementApi(configuration),
     callback: () => new CallbackApi(configuration),
     statisticsDashboard: () => new StatisticsDashboardApi(configuration),
@@ -189,6 +194,7 @@ const factories: Partial<{ [K in ApiClientKey]: () => ApiClients[K] }> = {
     tspProfiles: () => new TSPProfileManagementApi(configuration),
     tspProfileBasicCredentials: () => new TSPProfileBasicCredentialManagementApi(configuration),
     signingProfiles: () => new SigningProfileManagementApi(configuration),
+    signingRecords: () => new SigningRecordManagementApi(configuration),
 };
 
 const overrides: Partial<Record<ApiClientKey, unknown>> = Object.create(null);

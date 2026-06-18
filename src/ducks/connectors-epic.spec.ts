@@ -10,7 +10,7 @@ import { alertsSlice } from './alert-slice';
 import { actions as pagingActions } from './paging';
 import { EntityType } from './filters';
 import { LockWidgetNameEnum } from 'types/user-interface';
-import { ConnectorVersion } from 'types/openapi';
+import { AuthType, ConnectorVersion } from 'types/openapi';
 
 vi.mock('./alerts', () => ({
     actions: {
@@ -42,6 +42,10 @@ type EpicDeps = {
             getAttributes: (args: any) => any;
             getAttributesAll: (args: any) => any;
             forceDeleteConnector: (args: any) => any;
+        };
+        connectorAuthentication: {
+            getBasicAuthAttributes: () => any;
+            getCertificateAttributes: () => any;
         };
         callback: {
             callback: (args: any) => any;
@@ -76,6 +80,11 @@ function createDeps(overrides: Partial<EpicDeps['apiClients']> = {}): EpicDeps {
                 getAttributesAll: () => of({}),
                 forceDeleteConnector: () => of(null),
                 ...overrides.connectors,
+            },
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => of([]),
+                getCertificateAttributes: () => of([]),
+                ...overrides.connectorAuthentication,
             },
             callback: {
                 callback: () => of({}),
@@ -659,7 +668,12 @@ describe('connectors epics', () => {
         expect(emitted[1]).toEqual(appRedirectActions.fetchError({ error: err, message: 'Failed to authorize connector' }));
     });
 
-    test('bulkAuthorizeConnectors success emits bulkAuthorizeConnectorsSuccess and listConnectors', async () => {
+    test('bulkAuthorizeConnectors success refreshes list preserving current pagination and filters', async () => {
+        const currentFilters = [{ fieldSource: 'property', fieldIdentifier: 'name' }] as any;
+        const stateValue = {
+            pagings: { pagings: [{ entity: EntityType.CONNECTOR, paging: { pageNumber: 2, pageSize: 25 } }] },
+            filters: { filters: [{ entity: EntityType.CONNECTOR, filter: { currentFilters } }] },
+        };
         const emitted = await runEpic(
             15,
             slice.actions.bulkAuthorizeConnectors({ uuids: ['c-1', 'c-2'] }),
@@ -672,9 +686,10 @@ describe('connectors epics', () => {
                 } as any,
             },
             2,
+            stateValue,
         );
         expect(emitted[0]).toEqual(slice.actions.bulkAuthorizeConnectorsSuccess({ uuids: ['c-1', 'c-2'] }));
-        expect(emitted[1]).toEqual(slice.actions.listConnectors({ itemsPerPage: 1000, pageNumber: 1, filters: [] }));
+        expect(emitted[1]).toEqual(slice.actions.listConnectors({ itemsPerPage: 25, pageNumber: 2, filters: currentFilters }));
     });
 
     test('bulkAuthorizeConnectors failure emits bulkAuthorizeConnectorsFailure and fetchError', async () => {
@@ -887,5 +902,73 @@ describe('connectors epics', () => {
         expect(emitted[1]).toEqual(
             appRedirectActions.fetchError({ error: expect.any(Error), message: 'Failed to perform resource callback' }),
         );
+    });
+
+    test('getConnectorAuthAttributesDescriptors Basic fetches basic auth attributes and emits success', async () => {
+        const basicAttrs = [{ uuid: 'u1', name: 'username', contentType: 'string' }];
+        let certificateCalled = false;
+        const emitted = await runEpic(19, slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.Basic }), {
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => of(basicAttrs),
+                getCertificateAttributes: () => {
+                    certificateCalled = true;
+                    return of([]);
+                },
+            } as any,
+        });
+        expect(certificateCalled).toBe(false);
+        expect(emitted[0].type).toBe(slice.actions.getConnectorAuthAttributesDescriptorsSuccess.type);
+        expect(emitted[0].payload.attributes).toHaveLength(1);
+        expect(emitted[0].payload.attributes[0].name).toBe('username');
+    });
+
+    test('getConnectorAuthAttributesDescriptors Certificate fetches certificate attributes and emits success', async () => {
+        let basicCalled = false;
+        const emitted = await runEpic(19, slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.Certificate }), {
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => {
+                    basicCalled = true;
+                    return of([]);
+                },
+                getCertificateAttributes: () => of([{ uuid: 'u2', name: 'keyStore', contentType: 'file' }]),
+            } as any,
+        });
+        expect(basicCalled).toBe(false);
+        expect(emitted[0].type).toBe(slice.actions.getConnectorAuthAttributesDescriptorsSuccess.type);
+        expect(emitted[0].payload.attributes[0].name).toBe('keyStore');
+    });
+
+    test('getConnectorAuthAttributesDescriptors failure emits failure and fetchError', async () => {
+        const err = new Error('auth attrs failed');
+        const emitted = await runEpic(
+            19,
+            slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.Basic }),
+            { connectorAuthentication: { getBasicAuthAttributes: () => throwError(() => err) } as any },
+            2,
+        );
+        expect(emitted[0]).toEqual(slice.actions.getConnectorAuthAttributesDescriptorsFailure());
+        expect(emitted[1]).toEqual(
+            appRedirectActions.fetchError({ error: err, message: 'Failed to get connector authentication attributes' }),
+        );
+    });
+
+    test('getConnectorAuthAttributesDescriptors for an unsupported auth type emits empty success without calling the API', async () => {
+        let basicCalled = false;
+        let certificateCalled = false;
+        const emitted = await runEpic(19, slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.None }), {
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => {
+                    basicCalled = true;
+                    return of([]);
+                },
+                getCertificateAttributes: () => {
+                    certificateCalled = true;
+                    return of([]);
+                },
+            } as any,
+        });
+        expect(basicCalled).toBe(false);
+        expect(certificateCalled).toBe(false);
+        expect(emitted[0]).toEqual(slice.actions.getConnectorAuthAttributesDescriptorsSuccess({ attributes: [] }));
     });
 });
