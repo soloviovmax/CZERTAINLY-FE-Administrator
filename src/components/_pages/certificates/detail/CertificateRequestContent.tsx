@@ -18,6 +18,7 @@ import Asn1Dialog from '../Asn1Dialog/Asn1Dialog';
 import type { AttributeResponseModel } from 'types/attributes';
 import { Download } from 'lucide-react';
 import Dropdown from 'components/Dropdown';
+import { EnumValueDescription } from 'components/EnumDescription';
 
 type Props = Readonly<{
     certificate: CertificateDetailResponseModel | undefined;
@@ -116,9 +117,17 @@ export default function CertificateRequestContent({ certificate, isBusy, getFres
                       id: 'certificateRequestFormat',
                       columns: [
                           'Certificate Request Format',
-                          certificate?.certificateRequest?.certificateRequestFormat
-                              ? getEnumLabel(certificateRequestFormatEnum, certificate?.certificateRequest?.certificateRequestFormat)
-                              : '',
+                          certificate?.certificateRequest?.certificateRequestFormat ? (
+                              <span key="certificateRequestFormat" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(certificateRequestFormatEnum, certificate?.certificateRequest?.certificateRequestFormat)}
+                                  <EnumValueDescription
+                                      platformEnum={PlatformEnum.CertificateRequestFormat}
+                                      value={certificate?.certificateRequest?.certificateRequestFormat}
+                                  />
+                              </span>
+                          ) : (
+                              ''
+                          ),
                       ],
                   },
                   {

@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router';
 
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Badge from 'components/Badge';
 import { PlatformEnum, Resource } from 'types/openapi';
 import { LockWidgetNameEnum } from 'types/user-interface';
@@ -92,7 +93,16 @@ export default function GlobalMetadataDetail() {
                       },
                       {
                           id: 'contentType',
-                          columns: ['Content Type', getEnumLabel(attributeContentTypeEnum, globalMetadata.contentType)],
+                          columns: [
+                              'Content Type',
+                              <span key="contentType" className="inline-flex items-center gap-1">
+                                  {getEnumLabel(attributeContentTypeEnum, globalMetadata.contentType)}
+                                  <EnumValueDescription
+                                      platformEnum={PlatformEnum.AttributeContentType}
+                                      value={globalMetadata.contentType}
+                                  />
+                              </span>,
+                          ],
                       },
                       {
                           id: 'group',

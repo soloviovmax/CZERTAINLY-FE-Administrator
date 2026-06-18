@@ -35,6 +35,7 @@ import CertificateStatusBadge from '../../../_pages/certificates/CertificateStat
 
 import { createWidgetDetailHeaders } from 'utils/widget';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
 import Select from 'components/Select';
@@ -571,13 +572,23 @@ export default function LocationDetail() {
             },
             {
                 id: 'cs',
-                content: 'State',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        State
+                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateState} title="State" />
+                    </span>
+                ),
                 sortable: true,
                 width: '15%',
             },
             {
                 id: 'vs',
-                content: 'Validation Status',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Validation Status
+                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateValidationStatus} title="Validation Status" />
+                    </span>
+                ),
                 sortable: true,
                 width: '15%',
             },

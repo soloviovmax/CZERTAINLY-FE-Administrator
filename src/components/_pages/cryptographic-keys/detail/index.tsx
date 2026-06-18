@@ -15,7 +15,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router';
 import Select from 'components/Select';
 
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { KeyCompromiseReason, KeyState, KeyType, PlatformEnum, Resource } from 'types/openapi';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import { dateFormatter } from 'utils/dateUtil';
@@ -142,7 +143,11 @@ export default function CryptographicKeyDetail() {
         if (keyCompromiseReasonEnum) {
             for (const reason in KeyCompromiseReason) {
                 const myReason: KeyCompromiseReason = KeyCompromiseReason[reason as keyof typeof KeyCompromiseReason];
-                options.push({ value: myReason, label: getEnumLabel(keyCompromiseReasonEnum, myReason) });
+                options.push({
+                    value: myReason,
+                    label: getEnumLabel(keyCompromiseReasonEnum, myReason),
+                    description: getEnumDescription(keyCompromiseReasonEnum, myReason),
+                });
             }
         }
         return options;
@@ -222,7 +227,12 @@ export default function CryptographicKeyDetail() {
             },
             {
                 id: 'resource',
-                content: 'Resource',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Resource
+                        <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                    </span>
+                ),
             },
         ],
         [],
@@ -468,6 +478,8 @@ export default function CryptographicKeyDetail() {
                             options={optionForCompromise}
                             value={compromiseReason || ''}
                             onChange={(value) => setCompromiseReason(value as KeyCompromiseReason)}
+                            showOptionDescriptionInDropdown
+                            showSelectedDescriptionAsHelp
                         />
                     </div>
                 }

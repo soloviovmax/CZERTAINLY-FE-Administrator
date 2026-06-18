@@ -9,7 +9,7 @@ import { useForm, Controller, FormProvider, useWatch } from 'react-hook-form';
 import { AuditLoggingSettingsDtoOutputEnum, Module, PlatformEnum, Resource } from 'types/openapi';
 
 import Select from 'components/Select';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import ProgressButton from 'components/ProgressButton';
 import Switch from 'components/Switch';
 
@@ -63,6 +63,7 @@ const LoggingSetting = () => {
                 .map((el) => ({
                     label: getEnumLabel(moduleEnum, el),
                     value: el,
+                    description: getEnumDescription(moduleEnum, el),
                 }))
                 .sort((a, b) => a.label.localeCompare(b.label)),
         [moduleEnum],
@@ -74,6 +75,7 @@ const LoggingSetting = () => {
                 .map((el) => ({
                     label: getEnumLabel(resourceEnum, el),
                     value: el,
+                    description: getEnumDescription(resourceEnum, el),
                 }))
                 .sort((a, b) => a.label.localeCompare(b.label)),
         [resourceEnum],
@@ -270,10 +272,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="ignoredModules"
                                             label="Select Modules to Ignore"
-                                            options={moduleSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={moduleSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />
@@ -285,10 +292,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="loggedModules"
                                             label="Select Modules to Log"
-                                            options={moduleSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={moduleSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />
@@ -317,10 +329,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="ignoredResources"
                                             label="Select Resources to Ignore"
-                                            options={resourceSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={resourceSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />
@@ -332,10 +349,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="loggedResources"
                                             label="Select Resources to Log"
-                                            options={resourceSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={resourceSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />
@@ -418,10 +440,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="ignoredModules"
                                             label="Select Modules to Ignore"
-                                            options={moduleSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={moduleSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />
@@ -433,10 +460,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="loggedModules"
                                             label="Select Modules to Log"
-                                            options={moduleSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={moduleSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />
@@ -465,10 +497,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="ignoredResources"
                                             label="Select Resources to Ignore"
-                                            options={resourceSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={resourceSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />
@@ -480,10 +517,15 @@ const LoggingSetting = () => {
                                         <Select
                                             id="loggedResources"
                                             label="Select Resources to Log"
-                                            options={resourceSelectorItems.map((item) => ({ value: item.value, label: item.label }))}
+                                            options={resourceSelectorItems.map((item) => ({
+                                                value: item.value,
+                                                label: item.label,
+                                                description: item.description,
+                                            }))}
                                             value={field.value || []}
                                             onChange={(value) => field.onChange(value)}
                                             isMulti
+                                            showOptionDescriptionInDropdown
                                         />
                                     )}
                                 />

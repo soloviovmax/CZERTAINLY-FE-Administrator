@@ -1,10 +1,11 @@
 import type { TableHeader } from 'components/CustomTable';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { auditLogsTypeMapping } from './mapping';
 import { getEnumLabel } from 'ducks/enums';
 import { Link } from 'react-router';
 import Button from 'components/Button';
 import type { EnumItemDto } from 'types/enums';
-import type { AuditLogDto } from 'types/openapi';
+import { type AuditLogDto, PlatformEnum } from 'types/openapi';
 import { dateFormatter } from 'utils/dateUtil';
 import { ArrowRightCircle, Info } from 'lucide-react';
 
@@ -217,23 +218,30 @@ export const createAuditLogsList = (
 };
 
 /** Small helper to avoid duplicated object literals */
-const hdr = (content: string, id: string, width?: string, align: 'left' | 'center' | 'right' = 'left'): TableHeader => ({
+const hdr = (content: React.ReactNode, id: string, width?: string, align: 'left' | 'center' | 'right' = 'left'): TableHeader => ({
     content,
     id,
     width,
     align,
 });
 
+const enumHdrContent = (title: string, platformEnum: PlatformEnum) => (
+    <span className="inline-flex items-center gap-1">
+        {title}
+        <EnumColumnDescription platformEnum={platformEnum} title={title} />
+    </span>
+);
+
 export const auditLogsRowHeaders: TableHeader[] = [
     hdr('Id', 'id', '5%'),
     hdr('Timestamp', 'timestamp', '5%'),
-    hdr('Module', 'module', '5%'),
-    hdr('Actor', 'actor', '10%'),
-    hdr('Auth method', 'authMethod', '5%'),
-    hdr('Resource', 'resource', '10%'),
-    hdr('Affiliated resource', 'affiliatedResource', '10%'),
-    hdr('Operation', 'operation', '5%', 'center'),
-    hdr('Operation result', 'operationResult', '5%', 'center'),
+    hdr(enumHdrContent('Module', PlatformEnum.Module), 'module', '5%'),
+    hdr(enumHdrContent('Actor', PlatformEnum.ActorType), 'actor', '10%'),
+    hdr(enumHdrContent('Auth method', PlatformEnum.AuthMethod), 'authMethod', '5%'),
+    hdr(enumHdrContent('Resource', PlatformEnum.Resource), 'resource', '10%'),
+    hdr(enumHdrContent('Affiliated resource', PlatformEnum.Resource), 'affiliatedResource', '10%'),
+    hdr(enumHdrContent('Operation', PlatformEnum.Operation), 'operation', '5%', 'center'),
+    hdr(enumHdrContent('Operation result', PlatformEnum.OperationResult), 'operationResult', '5%', 'center'),
     hdr('', 'moreInfo', '2%'),
 ];
 

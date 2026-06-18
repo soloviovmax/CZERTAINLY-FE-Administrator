@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 
 import type { EnumItemModel } from 'types/enums';
-import { getEnumDescription, getEnumLabel } from './enums';
+import { getEnumAsSelectOptions, getEnumDescription, getEnumLabel } from './enums';
 
 const platformEnum: { [key: string]: EnumItemModel } = {
     user: { code: 'user', label: 'User', description: 'Selected users receive notifications.' },
@@ -41,5 +41,18 @@ describe('getEnumDescription', () => {
 
     test('returns undefined when the key is undefined', () => {
         expect(getEnumDescription(platformEnum, undefined)).toBeUndefined();
+    });
+});
+
+describe('getEnumAsSelectOptions', () => {
+    test('maps each enum item to value/label/description preserving order', () => {
+        expect(getEnumAsSelectOptions(platformEnum)).toEqual([
+            { value: 'user', label: 'User', description: 'Selected users receive notifications.' },
+            { value: 'group', label: 'Group', description: undefined },
+        ]);
+    });
+
+    test('returns an empty array when the enum is undefined', () => {
+        expect(getEnumAsSelectOptions(undefined)).toEqual([]);
     });
 });

@@ -8,6 +8,7 @@ import PagedList from 'components/PagedList/PagedList';
 import Dialog from 'components/Dialog';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import Select from 'components/Select';
+import { EnumColumnDescription } from 'components/EnumDescription';
 
 import type { ApiClients } from '../../../../api';
 import { actions, selectors } from 'ducks/secrets';
@@ -72,13 +73,23 @@ export default function SecretsList() {
             },
             {
                 id: 'type',
-                content: 'Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.SecretType} title="Type" />
+                    </span>
+                ),
                 width: '10%',
                 sortable: true,
             },
             {
                 id: 'state',
-                content: 'State',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        State
+                        <EnumColumnDescription platformEnum={PlatformEnum.SecretState} title="State" />
+                    </span>
+                ),
                 width: '10%',
                 align: 'center',
                 sortable: true,

@@ -8,6 +8,7 @@ import Container from 'components/Container';
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import StatusBadge from 'components/StatusBadge';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import CustomAttributeWidget from 'components/Attributes/CustomAttributeWidget';
@@ -188,54 +189,58 @@ export default function SigningProfileDetail() {
 
     // ── General details ────────────────────────────────────────────────────────
 
-    const generalData: TableDataRow[] = useMemo(() => {
-        if (!signingProfile) {
-            return [];
-        }
-        return [
-            { id: 'uuid', columns: ['UUID', signingProfile.uuid] },
-            { id: 'name', columns: ['Name', signingProfile.name] },
-            { id: 'description', columns: ['Description', signingProfile.description || ''] },
-            { id: 'version', columns: ['Version', String(signingProfile.version)] },
-            { id: 'status', columns: ['Status', <StatusBadge key="value" enabled={signingProfile.enabled} />] },
-            {
-                id: 'workflowType',
-                columns: [
-                    'Signing Workflow Type',
-                    <span
-                        key="value"
-                        className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800"
-                    >
-                        {workflowTypeLabels[(signingProfile.workflow as TimestampingWorkflowDto)?.type] ??
-                            (signingProfile.workflow as TimestampingWorkflowDto)?.type ??
-                            '—'}
-                    </span>,
-                ],
-            },
-            {
-                id: 'enabledProtocols',
-                columns: [
-                    'Enabled Protocols',
-                    signingProfile.enabledProtocols && signingProfile.enabledProtocols.length > 0 ? (
-                        <div key="value" className="flex flex-wrap gap-1">
-                            {signingProfile.enabledProtocols.map((p) => (
-                                <span
-                                    key={p}
-                                    className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800"
-                                >
-                                    {protocolLabels[p] ?? p}
-                                </span>
-                            ))}
-                        </div>
-                    ) : (
-                        <span key="value" className="text-gray-400 text-sm">
-                            None
-                        </span>
-                    ),
-                ],
-            },
-        ];
-    }, [signingProfile]);
+    const generalData: TableDataRow[] = useMemo(
+        () =>
+            signingProfile
+                ? [
+                      { id: 'uuid', columns: ['UUID', signingProfile.uuid] },
+                      { id: 'name', columns: ['Name', signingProfile.name] },
+                      { id: 'description', columns: ['Description', signingProfile.description || ''] },
+                      { id: 'version', columns: ['Version', String(signingProfile.version)] },
+                      { id: 'status', columns: ['Status', <StatusBadge key="value" enabled={signingProfile.enabled} />] },
+                      {
+                          id: 'workflowType',
+                          columns: [
+                              'Signing Workflow Type',
+                              <span key="value" className="inline-flex items-center gap-1">
+                                  <span className="inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800">
+                                      {workflowTypeLabels[(signingProfile.workflow as TimestampingWorkflowDto)?.type] ??
+                                          (signingProfile.workflow as TimestampingWorkflowDto)?.type ??
+                                          '—'}
+                                  </span>
+                                  <EnumValueDescription
+                                      platformEnum={PlatformEnum.SigningWorkflowType}
+                                      value={(signingProfile.workflow as TimestampingWorkflowDto)?.type}
+                                  />
+                              </span>,
+                          ],
+                      },
+                      {
+                          id: 'enabledProtocols',
+                          columns: [
+                              'Enabled Protocols',
+                              signingProfile.enabledProtocols && signingProfile.enabledProtocols.length > 0 ? (
+                                  <div key="value" className="flex flex-wrap gap-1">
+                                      {signingProfile.enabledProtocols.map((p) => (
+                                          <span key={p} className="inline-flex items-center gap-1">
+                                              <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                                                  {protocolLabels[p] ?? p}
+                                              </span>
+                                              <EnumValueDescription platformEnum={PlatformEnum.SigningProtocol} value={p} />
+                                          </span>
+                                      ))}
+                                  </div>
+                              ) : (
+                                  <span key="value" className="text-gray-400 text-sm">
+                                      None
+                                  </span>
+                              ),
+                          ],
+                      },
+                  ]
+                : [],
+        [signingProfile],
+    );
 
     // ── Timestamping Workflow ──────────────────────────────────────────────────
 
@@ -368,11 +373,11 @@ export default function SigningProfileDetail() {
                 id: 'signingScheme',
                 columns: [
                     'Signing Scheme',
-                    <span
-                        key="value"
-                        className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800"
-                    >
-                        {signingSchemeLabels[sc?.signingScheme] ?? sc?.signingScheme ?? '—'}
+                    <span key="value" className="inline-flex items-center gap-1">
+                        <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800">
+                            {signingSchemeLabels[sc?.signingScheme] ?? sc?.signingScheme ?? '—'}
+                        </span>
+                        <EnumValueDescription platformEnum={PlatformEnum.SigningScheme} value={sc?.signingScheme} />
                     </span>,
                 ],
             },
@@ -383,7 +388,10 @@ export default function SigningProfileDetail() {
                 id: 'managedSigningType',
                 columns: [
                     'Managed Signing Type',
-                    <span key="value">{managedSigningTypeLabels[sc.managedSigningType] ?? sc.managedSigningType}</span>,
+                    <span key="value" className="inline-flex items-center gap-1">
+                        {managedSigningTypeLabels[sc.managedSigningType] ?? sc.managedSigningType}
+                        <EnumValueDescription platformEnum={PlatformEnum.ManagedSigningType} value={sc.managedSigningType} />
+                    </span>,
                 ],
             });
         }

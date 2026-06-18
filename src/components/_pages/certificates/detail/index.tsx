@@ -5,6 +5,7 @@ import AttributeViewer, { ATTRIBUTE_VIEWER_TYPE } from 'components/Attributes/At
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import ProgressButton from 'components/ProgressButton';
+import Select from 'components/Select';
 import Spinner from 'components/Spinner';
 import StatusBadge from 'components/StatusBadge';
 import { actions as utilsActuatorActions } from 'ducks/utilsActuator';
@@ -40,7 +41,7 @@ import type { AttributeDescriptorModel, AttributeResponseModel } from 'types/att
 import { PlatformEnum, Resource } from 'types/openapi';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { collectFormAttributes } from 'utils/attributes/attributes';
-import { downloadFile } from 'utils/certificate';
+import { downloadFile, getCertificateStatusColor } from 'utils/certificate';
 
 import { dateFormatter } from 'utils/dateUtil';
 import CustomAttributeWidget from '../../../Attributes/CustomAttributeWidget';
@@ -57,6 +58,7 @@ import CertificateList from 'components/_pages/certificates/list';
 import { capitalize } from 'utils/common-utils';
 import ComplianceCheckResultWidget from 'components/_pages/certificates/ComplianceCheckResultWidget/ComplianceCheckResultWidget';
 import Badge from 'components/Badge';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
 import CertificateDetailsContent from './CertificateDetailsContent';
@@ -110,7 +112,7 @@ function LocationPushForm({
     const handleFormSubmit = (values: any) => {
         onSubmit(allFormValues);
     };
-    console.log('formState.isValid', formState.isValid);
+
     return (
         <FormProvider {...methods}>
             <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -233,6 +235,7 @@ export default function CertificateDetail() {
 
     const [isAddingRelatedCertificate, setIsAddingRelatedCertificate] = useState<boolean>(false);
     const [selectedCertificate, setSelectedCertificate] = useState<string | undefined>();
+    const [relatedCertificateRelation, setRelatedCertificateRelation] = useState<'predecessor' | 'successor'>('successor');
     const [confirmDeleteRelatedCertificate, setConfirmDeleteRelatedCertificate] = useState<boolean>(false);
     const [relatedCertificateCheckedRows, setRelatedCertificateCheckedRows] = useState<string[]>([]);
     const [isAlreadyRelatedError, setIsAlreadyRelatedError] = useState<boolean>(false);
@@ -613,8 +616,28 @@ export default function CertificateDetail() {
                 id: 'relation',
                 content: 'Relation',
             },
-            { id: 'relationType', content: 'Relation Type' },
-            { id: 'state', content: 'State' },
+            {
+                id: 'relationType',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Relation Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.CertificateRelationType} title="Relation Type" />
+                    </span>
+                ),
+            },
+            {
+                id: 'state',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        State
+                        <EnumColumnDescription
+                            platformEnum={PlatformEnum.CertificateState}
+                            title="State"
+                            colorResolver={(code) => getCertificateStatusColor(code as CertStatus)}
+                        />
+                    </span>
+                ),
+            },
             { id: 'serialNumber', content: 'Serial Number' },
             { id: 'valid', content: 'Valid From' },
             { id: 'expires', content: 'Expires At' },
@@ -805,6 +828,7 @@ export default function CertificateDetail() {
         setRelatedCertificatesFilters();
         setRelatedCertificateCheckedRows([]);
         setIsAlreadyRelatedError(false);
+        setRelatedCertificateRelation('successor');
         setIsAddingRelatedCertificate(true);
     }, [cloneCertificateFilters, currentFilters, setRelatedCertificatesFilters]);
 
@@ -815,11 +839,11 @@ export default function CertificateDetail() {
     }, [restoreCertificateListFilters]);
 
     const onCertificateAssociate = useCallback(
-        (certificateId: string | undefined, associateId: string | undefined) => {
+        (certificateId: string | undefined, associateId: string | undefined, relation: 'predecessor' | 'successor') => {
             if (!certificateId || !associateId) return;
             closeAddRelatedCertificateDialog();
             setIsAlreadyRelatedError(false);
-            dispatch(actions.associateCertificate({ uuid: certificateId, certificateUuid: associateId }));
+            dispatch(actions.associateCertificate({ uuid: certificateId, certificateUuid: associateId, relation }));
         },
         [dispatch, closeAddRelatedCertificateDialog],
     );
@@ -1359,6 +1383,27 @@ export default function CertificateDetail() {
                 buttons={[]}
                 body={
                     <>
+                        <div className="mb-4">
+                            <Select
+                                id="relatedCertificateRelation"
+                                label="Relation"
+                                value={relatedCertificateRelation}
+                                onChange={(value) => setRelatedCertificateRelation(value as 'predecessor' | 'successor')}
+                                options={[
+                                    {
+                                        value: 'successor',
+                                        label: 'Successor',
+                                        description: 'Selected certificate is issued after this one',
+                                    },
+                                    {
+                                        value: 'predecessor',
+                                        label: 'Predecessor',
+                                        description: 'Selected certificate is issued before this one',
+                                    },
+                                ]}
+                                showOptionDescriptionInDropdown={true}
+                            />
+                        </div>
                         <CertificateList
                             hideAdditionalButtons={true}
                             hideWidgetButtons={true}
@@ -1378,7 +1423,7 @@ export default function CertificateDetail() {
                                 type="button"
                                 onClick={() => {
                                     if (selectedCertificate) {
-                                        onCertificateAssociate(id, selectedCertificate);
+                                        onCertificateAssociate(id, selectedCertificate, relatedCertificateRelation);
                                     }
                                 }}
                             />

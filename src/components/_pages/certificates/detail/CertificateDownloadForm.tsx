@@ -70,6 +70,7 @@ const CertificateDownloadForm = () => {
         return {
             label: item.label,
             value: item.code,
+            description: item.description,
         };
     });
 
@@ -77,6 +78,7 @@ const CertificateDownloadForm = () => {
         return {
             label: item.label,
             value: item.code,
+            description: item.description,
         };
     });
 
@@ -207,12 +209,16 @@ const CertificateDownloadForm = () => {
                         formLabel: isDownloadFormCertificateChain ? 'Certificate Chain Format' : 'Certificate Format',
                         formValue: 'certificateFormat',
                         options: certificateFormatOptions,
+                        showOptionDescriptionInDropdown: true,
+                        showSelectedDescriptionAsHelp: true,
                     },
                     {
                         formLabel: isDownloadFormCertificateChain ? 'Certificate Chain Encoding' : 'Certificate Encoding',
                         formValue: 'certificateEncoding',
                         options: certificateEncodingOptions,
                         placement: 'top',
+                        showOptionDescriptionInDropdown: true,
+                        showSelectedDescriptionAsHelp: true,
                     },
                 ]}
             />

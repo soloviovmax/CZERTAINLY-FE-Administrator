@@ -237,7 +237,6 @@ export default function ApprovalsList() {
                                     paginationData={{
                                         pageSize: pageSize,
                                         totalItems: userApprovalsTotalItems || 0,
-                                        itemsPerPageOptions: [10, 20, 50, 100],
                                         loadedPageSize: pageSize,
                                         totalPages: userApprovalsTotalItems ? Math.ceil(userApprovalsTotalItems / pageSize) : 0,
                                         page: pageNumber,
@@ -278,7 +277,6 @@ export default function ApprovalsList() {
                                     paginationData={{
                                         pageSize: pageSize,
                                         totalItems: approvalsTotalItems || 0,
-                                        itemsPerPageOptions: [10, 20, 50, 100],
                                         loadedPageSize: pageSize,
                                         totalPages: approvalsTotalItems ? Math.ceil(approvalsTotalItems / pageSize) : 0,
                                         page: pageNumber,

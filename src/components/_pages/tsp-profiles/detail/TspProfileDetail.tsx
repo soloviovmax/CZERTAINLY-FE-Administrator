@@ -7,6 +7,7 @@ import Container from 'components/Container';
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import Badge from 'components/Badge';
+import { EnumValueDescription } from 'components/EnumDescription';
 import StatusBadge from 'components/StatusBadge';
 import Widget from 'components/Widget';
 import WidgetButtons, { type WidgetButtonProps } from 'components/WidgetButtons';
@@ -214,7 +215,10 @@ export const TspProfileDetail = () => {
                               'Allowed Methods',
                               <div key="methods" className="flex flex-wrap gap-1">
                                   {(tspProfile.allowedAuthenticationMethods ?? []).map((method) => (
-                                      <Badge key={method}>{getEnumLabel(authenticationMethodEnum, method)}</Badge>
+                                      <span key={method} className="inline-flex items-center gap-1">
+                                          <Badge>{getEnumLabel(authenticationMethodEnum, method)}</Badge>
+                                          <EnumValueDescription platformEnum={PlatformEnum.TspAuthenticationMethod} value={method} />
+                                      </span>
                                   ))}
                               </div>,
                           ],

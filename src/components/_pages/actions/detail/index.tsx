@@ -2,6 +2,7 @@ import type { ApiClients } from '../../../../api';
 import CustomTable, { type TableDataRow } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
 import ConditionsExecutionsList from 'components/ExecutionConditionItemsList';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Breadcrumb from 'components/Breadcrumb';
 import Widget from 'components/Widget';
 import EditNameDescriptionDialog from 'components/EditNameDescriptionDialog';
@@ -163,7 +164,12 @@ const RuleDetails = () => {
             },
             {
                 id: 'type',
-                content: 'Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.ExecutionType} title="Type" />
+                    </span>
+                ),
             },
             {
                 id: 'description',

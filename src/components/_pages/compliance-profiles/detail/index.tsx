@@ -30,6 +30,7 @@ import Badge from 'components/Badge';
 import Breadcrumb from 'components/Breadcrumb';
 import Container from 'components/Container';
 import Button from 'components/Button';
+import { EnumValueDescription } from 'components/EnumDescription';
 
 export default function ComplianceProfileDetail() {
     const dispatch = useDispatch();
@@ -175,13 +176,16 @@ export default function ComplianceProfileDetail() {
                 id: 'resource',
                 columns: [
                     'Resource',
-                    selectedEntityDetails?.resource === Resource.CertificateRequests ? (
-                        getEnumLabel(resourceEnum, selectedEntityDetails?.resource) || ''
-                    ) : (
-                        <Link key={selectedEntityDetails?.uuid} to={`../../${selectedEntityDetails?.resource}`}>
-                            {getEnumLabel(resourceEnum, selectedEntityDetails?.resource) || ''}
-                        </Link>
-                    ),
+                    <span key={selectedEntityDetails?.uuid} className="inline-flex items-center gap-1">
+                        {selectedEntityDetails?.resource === Resource.CertificateRequests ? (
+                            getEnumLabel(resourceEnum, selectedEntityDetails?.resource) || ''
+                        ) : (
+                            <Link to={`../../${selectedEntityDetails?.resource}`}>
+                                {getEnumLabel(resourceEnum, selectedEntityDetails?.resource) || ''}
+                            </Link>
+                        )}
+                        <EnumValueDescription platformEnum={PlatformEnum.Resource} value={selectedEntityDetails?.resource} />
+                    </span>,
                 ],
             },
             { id: 'format', columns: ['Format', selectedEntityDetails?.format || ''] },
@@ -225,7 +229,16 @@ export default function ComplianceProfileDetail() {
                     </Badge>,
                 ],
             },
-            { id: 'resource', columns: ['Resource', getEnumLabel(resourceEnum, selectedEntityDetails?.resource) || ''] },
+            {
+                id: 'resource',
+                columns: [
+                    'Resource',
+                    <span key={selectedEntityDetails?.uuid} className="inline-flex items-center gap-1">
+                        {getEnumLabel(resourceEnum, selectedEntityDetails?.resource) || ''}
+                        <EnumValueDescription platformEnum={PlatformEnum.Resource} value={selectedEntityDetails?.resource} />
+                    </span>,
+                ],
+            },
         ];
     }, [selectedEntityDetails, resourceEnum]);
 
@@ -244,7 +257,16 @@ export default function ComplianceProfileDetail() {
                 { id: 'description', columns: ['Description', rule?.description || ''] },
 
                 { id: 'type', columns: ['Type', capitalize(rule?.type || '')] },
-                { id: 'resource', columns: ['Resource', getEnumLabel(resourceEnum, rule?.resource) || ''] },
+                {
+                    id: 'resource',
+                    columns: [
+                        'Resource',
+                        <span key={rule?.uuid} className="inline-flex items-center gap-1">
+                            {getEnumLabel(resourceEnum, rule?.resource) || ''}
+                            <EnumValueDescription platformEnum={PlatformEnum.Resource} value={rule?.resource} />
+                        </span>,
+                    ],
+                },
                 { id: 'format', columns: ['Format', rule?.format || ''] },
                 { id: 'kind', columns: ['Kind', rule?.kind || ''] },
                 {
