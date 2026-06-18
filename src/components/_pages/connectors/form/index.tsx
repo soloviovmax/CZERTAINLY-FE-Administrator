@@ -250,7 +250,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
 
     useEffect(() => {
         if (watchedAuthType === AuthType.Basic || watchedAuthType === AuthType.Certificate) {
-            dispatch(connectorActions.getConnectorAuthAttributesDescriptors({ authType: watchedAuthType as AuthType }));
+            dispatch(connectorActions.getConnectorAuthAttributesDescriptors({ authType: watchedAuthType }));
         } else {
             dispatch(connectorActions.clearConnectorAuthAttributesDescriptors());
         }
