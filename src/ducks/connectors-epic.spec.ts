@@ -945,4 +945,24 @@ describe('connectors epics', () => {
             appRedirectActions.fetchError({ error: err, message: 'Failed to get connector authentication attributes' }),
         );
     });
+
+    test('getConnectorAuthAttributesDescriptors for an unsupported auth type emits empty success without calling the API', async () => {
+        let basicCalled = false;
+        let certificateCalled = false;
+        const emitted = await runEpic(19, slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.None }), {
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => {
+                    basicCalled = true;
+                    return of([]);
+                },
+                getCertificateAttributes: () => {
+                    certificateCalled = true;
+                    return of([]);
+                },
+            } as any,
+        });
+        expect(basicCalled).toBe(false);
+        expect(certificateCalled).toBe(false);
+        expect(emitted[0]).toEqual(slice.actions.getConnectorAuthAttributesDescriptorsSuccess({ attributes: [] }));
+    });
 });

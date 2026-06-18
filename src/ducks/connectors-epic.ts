@@ -537,8 +537,13 @@ const getConnectorAuthAttributesDescriptors: AppEpic = (action$, state, deps) =>
     return action$.pipe(
         filter(slice.actions.getConnectorAuthAttributesDescriptors.match),
         switchMap((action) => {
+            const { authType } = action.payload;
+            if (authType !== AuthType.Basic && authType !== AuthType.Certificate) {
+                return of(slice.actions.getConnectorAuthAttributesDescriptorsSuccess({ attributes: [] }));
+            }
+
             const source$ =
-                action.payload.authType === AuthType.Certificate
+                authType === AuthType.Certificate
                     ? deps.apiClients.connectorAuthentication.getCertificateAttributes()
                     : deps.apiClients.connectorAuthentication.getBasicAuthAttributes();
 

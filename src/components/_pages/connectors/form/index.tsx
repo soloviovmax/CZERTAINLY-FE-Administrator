@@ -89,6 +89,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
     const isUpdating = useSelector(connectorSelectors.isUpdating);
     const isConnecting = useSelector(connectorSelectors.isConnecting);
     const isReconnecting = useSelector(connectorSelectors.isReconnecting);
+    const isFetchingAuthAttributes = useSelector(connectorSelectors.isFetchingAuthAttributes);
 
     const connectorSelector = useSelector(connectorSelectors.connector);
     const connectionDetails = useSelector(connectorSelectors.connectorConnectInfo);
@@ -138,17 +139,14 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
     const buildAuthAttributes = useCallback(
         (values: FormValues): AttributeRequestModel[] => {
             if (!authAttributeDescriptors?.length) return [];
-            const valueByName: Record<string, string | undefined> = {
-                username: values.username,
-                password: values.password,
-            };
+            const formValues = values as Record<string, unknown>;
             return authAttributeDescriptors
                 .filter((descriptor) => {
-                    const value = valueByName[descriptor.name];
+                    const value = formValues[descriptor.name];
                     return value !== undefined && value !== '';
                 })
                 .map((descriptor) => {
-                    const contentItem = getAttributeFormValue(descriptor.contentType, descriptor.content, valueByName[descriptor.name]);
+                    const contentItem = getAttributeFormValue(descriptor.contentType, descriptor.content, formValues[descriptor.name]);
                     const contentArray = Array.isArray(contentItem) ? contentItem : [contentItem];
                     const version = resolveAttributeVersion(descriptor as any);
                     return buildAttributeRequestModel(descriptor.name, contentArray, descriptor as any, version);
@@ -483,7 +481,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         <Button
                             variant="outline"
                             onClick={() => onConnectClick(getValues())}
-                            disabled={isSubmitting || isConnecting || isReconnecting || !watchedUrl || !isValid}
+                            disabled={isSubmitting || isConnecting || isReconnecting || isFetchingAuthAttributes || !watchedUrl || !isValid}
                             type="button"
                         >
                             {isConnecting || isReconnecting ? connectProgressTitle : connectTitle}
@@ -592,7 +590,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                                 title={submitTitle}
                                 inProgressTitle={inProgressTitle}
                                 inProgress={isUpdating || isCreating}
-                                disabled={!isDirty || (!editMode && !!selectedVersionErrorMessage)}
+                                disabled={!isDirty || isFetchingAuthAttributes || (!editMode && !!selectedVersionErrorMessage)}
                                 type="submit"
                             />
                         </Container>
