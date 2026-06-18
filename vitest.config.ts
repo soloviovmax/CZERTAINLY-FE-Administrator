@@ -15,12 +15,7 @@ export default defineConfig({
             provider: 'v8',
             reporter: ['lcovonly', 'text-summary'],
             reportsDirectory: './coverage-vitest',
-            include: [
-                'src/*.{ts,tsx}',
-                'src/utils/**/*.{ts,tsx}',
-                'src/ducks/**/*.{ts,tsx}',
-                'src/components/ListStateScopeCleaner/**/*.{ts,tsx}',
-            ],
+            include: ['src/*.{ts,tsx}', 'src/utils/**/*.{ts,tsx}', 'src/ducks/**/*.{ts,tsx}'],
             exclude: [
                 'node_modules',
                 'src/**/*.spec.{ts,tsx}',
