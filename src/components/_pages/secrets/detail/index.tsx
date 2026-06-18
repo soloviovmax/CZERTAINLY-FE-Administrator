@@ -12,6 +12,7 @@ import Container from 'components/Container';
 import CustomAttributeWidget from 'components/Attributes/CustomAttributeWidget';
 import CustomTable, { type TableDataRow, type TableHeader } from 'components/CustomTable';
 import Dialog from 'components/Dialog';
+import { EnumColumnDescription, EnumValueDescription } from 'components/EnumDescription';
 import EditIcon from 'components/icons/EditIcon';
 import Select from 'components/Select';
 import TabLayout from 'components/Layout/TabLayout';
@@ -248,7 +249,13 @@ function SecretDetail() {
         const rows: TableDataRow[] = [
             {
                 id: 'type',
-                columns: ['Type', getEnumLabel(secretTypeEnum, secret.type)],
+                columns: [
+                    'Type',
+                    <span key="type" className="inline-flex items-center gap-1">
+                        {getEnumLabel(secretTypeEnum, secret.type)}
+                        <EnumValueDescription platformEnum={PlatformEnum.SecretType} value={secret.type} />
+                    </span>,
+                ],
             },
             {
                 id: 'description',
@@ -258,9 +265,10 @@ function SecretDetail() {
                 id: 'state',
                 columns: [
                     'State',
-                    <SecretStateBadge key="state" state={secret.state}>
-                        {getEnumLabel(secretStateEnum, secret.state)}
-                    </SecretStateBadge>,
+                    <span key="state" className="inline-flex items-center gap-1">
+                        <SecretStateBadge state={secret.state}>{getEnumLabel(secretStateEnum, secret.state)}</SecretStateBadge>
+                        <EnumValueDescription platformEnum={PlatformEnum.SecretState} value={secret.state} />
+                    </span>,
                 ],
             },
             {
@@ -408,7 +416,15 @@ function SecretDetail() {
             { id: 'approvalProfile', content: 'Approval Profile' },
             { id: 'status', content: 'Status' },
             { id: 'requestedBy', content: 'Requested By' },
-            { id: 'resource', content: 'Resource' },
+            {
+                id: 'resource',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Resource
+                        <EnumColumnDescription platformEnum={PlatformEnum.Resource} title="Resource" />
+                    </span>
+                ),
+            },
             { id: 'action', content: 'Action' },
             { id: 'createdAt', content: 'Created At' },
             { id: 'closedAt', content: 'Closed At' },

@@ -11,7 +11,8 @@ test.describe('KeyStatusCircle', () => {
 
         const circle = component.getByTestId('key-status-circle');
         await expect(circle).toBeAttached();
-        await expect(circle).toHaveAttribute('title', 'Enabled');
+        await expect(circle).toContainText('Enabled');
+        await expect(circle).not.toHaveAttribute('title');
     });
 
     test('should render disabled state', async ({ mount }) => {
@@ -23,7 +24,8 @@ test.describe('KeyStatusCircle', () => {
 
         const circle = component.getByTestId('key-status-circle');
         await expect(circle).toBeAttached();
-        await expect(circle).toHaveAttribute('title', 'Disabled');
+        await expect(circle).toContainText('Disabled');
+        await expect(circle).not.toHaveAttribute('title');
     });
 
     test('should support custom dataTestId', async ({ mount }) => {

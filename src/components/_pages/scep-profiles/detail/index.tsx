@@ -21,6 +21,7 @@ import { createWidgetDetailHeaders, getGroupNames, getOwnerName } from 'utils/wi
 import { actions as groupsActions, selectors as groupsSelectors } from 'ducks/certificateGroups';
 import { actions as userAction, selectors as userSelectors } from 'ducks/users';
 import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import Container from 'components/Container';
 import Breadcrumb from 'components/Breadcrumb';
 import Switch from 'components/Switch';
@@ -292,7 +293,16 @@ export default function ScepProfileDetail() {
                       },
                       {
                           id: 'status',
-                          columns: ['Status', <CertificateStatus key="certStatus" status={scepProfile.caCertificate.state} />],
+                          columns: [
+                              'Status',
+                              <span key="certStatus" className="inline-flex items-center gap-1">
+                                  <CertificateStatus status={scepProfile.caCertificate.state} />
+                                  <EnumValueDescription
+                                      platformEnum={PlatformEnum.CertificateState}
+                                      value={scepProfile.caCertificate.state}
+                                  />
+                              </span>,
+                          ],
                       },
                   ]
                 : [],

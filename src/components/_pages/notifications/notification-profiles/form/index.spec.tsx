@@ -54,37 +54,42 @@ test.describe('NotificationProfileForm - Object recipient type', () => {
     });
 });
 
-test.describe('NotificationProfileForm - recipient type description tooltip', () => {
-    test('no info icon when the selected recipient type has no description', async ({ mount, page }) => {
-        await mount(<NotificationProfileFormTestWrapper platformEnumsOverride={enumsWithDescription} />);
+test.describe('NotificationProfileForm - recipient type description', () => {
+    const helpField = (page: import('@playwright/test').Page) => page.getByTestId('select-recipientType-selected-description');
+
+    test('no inline help when the selected recipient type has no description', async ({ mount, page }) => {
         // The form defaults to the "None" recipient type, which has no description.
-        await expect(page.getByTestId('recipientType-info')).toHaveCount(0);
+        await mount(<NotificationProfileFormTestWrapper platformEnumsOverride={enumsWithDescription} />);
+        await expect(helpField(page)).toHaveCount(0);
     });
 
-    test('info icon appears and tooltip shows the description when the type has one', async ({ mount, page }) => {
+    test('dropdown options show the description teaser', async ({ mount, page }) => {
         await mount(<NotificationProfileFormTestWrapper platformEnumsOverride={enumsWithDescription} />);
 
         await page.getByTestId('select-recipientType-trigger').click();
-        await page.getByRole('option', { name: 'User', exact: true }).click();
-
-        const infoIcon = page.getByTestId('recipientType-info');
-        await expect(infoIcon).toBeVisible();
-
-        await infoIcon.hover();
         await expect(page.getByText(USER_DESCRIPTION)).toBeVisible();
     });
 
-    test('info icon disappears when switching to a type without a description', async ({ mount, page }) => {
+    test('selected value shows its full description as inline help beneath the field', async ({ mount, page }) => {
         await mount(<NotificationProfileFormTestWrapper platformEnumsOverride={enumsWithDescription} />);
 
-        // User has a description → icon shown.
         await page.getByTestId('select-recipientType-trigger').click();
-        await page.getByRole('option', { name: 'User', exact: true }).click();
-        await expect(page.getByTestId('recipientType-info')).toBeVisible();
+        // The option's accessible name now includes the description teaser, so match by substring.
+        await page.getByRole('option', { name: 'User' }).click();
 
-        // Owner has no description → icon hidden.
+        await expect(helpField(page)).toBeVisible();
+        await expect(helpField(page)).toHaveText(USER_DESCRIPTION);
+    });
+
+    test('inline help disappears when switching to a type without a description', async ({ mount, page }) => {
+        await mount(<NotificationProfileFormTestWrapper platformEnumsOverride={enumsWithDescription} />);
+
+        await page.getByTestId('select-recipientType-trigger').click();
+        await page.getByRole('option', { name: 'User' }).click();
+        await expect(helpField(page)).toBeVisible();
+
         await page.getByTestId('select-recipientType-trigger').click();
         await page.getByRole('option', { name: 'Owner', exact: true }).click();
-        await expect(page.getByTestId('recipientType-info')).toHaveCount(0);
+        await expect(helpField(page)).toHaveCount(0);
     });
 });

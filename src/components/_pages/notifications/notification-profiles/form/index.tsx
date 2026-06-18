@@ -30,8 +30,6 @@ import { LockWidgetNameEnum } from 'types/user-interface';
 import { getInputStringFromIso8601String, getIso8601StringFromInputString } from 'utils/duration';
 import TextInput from 'components/TextInput';
 import TextArea from 'components/TextArea';
-import Tooltip from 'components/Tooltip';
-import { Info } from 'lucide-react';
 
 type NotificationProfileFormProps = Readonly<{
     notificationProfileId?: string;
@@ -369,11 +367,10 @@ function RecipientTypeFields() {
             Object.values(RecipientType).map((el) => ({
                 label: getEnumLabel(recipientTypeEnum, el),
                 value: el,
+                description: getEnumDescription(recipientTypeEnum, el),
             })),
         [recipientTypeEnum],
     );
-
-    const recipientTypeDescription = getEnumDescription(recipientTypeEnum, watchedRecipientType);
 
     const renderRecipientField = useCallback(() => {
         let props: { options: { value: string; label: string }[]; description: string; placeholder: string } | null = null;
@@ -435,17 +432,10 @@ function RecipientTypeFields() {
     return (
         <>
             <div>
-                <div className="flex items-center gap-1 mb-2">
+                <div className="mb-2">
                     <Label htmlFor="recipientType" required className="!mb-0">
                         Recipient Type
                     </Label>
-                    {recipientTypeDescription && (
-                        <Tooltip content={recipientTypeDescription}>
-                            <button type="button" aria-label="Recipient type description" className="flex text-gray-400 cursor-help">
-                                <Info size={16} className="block" data-testid="recipientType-info" />
-                            </button>
-                        </Tooltip>
-                    )}
                 </div>
                 <p className="text-sm text-gray-500 mb-2">Recipient type of notifications managed by profile.</p>
                 <Controller
@@ -472,6 +462,8 @@ function RecipientTypeFields() {
                                 options={recipientTypeOptions}
                                 placeholder="Select Recipient Type"
                                 placement="bottom"
+                                showOptionDescriptionInDropdown
+                                showSelectedDescriptionAsHelp
                             />
                             {fieldState.error && fieldState.isTouched && (
                                 <p className="mt-1 text-sm text-red-600">

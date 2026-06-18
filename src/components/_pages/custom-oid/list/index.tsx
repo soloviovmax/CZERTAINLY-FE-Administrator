@@ -11,6 +11,7 @@ import { LockWidgetNameEnum } from 'types/user-interface';
 import type { SearchRequestModel } from 'types/certificate';
 import { selectors as enumSelectors } from 'ducks/enums';
 import { PlatformEnum } from 'types/openapi';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import Dialog from 'components/Dialog';
 import CustomOIDForm from 'components/_pages/custom-oid/form';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
@@ -55,7 +56,12 @@ export default function CustomOIDList() {
                 width: '40%',
             },
             {
-                content: 'Category',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Category
+                        <EnumColumnDescription platformEnum={PlatformEnum.OidCategory} title="Category" />
+                    </span>
+                ),
                 align: 'center',
                 sortable: true,
                 id: 'category',

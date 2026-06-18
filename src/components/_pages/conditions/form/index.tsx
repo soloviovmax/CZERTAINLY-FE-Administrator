@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router';
 import { Controller, FormProvider, useForm, useWatch } from 'react-hook-form';
 
 import ProgressButton from 'components/ProgressButton';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumDescription, getEnumLabel } from 'ducks/enums';
 import Select from 'components/Select';
 import Button from 'components/Button';
 import Container from 'components/Container';
@@ -168,9 +168,15 @@ const ConditionForm = ({ onCancel, onSuccess }: ConditionFormProps = {}) => {
                                             onChange={(value) => {
                                                 field.onChange(value);
                                             }}
-                                            options={typeOptions.map((opt) => ({ value: opt.value, label: opt.label }))}
+                                            options={typeOptions.map((opt) => ({
+                                                value: opt.value,
+                                                label: opt.label,
+                                                description: getEnumDescription(conditionTypeEnum, opt.value),
+                                            }))}
                                             placeholder="Select Condition Type"
                                             placement="bottom"
+                                            showOptionDescriptionInDropdown
+                                            showSelectedDescriptionAsHelp
                                         />
                                         {fieldState.error && fieldState.isTouched && (
                                             <p className="mt-1 text-sm text-red-600">

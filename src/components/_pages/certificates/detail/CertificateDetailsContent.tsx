@@ -19,7 +19,8 @@ import { useCopyToClipboard } from 'utils/common-hooks';
 import { dateFormatter } from 'utils/dateUtil';
 import { actions, selectors } from 'ducks/certificates';
 import { actions as userInterfaceActions } from 'ducks/user-interface';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
+import { EnumValueDescription } from 'components/EnumDescription';
 import { actions as certificateGroupActions, selectors as groupSelectors } from 'ducks/certificateGroups';
 import { actions as userActions, selectors as userSelectors } from 'ducks/users';
 import { actions as raProfileActions, selectors as raProfileSelectors } from 'ducks/ra-profiles';
@@ -97,6 +98,7 @@ export default function CertificateDetailsContent({ certificate, validationResul
             .map((key) => ({
                 value: certificateRevocationReason[key].code,
                 label: certificateRevocationReason[key].label,
+                description: getEnumDescription(certificateRevocationReason, certificateRevocationReason[key].code),
             }))
             .sort((a, b) => a.label.localeCompare(b.label));
         setCertificateRevokeReasonOptions(options);
@@ -442,9 +444,10 @@ export default function CertificateDetailsContent({ certificate, validationResul
                 id: 'protocol',
                 columns: [
                     'Protocol Name',
-                    <Badge key="protocol" color="secondary">
-                        {getEnumLabel(certificateProtocol, protocolInfo.protocol)}
-                    </Badge>,
+                    <span key="protocol" className="inline-flex items-center gap-1">
+                        <Badge color="secondary">{getEnumLabel(certificateProtocol, protocolInfo.protocol)}</Badge>
+                        <EnumValueDescription platformEnum={PlatformEnum.CertificateProtocol} value={protocolInfo.protocol} />
+                    </span>,
                 ],
             },
             {
@@ -726,6 +729,8 @@ export default function CertificateDetailsContent({ certificate, validationResul
                         value={revokeReason || ''}
                         onChange={(value) => setRevokeReason(value as CertificateRevocationReason)}
                         label="Revocation Reason"
+                        showOptionDescriptionInDropdown
+                        showSelectedDescriptionAsHelp
                     />
                 }
                 toggle={() => setRevoke(false)}

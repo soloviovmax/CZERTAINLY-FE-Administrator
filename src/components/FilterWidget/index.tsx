@@ -3,7 +3,7 @@ import Widget from 'components/Widget';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { ApiClients } from 'src/api';
-import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
+import { selectors as enumSelectors, getEnumLabel, getEnumDescription } from 'ducks/enums';
 import { actions as alertActions } from 'ducks/alerts';
 import { type EntityType, actions, selectors } from 'ducks/filters';
 import { useDispatch, useSelector } from 'react-redux';
@@ -711,6 +711,7 @@ export default function FilterWidget({
                             options={availableFilters.map((f) => ({
                                 label: getEnumLabel(searchGroupEnum, f.filterFieldSource),
                                 value: f.filterFieldSource,
+                                description: getEnumDescription(searchGroupEnum, f.filterFieldSource),
                             }))}
                             onChange={(e) => {
                                 setFilterGroup({ label: e as string, value: e as FilterFieldSource });
@@ -720,6 +721,8 @@ export default function FilterWidget({
                                 setRegexError('');
                             }}
                             value={filterGroup || null}
+                            showOptionDescriptionInDropdown
+                            showSelectedDescriptionAsHelp
                         />
                         <Select
                             label="Filter Field"
@@ -744,6 +747,7 @@ export default function FilterWidget({
                                     ? currentField?.conditions.map((c) => ({
                                           label: getEnumLabel(FilterConditionOperatorEnum, c),
                                           value: c,
+                                          description: getEnumDescription(FilterConditionOperatorEnum, c),
                                       }))
                                     : []
                             }
@@ -755,6 +759,8 @@ export default function FilterWidget({
                             value={filterCondition || null}
                             isDisabled={!filterField}
                             isSearchable
+                            showOptionDescriptionInDropdown
+                            showSelectedDescriptionAsHelp
                         />
 
                         <div>

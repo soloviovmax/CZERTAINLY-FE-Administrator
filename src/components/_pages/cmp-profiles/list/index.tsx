@@ -18,6 +18,7 @@ import { selectors as enumSelectors, getEnumLabel } from 'ducks/enums';
 import { PlatformEnum } from 'types/openapi';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import Badge from 'components/Badge';
+import { EnumColumnDescription } from 'components/EnumDescription';
 
 export default function AdministratorsList() {
     const dispatch = useDispatch();
@@ -177,7 +178,12 @@ export default function AdministratorsList() {
             },
             {
                 id: 'variant',
-                content: 'Variant',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Variant
+                        <EnumColumnDescription platformEnum={PlatformEnum.CmpProfileVariant} title="Variant" />
+                    </span>
+                ),
                 sortable: true,
                 width: 'auto',
             },

@@ -4,6 +4,7 @@ import PagedList from 'components/PagedList/PagedList';
 import Dialog from 'components/Dialog';
 import NotificationProfileForm from '../form';
 import { getEnumLabel, selectors as enumSelectors } from 'ducks/enums';
+import { EnumColumnDescription } from 'components/EnumDescription';
 import { actions, selectors } from 'ducks/notification-profiles';
 import { useCallback, useMemo, useState } from 'react';
 import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
@@ -82,7 +83,12 @@ const NotificationProfilesList = () => {
             },
             {
                 id: 'recipientType',
-                content: 'Recipient Type',
+                content: (
+                    <span className="inline-flex items-center gap-1">
+                        Recipient Type
+                        <EnumColumnDescription platformEnum={PlatformEnum.RecipientType} title="Recipient Type" />
+                    </span>
+                ),
                 sortable: true,
                 align: 'center',
             },

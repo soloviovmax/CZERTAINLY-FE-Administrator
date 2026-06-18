@@ -38,6 +38,11 @@ export const getEnumDescription = (
     enumItemKey: string | undefined,
 ): string | undefined => (platformEnum && enumItemKey ? platformEnum[enumItemKey]?.description : undefined);
 
+export const getEnumAsSelectOptions = (
+    platformEnum: { [key: string]: EnumItemModel } | undefined,
+): { value: string; label: string; description?: string }[] =>
+    Object.values(platformEnum ?? {}).map((item) => ({ value: item.code, label: item.label, description: item.description }));
+
 export const selectors = {
     state,
     platformEnums,

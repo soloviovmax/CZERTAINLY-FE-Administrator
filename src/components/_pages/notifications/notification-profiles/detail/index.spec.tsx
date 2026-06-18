@@ -7,8 +7,8 @@ import {
 } from '../notificationProfileTestFixtures';
 import { NotificationProfileDetailTestWrapper } from './NotificationProfileDetailTestWrapper';
 
-test.describe('NotificationProfileDetail - recipient type description tooltip', () => {
-    test('shows info icon and tooltip when the recipient type has a description', async ({ mount, page }) => {
+test.describe('NotificationProfileDetail - recipient type description toggletip', () => {
+    test('shows info button and toggletip opens on click when the recipient type has a description', async ({ mount, page }) => {
         await mount(
             <NotificationProfileDetailTestWrapper
                 notificationProfile={{ ...baseProfile, recipientType: RecipientType.User }}
@@ -16,14 +16,18 @@ test.describe('NotificationProfileDetail - recipient type description tooltip', 
             />,
         );
 
-        const infoIcon = page.getByTestId('recipientType-info');
-        await expect(infoIcon).toBeVisible();
+        const infoButton = page.getByTestId('recipientType-info');
+        await expect(infoButton).toBeVisible();
+        await expect(page.getByText(USER_DESCRIPTION)).toHaveCount(0);
 
-        await infoIcon.hover();
+        await infoButton.click();
         await expect(page.getByText(USER_DESCRIPTION)).toBeVisible();
+
+        await page.keyboard.press('Escape');
+        await expect(page.getByText(USER_DESCRIPTION)).toHaveCount(0);
     });
 
-    test('does not show info icon when the recipient type has no description', async ({ mount, page }) => {
+    test('does not show info button when the recipient type has no description', async ({ mount, page }) => {
         await mount(
             <NotificationProfileDetailTestWrapper
                 notificationProfile={{ ...baseProfile, recipientType: RecipientType.Owner }}
