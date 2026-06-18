@@ -1,5 +1,20 @@
-import { describe, expect, test } from 'vitest';
-import { LIST_VIEW_SCOPES, WorkflowListKey, isPathInScope, persistPaginationKey } from './listViewState';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { actions as listFilterActions } from 'ducks/list-filters';
+import { actions as tablePaginationActions } from 'ducks/table-pagination';
+import { LIST_VIEW_SCOPES, WorkflowListKey, isPathInScope, persistPaginationKey, useListViewReset } from './listViewState';
+
+const mockDispatch = vi.fn();
+const reduxState: { current: Record<string, unknown> } = { current: {} };
+
+vi.mock('react', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('react')>();
+    return { ...actual, useCallback: (fn: unknown) => fn };
+});
+
+vi.mock('react-redux', () => ({
+    useDispatch: () => mockDispatch,
+    useSelector: (selector: (state: Record<string, unknown>) => unknown) => selector(reduxState.current),
+}));
 
 describe('listViewState.isPathInScope', () => {
     test('matches the exact prefix', () => {
@@ -44,5 +59,53 @@ describe('listViewState scopes', () => {
 describe('listViewState.persistPaginationKey', () => {
     test('pairs a list key with its route-independent pagination key', () => {
         expect(persistPaginationKey(WorkflowListKey.conditions)).toBe('custom-table-persistent:workflows:conditions');
+    });
+});
+
+describe('listViewState.useListViewReset', () => {
+    const listKey = WorkflowListKey.rules;
+    const persistKey = persistPaginationKey(listKey);
+
+    const buildState = (
+        listFilter?: { resource?: string },
+        tableState?: { page?: number; pageSize?: number; search?: string; sortColumn?: string },
+    ) => ({
+        listFilters: { byKey: listFilter ? { [listKey]: listFilter } : {} },
+        tablePagination: { byKey: tableState ? { [persistKey]: tableState } : {} },
+    });
+
+    beforeEach(() => {
+        mockDispatch.mockClear();
+        reduxState.current = buildState();
+    });
+
+    test('canReset is false for a pristine view', () => {
+        reduxState.current = buildState();
+        expect(useListViewReset(listKey).canReset).toBe(false);
+    });
+
+    test('canReset is true when a list filter resource is set', () => {
+        reduxState.current = buildState({ resource: 'certificates' });
+        expect(useListViewReset(listKey).canReset).toBe(true);
+    });
+
+    test.each([
+        ['page beyond the first', { page: 2, pageSize: 10 }],
+        ['a non-default page size', { page: 1, pageSize: 25 }],
+        ['an active search', { page: 1, pageSize: 10, search: 'abc' }],
+        ['an active sort', { page: 1, pageSize: 10, sortColumn: 'name' }],
+    ])('canReset is true with %s', (_label, tableState) => {
+        reduxState.current = buildState(undefined, tableState);
+        expect(useListViewReset(listKey).canReset).toBe(true);
+    });
+
+    test('resetView clears both the list filter and the persisted pagination', () => {
+        reduxState.current = buildState({ resource: 'certificates' }, { page: 3, pageSize: 10 });
+
+        useListViewReset(listKey).resetView();
+
+        expect(mockDispatch).toHaveBeenCalledWith(listFilterActions.clearListFilter({ key: listKey }));
+        expect(mockDispatch).toHaveBeenCalledWith(tablePaginationActions.clearPagination({ key: persistKey }));
+        expect(mockDispatch).toHaveBeenCalledTimes(2);
     });
 });

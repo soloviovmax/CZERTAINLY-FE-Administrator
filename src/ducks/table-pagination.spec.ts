@@ -207,6 +207,21 @@ describe('table-pagination selectors', () => {
         expect(selectors.resetVersionForKey('custom-table-persistent:workflows:rules')({ tablePagination: next } as any)).toBe(1);
     });
 
+    test('state selector falls back to initialState when the slice is missing', () => {
+        expect(selectors.state(undefined)).toEqual(initialState);
+        expect(selectors.pagination('any')({} as any)).toEqual({ page: 1, pageSize: 10 });
+    });
+
+    test('resetVersionForKey defaults to 0 when no reset version map exists', () => {
+        expect(selectors.resetVersionForKey('k')({ tablePagination: { byKey: {} } } as any)).toBe(0);
+    });
+
+    test('clearPagination initializes the reset version map when absent', () => {
+        const legacyState = { byKey: { k: { page: 2, pageSize: 10 } } } as any;
+        const next = reducer(legacyState, actions.clearPagination({ key: 'k' }));
+        expect(next.resetVersionByKey['k']).toBe(1);
+    });
+
     test('hasResettableStateForPath detects non-default page/pageSize/search/sort', () => {
         const make = (entry: any) => ({ tablePagination: { byKey: { 'custom-table-pagination:/raprofiles:t': entry } } }) as any;
 

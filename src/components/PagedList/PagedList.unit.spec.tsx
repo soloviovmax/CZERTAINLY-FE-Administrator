@@ -12,6 +12,7 @@ const useSelectorMock = vi.fn();
 const useNavigateMock = vi.fn();
 
 let mockState: any;
+let mockPathname = '/test-list';
 
 vi.mock('react-redux', () => ({
     useDispatch: () => useDispatchMock(),
@@ -23,7 +24,7 @@ vi.mock('react-redux', () => ({
 
 vi.mock('react-router', () => ({
     useNavigate: () => useNavigateMock(),
-    useLocation: () => ({ pathname: '/test-list' }),
+    useLocation: () => ({ pathname: mockPathname }),
 }));
 
 vi.mock('components/FilterWidget', () => ({
@@ -31,11 +32,16 @@ vi.mock('components/FilterWidget', () => ({
 }));
 
 vi.mock('components/Widget', () => ({
-    default: ({ widgetButtons, refreshAction, hideWidgetButtons, children }: any) => (
+    default: ({ widgetButtons, refreshAction, resetViewAction, hideWidgetButtons, children }: any) => (
         <div>
             <button type="button" data-testid="refresh" onClick={refreshAction}>
                 refresh
             </button>
+            {resetViewAction && (
+                <button type="button" data-testid="reset-view" onClick={resetViewAction}>
+                    reset
+                </button>
+            )}
             {!hideWidgetButtons &&
                 (widgetButtons || []).map((button: any, index: number) => (
                     <button
@@ -132,6 +138,7 @@ describe('PagedList unit coverage', () => {
 
         dispatch = vi.fn();
         navigate = vi.fn();
+        mockPathname = '/test-list';
         useDispatchMock.mockReturnValue(dispatch);
         useNavigateMock.mockReturnValue(navigate);
 
@@ -169,6 +176,57 @@ describe('PagedList unit coverage', () => {
         });
         container.remove();
         vi.clearAllMocks();
+    });
+
+    it('does not expose a reset-view action when the view is at its defaults', async () => {
+        mockState.pagings.pagings[0].paging.pageNumber = 1;
+        mockState.pagings.pagings[0].paging.pageSize = 10;
+        mockState.filters.filters[0].filter.currentFilters = [];
+
+        await renderPagedList();
+
+        expect(container.querySelector('[data-testid="reset-view"]')).toBeNull();
+    });
+
+    it('resets filters and pagination when the reset-view action is triggered', async () => {
+        // mockState defaults to pageNumber 2, so the view is non-default and the reset action is exposed
+        await renderPagedList();
+
+        const resetButton = container.querySelector('[data-testid="reset-view"]') as HTMLButtonElement;
+        expect(resetButton).toBeTruthy();
+
+        await act(async () => {
+            resetButton.click();
+        });
+
+        expect(dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'filters/setCurrentFilters', payload: { entity: EntityType.CBOM, currentFilters: [] } }),
+        );
+        expect(dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'filters/setPreservedFilters', payload: { entity: EntityType.CBOM, preservedFilters: [] } }),
+        );
+        expect(dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'pagings/resetPaging', payload: { entity: EntityType.CBOM } }),
+        );
+        expect(dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'tablePagination/clearPaginationByRootRoute', payload: { rootRoute: 'test-list' } }),
+        );
+    });
+
+    it('skips the root-route pagination reset when the path has no root segment', async () => {
+        mockPathname = '/';
+
+        await renderPagedList();
+
+        const resetButton = container.querySelector('[data-testid="reset-view"]') as HTMLButtonElement;
+        await act(async () => {
+            resetButton.click();
+        });
+
+        expect(dispatch).toHaveBeenCalledWith(
+            expect.objectContaining({ type: 'pagings/resetPaging', payload: { entity: EntityType.CBOM } }),
+        );
+        expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'tablePagination/clearPaginationByRootRoute' }));
     });
 
     it('renders filter widget only when filter props are present', async () => {

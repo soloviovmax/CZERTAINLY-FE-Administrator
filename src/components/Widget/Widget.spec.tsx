@@ -162,4 +162,26 @@ test.describe('Widget', () => {
         await expect(page.getByRole('heading', { name: 'With Info' })).toBeVisible();
         await expect(page.getByText('Info: Description text')).toBeVisible();
     });
+
+    test('should render reset-view button when resetViewAction is provided', async ({ mount, page }) => {
+        const store = createMockStore();
+        await mount(withProviders(<Widget title="Resettable" dataTestId="reset-widget" resetViewAction={() => {}} />, { store }));
+        await expect(page.getByTestId('reset-view-icon')).toBeVisible();
+        await expect(page.getByTestId('reset-view-icon')).toBeEnabled();
+        await page.getByTestId('reset-view-icon').click();
+    });
+
+    test('should not render reset-view button by default', async ({ mount, page }) => {
+        const store = createMockStore();
+        await mount(withProviders(<Widget title="Plain" dataTestId="plain-widget" refreshAction={() => {}} />, { store }));
+        await expect(page.getByTestId('reset-view-icon')).toHaveCount(0);
+    });
+
+    test('should disable reset-view button when busy', async ({ mount, page }) => {
+        const store = createMockStore();
+        await mount(
+            withProviders(<Widget title="Resettable" dataTestId="reset-widget" resetViewAction={() => {}} busy={true} />, { store }),
+        );
+        await expect(page.getByTestId('reset-view-icon')).toBeDisabled();
+    });
 });
