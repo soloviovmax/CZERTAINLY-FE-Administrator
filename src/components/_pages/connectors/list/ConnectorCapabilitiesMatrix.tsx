@@ -28,7 +28,7 @@ export default function ConnectorCapabilitiesMatrix({ connector }: Props) {
 
     if (connector.version === ConnectorVersion.V2) {
         const rows: TableDataRow[] = (connector.interfaces ?? []).map((iface) => ({
-            id: `${iface.code}-${iface.version}`,
+            id: iface.uuid,
             columns: [
                 <Badge key="code" color="primary">
                     {getEnumLabel(interfaceEnum, iface.code)}
@@ -52,7 +52,7 @@ export default function ConnectorCapabilitiesMatrix({ connector }: Props) {
     }
 
     const rows: TableDataRow[] = (connector.functionGroups ?? []).map((group) => ({
-        id: group.functionGroupCode ?? group.name,
+        id: group.uuid,
         columns: [
             <Badge key="code" color="primary">
                 {getEnumLabel(functionGroupEnum, group.functionGroupCode ?? group.name)}
