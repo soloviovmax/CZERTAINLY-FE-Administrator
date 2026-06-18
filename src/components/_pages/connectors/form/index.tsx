@@ -13,10 +13,17 @@ import Select from 'components/Select';
 import Button from 'components/Button';
 import Container from 'components/Container';
 import TextInput from 'components/TextInput';
+import Label from 'components/Label';
+import type { AttributeRequestModel } from 'types/attributes';
 import type { ConnectorResponseModel } from 'types/connectors';
 import { AuthType, ConnectorStatus, ConnectorVersion, PlatformEnum, Resource } from 'types/openapi';
 
-import { collectFormAttributes } from 'utils/attributes/attributes';
+import {
+    buildAttributeRequestModel,
+    collectFormAttributes,
+    getAttributeFormValue,
+    resolveAttributeVersion,
+} from 'utils/attributes/attributes';
 import { featureFlags } from 'utils/feature-flags';
 
 import { validateAlphaNumericWithSpecialChars, validateRequired, validateRoutelessUrl } from 'utils/validators';
@@ -24,7 +31,6 @@ import { buildValidationRules, getFieldErrorMessage } from 'utils/validators-hel
 import { actions as customAttributesActions, selectors as customAttributesSelectors } from '../../../../ducks/customAttributes';
 import AttributeEditor from '../../../Attributes/AttributeEditor';
 import TabLayout from '../../../Layout/TabLayout';
-import Label from 'components/Label';
 import ConnectionDetailsV1 from './ConnectionDetailsV1';
 import ConnectionDetailsV2 from './ConnectionDetailsV2';
 import Switch from 'components/Switch';
@@ -76,6 +82,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
     );
 
     const resourceCustomAttributes = useSelector(customAttributesSelectors.resourceCustomAttributes);
+    const authAttributeDescriptors = useSelector(connectorSelectors.connectorAuthAttributes);
 
     const isFetching = useSelector(connectorSelectors.isFetchingDetail);
     const isCreating = useSelector(connectorSelectors.isCreating);
@@ -128,6 +135,28 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
         }
     }, [id, connectorUuid, connectorSelector, dispatch]);
 
+    const buildAuthAttributes = useCallback(
+        (values: FormValues): AttributeRequestModel[] => {
+            if (!authAttributeDescriptors?.length) return [];
+            const valueByName: Record<string, string | undefined> = {
+                username: values.username,
+                password: values.password,
+            };
+            return authAttributeDescriptors
+                .filter((descriptor) => {
+                    const value = valueByName[descriptor.name];
+                    return value !== undefined && value !== '';
+                })
+                .map((descriptor) => {
+                    const contentItem = getAttributeFormValue(descriptor.contentType, descriptor.content, valueByName[descriptor.name]);
+                    const contentArray = Array.isArray(contentItem) ? contentItem : [contentItem];
+                    const version = resolveAttributeVersion(descriptor as any);
+                    return buildAttributeRequestModel(descriptor.name, contentArray, descriptor as any, version);
+                });
+        },
+        [authAttributeDescriptors],
+    );
+
     const onSubmit = useCallback(
         (values: FormValues) => {
             if (editMode) {
@@ -138,6 +167,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         connectorUpdateRequest: {
                             url: values.url,
                             authType: values.authenticationType as AuthType,
+                            authAttributes: buildAuthAttributes(values),
                             customAttributes: collectFormAttributes('customConnector', resourceCustomAttributes, values),
                         },
                     } as any),
@@ -148,13 +178,14 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         name: values.name,
                         url: values.url,
                         authType: values.authenticationType as AuthType,
+                        authAttributes: buildAuthAttributes(values),
                         customAttributes: collectFormAttributes('customConnector', resourceCustomAttributes, values),
                         version: values.version,
                     } as any),
                 );
             }
         },
-        [editMode, connector, dispatch, resourceCustomAttributes],
+        [editMode, connector, dispatch, resourceCustomAttributes, buildAuthAttributes],
     );
 
     const handleCancel = useCallback(() => {
@@ -163,6 +194,7 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
 
     const onConnectClick = useCallback(
         (values: FormValues) => {
+            const authAttributes = buildAuthAttributes(values);
             if (editMode) {
                 if (!connector?.uuid) return;
                 dispatch(
@@ -170,13 +202,20 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
                         uuid: connector.uuid,
                         url: values.url,
                         authType: values.authenticationType as AuthType,
+                        authAttributes,
                     }),
                 );
             } else {
-                dispatch(connectorActions.connectConnector({ url: values.url, authType: values.authenticationType as AuthType }));
+                dispatch(
+                    connectorActions.connectConnector({
+                        url: values.url,
+                        authType: values.authenticationType as AuthType,
+                        authAttributes,
+                    }),
+                );
             }
         },
-        [connector, dispatch, editMode],
+        [connector, dispatch, editMode, buildAuthAttributes],
     );
 
     const defaultValues: FormValues = useMemo(
@@ -210,6 +249,14 @@ export default function ConnectorForm({ connectorId, onCancel, onSuccess }: Conn
         control,
         name: 'authenticationType',
     });
+
+    useEffect(() => {
+        if (watchedAuthType === AuthType.Basic || watchedAuthType === AuthType.Certificate) {
+            dispatch(connectorActions.getConnectorAuthAttributesDescriptors({ authType: watchedAuthType as AuthType }));
+        } else {
+            dispatch(connectorActions.clearConnectorAuthAttributesDescriptors());
+        }
+    }, [watchedAuthType, dispatch]);
 
     const watchedUseProxy = useWatch({
         control,

@@ -13,7 +13,7 @@ import type {
     FunctionGroupModel,
     HealthModel,
 } from 'types/connectors';
-import { ConnectorStatus, type FunctionGroupCode } from 'types/openapi';
+import { type AuthType, ConnectorStatus, type FunctionGroupCode } from 'types/openapi';
 import type { SearchRequestModel } from 'types/certificate';
 
 export type State = {
@@ -22,6 +22,7 @@ export type State = {
     connector?: ConnectorResponseModel;
     connectorHealth?: HealthModel;
     connectorAttributes?: AttributeDescriptorCollectionModel;
+    connectorAuthAttributes?: AttributeDescriptorModel[];
     connectorConnectionDetails?: FunctionGroupModel[];
     connectInfo?: any[];
     connectorInfoV2?: any;
@@ -37,6 +38,7 @@ export type State = {
     isFetchingHealth: boolean;
     isFetchingAttributes: boolean;
     isFetchingAllAttributes: boolean;
+    isFetchingAuthAttributes: boolean;
     isCreating: boolean;
     createConnectorSucceeded: boolean;
     isDeleting: boolean;
@@ -83,6 +85,7 @@ export const initialState: State = {
     isFetchingHealth: false,
     isFetchingAttributes: false,
     isFetchingAllAttributes: false,
+    isFetchingAuthAttributes: false,
     isCreating: false,
     createConnectorSucceeded: false,
     isDeleting: false,
@@ -229,6 +232,24 @@ export const slice = createSlice({
 
         getConnectorAttributesDescriptorsFailure: (state, action: PayloadAction<void>) => {
             state.isFetchingAllAttributes = false;
+        },
+
+        getConnectorAuthAttributesDescriptors: (state, action: PayloadAction<{ authType: AuthType }>) => {
+            state.connectorAuthAttributes = undefined;
+            state.isFetchingAuthAttributes = true;
+        },
+
+        getConnectorAuthAttributesDescriptorsSuccess: (state, action: PayloadAction<{ attributes: AttributeDescriptorModel[] }>) => {
+            state.isFetchingAuthAttributes = false;
+            state.connectorAuthAttributes = action.payload.attributes;
+        },
+
+        getConnectorAuthAttributesDescriptorsFailure: (state, action: PayloadAction<void>) => {
+            state.isFetchingAuthAttributes = false;
+        },
+
+        clearConnectorAuthAttributesDescriptors: (state) => {
+            state.connectorAuthAttributes = undefined;
         },
 
         getConnectorAllAttributesDescriptors: (state, action: PayloadAction<{ uuid: string }>) => {
@@ -501,6 +522,7 @@ const bulkDeleteErrorMessages = createSelector(state, (state) => state.bulkDelet
 const connector = createSelector(state, (state) => state.connector);
 const connectorHealth = createSelector(state, (state) => state.connectorHealth);
 const connectorAttributes = createSelector(state, (state) => state.connectorAttributes);
+const connectorAuthAttributes = createSelector(state, (state) => state.connectorAuthAttributes);
 const connectorConnectionDetails = createSelector(state, (state) => state.connectorConnectionDetails);
 const connectorConnectInfo = createSelector(state, (state) => state.connectInfo);
 const connectorInfoV2 = createSelector(state, (state) => state.connectorInfoV2);
@@ -513,6 +535,7 @@ const isFetchingDetail = createSelector(state, (state) => state.isFetchingDetail
 const isFetchingHealth = createSelector(state, (state) => state.isFetchingHealth);
 const isFetchingAttributes = createSelector(state, (state) => state.isFetchingAttributes);
 const isFetchingAllAttributes = createSelector(state, (state) => state.isFetchingAllAttributes);
+const isFetchingAuthAttributes = createSelector(state, (state) => state.isFetchingAuthAttributes);
 const isCreating = createSelector(state, (state) => state.isCreating);
 const createConnectorSucceeded = createSelector(state, (state) => state.createConnectorSucceeded);
 const isDeleting = createSelector(state, (state) => state.isDeleting);
@@ -539,6 +562,7 @@ export const selectors = {
     connector,
     connectorHealth,
     connectorAttributes,
+    connectorAuthAttributes,
     connectorConnectionDetails,
     connectorConnectInfo,
     connectorInfoV2,
@@ -550,6 +574,7 @@ export const selectors = {
     isFetchingHealth,
     isFetchingAttributes,
     isFetchingAllAttributes,
+    isFetchingAuthAttributes,
     isCreating,
     createConnectorSucceeded,
     isDeleting,

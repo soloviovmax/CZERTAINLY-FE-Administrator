@@ -10,7 +10,7 @@ import { alertsSlice } from './alert-slice';
 import { actions as pagingActions } from './paging';
 import { EntityType } from './filters';
 import { LockWidgetNameEnum } from 'types/user-interface';
-import { ConnectorVersion } from 'types/openapi';
+import { AuthType, ConnectorVersion } from 'types/openapi';
 
 vi.mock('./alerts', () => ({
     actions: {
@@ -42,6 +42,10 @@ type EpicDeps = {
             getAttributes: (args: any) => any;
             getAttributesAll: (args: any) => any;
             forceDeleteConnector: (args: any) => any;
+        };
+        connectorAuthentication: {
+            getBasicAuthAttributes: () => any;
+            getCertificateAttributes: () => any;
         };
         callback: {
             callback: (args: any) => any;
@@ -76,6 +80,11 @@ function createDeps(overrides: Partial<EpicDeps['apiClients']> = {}): EpicDeps {
                 getAttributesAll: () => of({}),
                 forceDeleteConnector: () => of(null),
                 ...overrides.connectors,
+            },
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => of([]),
+                getCertificateAttributes: () => of([]),
+                ...overrides.connectorAuthentication,
             },
             callback: {
                 callback: () => of({}),
@@ -886,6 +895,54 @@ describe('connectors epics', () => {
         expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: '' }));
         expect(emitted[1]).toEqual(
             appRedirectActions.fetchError({ error: expect.any(Error), message: 'Failed to perform resource callback' }),
+        );
+    });
+
+    test('getConnectorAuthAttributesDescriptors Basic fetches basic auth attributes and emits success', async () => {
+        const basicAttrs = [{ uuid: 'u1', name: 'username', contentType: 'string' }];
+        let certificateCalled = false;
+        const emitted = await runEpic(19, slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.Basic }), {
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => of(basicAttrs),
+                getCertificateAttributes: () => {
+                    certificateCalled = true;
+                    return of([]);
+                },
+            } as any,
+        });
+        expect(certificateCalled).toBe(false);
+        expect(emitted[0].type).toBe(slice.actions.getConnectorAuthAttributesDescriptorsSuccess.type);
+        expect(emitted[0].payload.attributes).toHaveLength(1);
+        expect(emitted[0].payload.attributes[0].name).toBe('username');
+    });
+
+    test('getConnectorAuthAttributesDescriptors Certificate fetches certificate attributes and emits success', async () => {
+        let basicCalled = false;
+        const emitted = await runEpic(19, slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.Certificate }), {
+            connectorAuthentication: {
+                getBasicAuthAttributes: () => {
+                    basicCalled = true;
+                    return of([]);
+                },
+                getCertificateAttributes: () => of([{ uuid: 'u2', name: 'keyStore', contentType: 'file' }]),
+            } as any,
+        });
+        expect(basicCalled).toBe(false);
+        expect(emitted[0].type).toBe(slice.actions.getConnectorAuthAttributesDescriptorsSuccess.type);
+        expect(emitted[0].payload.attributes[0].name).toBe('keyStore');
+    });
+
+    test('getConnectorAuthAttributesDescriptors failure emits failure and fetchError', async () => {
+        const err = new Error('auth attrs failed');
+        const emitted = await runEpic(
+            19,
+            slice.actions.getConnectorAuthAttributesDescriptors({ authType: AuthType.Basic }),
+            { connectorAuthentication: { getBasicAuthAttributes: () => throwError(() => err) } as any },
+            2,
+        );
+        expect(emitted[0]).toEqual(slice.actions.getConnectorAuthAttributesDescriptorsFailure());
+        expect(emitted[1]).toEqual(
+            appRedirectActions.fetchError({ error: err, message: 'Failed to get connector authentication attributes' }),
         );
     });
 });
