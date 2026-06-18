@@ -6,7 +6,7 @@ import Dialog from 'components/Dialog';
 import Widget from 'components/Widget';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { actions as listFilterActions, selectors as listFilterSelectors } from 'ducks/list-filters';
-import { WorkflowListKey } from 'utils/listViewState';
+import { WorkflowListKey, useListViewReset } from 'utils/listViewState';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
 import { Link } from 'react-router';
@@ -21,6 +21,7 @@ const ConditionsList = () => {
     const conditions = useSelector(rulesSelectors.conditions);
 
     const dispatch = useDispatch();
+    const { canReset, resetView } = useListViewReset(LIST_FILTER_KEY);
 
     const resourceTypeEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.Resource));
     const conditionTypeEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.ConditionType));
@@ -138,6 +139,7 @@ const ConditionsList = () => {
                 titleSize="large"
                 title="Conditions"
                 refreshAction={getFreshListConditionGroups}
+                resetViewAction={canReset ? resetView : undefined}
                 busy={isBusy && (!isFetchingList || conditions.length > 0)}
                 widgetButtons={buttons}
                 widgetInfoCard={{

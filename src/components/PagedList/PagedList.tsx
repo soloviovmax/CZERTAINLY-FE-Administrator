@@ -1,4 +1,4 @@
-import { type EntityType, selectors as filterSelectors } from 'ducks/filters';
+import { type EntityType, actions as filterActions, selectors as filterSelectors } from 'ducks/filters';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router';
@@ -13,6 +13,7 @@ import PagedListSkeleton from './PagedListSkeleton';
 import type { IconName } from 'types/icons';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { actions, selectors } from 'ducks/paging';
+import { actions as tablePaginationActions } from 'ducks/table-pagination';
 import type { Observable } from 'rxjs';
 import type { SearchFieldListModel, SearchFilterModel, SearchRequestModel } from 'types/certificate';
 import type { LockWidgetNameEnum } from 'types/user-interface';
@@ -185,6 +186,18 @@ function PagedList({
         return result.sort((a, b) => (a.icon === 'plus' ? -1 : 1));
     }, [checkedRows, additionalButtons, navigate, addHidden, onDeleteCallback]);
 
+    const hasNonDefaultViewState = currentFilters.length > 0 || pageNumber > 1 || pageSize !== 10;
+
+    const onResetView = useCallback(() => {
+        dispatch(filterActions.setCurrentFilters({ entity, currentFilters: [] }));
+        dispatch(filterActions.setPreservedFilters({ entity, preservedFilters: [] }));
+        dispatch(actions.resetPaging({ entity }));
+        const rootRoute = location.pathname.split('/')[1] ?? '';
+        if (rootRoute) {
+            dispatch(tablePaginationActions.clearPaginationByRootRoute({ rootRoute }));
+        }
+    }, [dispatch, entity, location.pathname]);
+
     const paginationData = useMemo(
         () => ({
             page: pageNumber,
@@ -227,6 +240,7 @@ function PagedList({
                 enableBusyOverlay
                 widgetLockName={pageWidgetLockName}
                 refreshAction={getFreshData}
+                resetViewAction={hasNonDefaultViewState ? onResetView : undefined}
                 widgetButtons={buttons}
                 titleSize="large"
                 hideWidgetButtons={hideWidgetButtons}

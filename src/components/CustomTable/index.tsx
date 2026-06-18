@@ -125,6 +125,17 @@ function CustomTable({
     );
     const dispatch = useDispatch();
 
+    const resetVersion = useSelector(tablePaginationSelectors.resetVersionForKey(internalPaginationStorageKey));
+    const lastResetVersionRef = useRef(resetVersion);
+    useEffect(() => {
+        if (lastResetVersionRef.current === resetVersion) return;
+        lastResetVersionRef.current = resetVersion;
+        if (!internalPaginationEnabled) return;
+        setPage(1);
+        setPageSize(10);
+        if (canSearch) setSearchKey('');
+    }, [resetVersion, internalPaginationEnabled, canSearch]);
+
     useLayoutEffect(() => {
         if (!internalPaginationEnabled) {
             return;

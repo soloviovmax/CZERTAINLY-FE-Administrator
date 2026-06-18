@@ -180,4 +180,38 @@ describe('table-pagination selectors', () => {
 
         expect(selectors.activeRootRoute(state)).toBe('locations');
     });
+
+    test('clearPaginationByPath removes only keys for the given path', () => {
+        let next = reducer(initialState, actions.setPagination({ key: 'custom-table-pagination:/raprofiles:t', page: 2, pageSize: 20 }));
+        next = reducer(next, actions.setPagination({ key: 'custom-table-pagination:/tokenprofiles:t', page: 3, pageSize: 50 }));
+
+        next = reducer(next, actions.clearPaginationByPath({ pathname: '/raprofiles' }));
+
+        expect(next.byKey['custom-table-pagination:/raprofiles:t']).toBeUndefined();
+        expect(next.byKey['custom-table-pagination:/tokenprofiles:t']).toBeDefined();
+        // bumps the reset version of cleared keys so mounted tables reset their local state
+        expect(next.resetVersionByKey['custom-table-pagination:/raprofiles:t']).toBe(1);
+    });
+
+    test('clearPagination bumps the reset version for the cleared key', () => {
+        const withState = reducer(
+            initialState,
+            actions.setPagination({ key: 'custom-table-persistent:workflows:rules', page: 3, pageSize: 20 }),
+        );
+        const next = reducer(withState, actions.clearPagination({ key: 'custom-table-persistent:workflows:rules' }));
+        expect(next.byKey['custom-table-persistent:workflows:rules']).toBeUndefined();
+        expect(next.resetVersionByKey['custom-table-persistent:workflows:rules']).toBe(1);
+        expect(selectors.resetVersionForKey('custom-table-persistent:workflows:rules')({ tablePagination: next } as any)).toBe(1);
+    });
+
+    test('hasResettableStateForPath detects non-default page/pageSize/search/sort', () => {
+        const make = (entry: any) => ({ tablePagination: { byKey: { 'custom-table-pagination:/raprofiles:t': entry } } }) as any;
+
+        expect(selectors.hasResettableStateForPath('/raprofiles')(make({ page: 1, pageSize: 10 }))).toBe(false);
+        expect(selectors.hasResettableStateForPath('/raprofiles')(make({ page: 2, pageSize: 10 }))).toBe(true);
+        expect(selectors.hasResettableStateForPath('/raprofiles')(make({ page: 1, pageSize: 50 }))).toBe(true);
+        expect(selectors.hasResettableStateForPath('/raprofiles')(make({ page: 1, pageSize: 10, search: 'x' }))).toBe(true);
+        expect(selectors.hasResettableStateForPath('/raprofiles')(make({ page: 1, pageSize: 10, sortColumn: 'name' }))).toBe(true);
+        expect(selectors.hasResettableStateForPath('/tokenprofiles')(make({ page: 2, pageSize: 10 }))).toBe(false);
+    });
 });

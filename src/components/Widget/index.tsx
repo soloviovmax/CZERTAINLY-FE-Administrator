@@ -6,10 +6,11 @@ import Spinner from 'components/Spinner';
 import WidgetButtons, { type WidgetButtonProps } from 'components/WidgetButtons';
 import WidgetLock from 'components/WidgetLock';
 import { selectors } from 'ducks/user-interface';
-import { useSelector } from 'react-redux';
-import { Link } from 'react-router';
+import { actions as tablePaginationActions, selectors as tablePaginationSelectors } from 'ducks/table-pagination';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useLocation } from 'react-router';
 import type { LockWidgetNameEnum } from 'types/user-interface';
-import { RefreshCw } from 'lucide-react';
+import { ListRestart, RefreshCw } from 'lucide-react';
 import Button from 'components/Button';
 
 interface WidgetInfoCard {
@@ -31,6 +32,7 @@ type Props = {
     busy?: boolean;
     widgetLockName?: LockWidgetNameEnum | LockWidgetNameEnum[];
     refreshAction?: () => void;
+    resetViewAction?: () => void;
     widgetButtons?: WidgetButtonProps[];
     widgetExtraTopNode?: React.ReactNode;
     hideWidgetButtons?: boolean;
@@ -55,6 +57,7 @@ function Widget({
     busy = false,
     widgetLockName,
     refreshAction,
+    resetViewAction,
     widgetExtraTopNode,
     hideWidgetButtons = false,
     lockSize = 'normal',
@@ -69,6 +72,13 @@ function Widget({
         (lock) => lock.widgetName === widgetLockName || (Array.isArray(widgetLockName) && widgetLockName.includes(lock.widgetName)),
     );
     const [showWidgetInfo, setShowWidgetInfo] = useState(false);
+
+    const dispatch = useDispatch();
+    const { pathname } = useLocation();
+    const hasResettableTableState = useSelector(tablePaginationSelectors.hasResettableStateForPath(pathname));
+    const effectiveResetViewAction =
+        resetViewAction ??
+        (refreshAction && hasResettableTableState ? () => dispatch(tablePaginationActions.clearPaginationByPath({ pathname })) : undefined);
 
     const getTitleText = () =>
         title ? (
@@ -110,6 +120,19 @@ function Widget({
             </Button>
         ) : null;
 
+    const renderResetViewButton = () =>
+        effectiveResetViewAction ? (
+            <Button
+                onClick={effectiveResetViewAction}
+                data-testid="reset-view-icon"
+                variant="transparent"
+                title="Reset filters, sorting and pagination"
+                disabled={busy || !!widgetLock}
+            >
+                <ListRestart size={16} />
+            </Button>
+        ) : null;
+
     const renderWidgetButtons = useCallback(() => {
         const updatedWidgetButtons = widgetButtons?.map((button) => ({ ...button, disabled: widgetLock ? true : button.disabled })) || [];
         if (widgetInfoCard)
@@ -131,8 +154,8 @@ function Widget({
         const hasTitle = !!title;
         const hasRefreshButton = !!refreshAction;
         const hasButtons = !!(widgetButtons?.length || widgetInfoCard) && !hideWidgetButtons;
-        return !!(hasTitle || hasRefreshButton || hasButtons || widgetExtraTopNode);
-    }, [title, refreshAction, widgetButtons, widgetInfoCard, hideWidgetButtons, widgetExtraTopNode]);
+        return !!(hasTitle || hasRefreshButton || effectiveResetViewAction || hasButtons || widgetExtraTopNode);
+    }, [title, refreshAction, effectiveResetViewAction, widgetButtons, widgetInfoCard, hideWidgetButtons, widgetExtraTopNode]);
 
     return (
         <section
@@ -149,9 +172,10 @@ function Widget({
         >
             {hasHeaderContent && (
                 <div className={cn('flex items-center justify-between flex-wrap gap-2', { 'mb-3': !!widgetLock || !!children })}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                         {renderTitle()}
                         {renderRefreshButton()}
+                        {renderResetViewButton()}
                     </div>
 
                     <div className="flex-1 flex items-center gap-2 justify-end">
