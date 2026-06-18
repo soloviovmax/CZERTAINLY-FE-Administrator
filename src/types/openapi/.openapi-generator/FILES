@@ -119,6 +119,7 @@ models/AuthenticationSettingsUpdateDto.ts
 models/AuthorityInstanceDto.ts
 models/AuthorityInstanceRequestDto.ts
 models/AuthorityInstanceUpdateRequestDto.ts
+models/AvailableOperations.ts
 models/BaseAttributeConstraint.ts
 models/BaseAttributeContentDtoV2.ts
 models/BaseAttributeContentDtoV3.ts
@@ -149,10 +150,12 @@ models/CertificateDetailDto.ts
 models/CertificateDownloadResponseDto.ts
 models/CertificateDto.ts
 models/CertificateEventHistoryDto.ts
+models/CertificateExtension.ts
 models/CertificateFormat.ts
 models/CertificateFormatEncoding.ts
 models/CertificateInLocationDto.ts
 models/CertificateKeyUsage.ts
+models/CertificateOperationKind.ts
 models/CertificateProtocol.ts
 models/CertificateProtocolDto.ts
 models/CertificateQcStatementsDto.ts
@@ -180,6 +183,7 @@ models/CipherDataRequestDto.ts
 models/CipherRequestData.ts
 models/CipherResponseData.ts
 models/ClientCertificateDataResponseDto.ts
+models/ClientCertificateRegistrationRequest.ts
 models/ClientCertificateRekeyRequestDto.ts
 models/ClientCertificateRenewRequestDto.ts
 models/ClientCertificateRequestDto.ts
@@ -410,6 +414,7 @@ models/OneTimeKeyManagedSigningDto.ts
 models/OneTimeKeyManagedSigningRequestDto.ts
 models/Operation.ts
 models/OperationResult.ts
+models/OperationSupport.ts
 models/PaginationRequestDto.ts
 models/PaginationResponseDtoCbomDto.ts
 models/PaginationResponseDtoConnectorDtoV2.ts

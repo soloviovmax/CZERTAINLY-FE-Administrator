@@ -16,12 +16,9 @@
  * @export
  * @enum {string}
  */
-export enum FeatureFlag {
-    Stateless = 'stateless',
-    OpenMetrics = 'openMetrics',
-    SecretVersioning = 'secretVersioning',
-    SecretRotation = 'secretRotation',
-    ContentSigning = 'contentSigning',
-    Timestamping = 'timestamping',
-    CertificateRegistration = 'certificateRegistration',
+export enum CertificateOperationKind {
+    Issue = 'ISSUE',
+    Renew = 'RENEW',
+    Revoke = 'REVOKE',
+    Register = 'REGISTER',
 }
