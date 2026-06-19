@@ -19,7 +19,8 @@ export default defineConfig({
                 'src/*.{ts,tsx}',
                 'src/utils/**/*.{ts,tsx}',
                 'src/ducks/**/*.{ts,tsx}',
-                'src/components/ListStateScopeCleaner/**/*.{ts,tsx}',
+                'src/components/PagedList/PagedList.tsx',
+                'src/components/Widget/index.tsx',
             ],
             exclude: [
                 'node_modules',

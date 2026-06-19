@@ -11,6 +11,7 @@ export type TablePaginationState = {
 export type State = {
     byKey: Record<string, TablePaginationState>;
     activeRootRoute?: string;
+    resetVersionByKey: Record<string, number>;
 };
 
 const DEFAULT_PAGINATION_STATE: TablePaginationState = {
@@ -21,6 +22,12 @@ const DEFAULT_PAGINATION_STATE: TablePaginationState = {
 export const initialState: State = {
     byKey: {},
     activeRootRoute: undefined,
+    resetVersionByKey: {},
+};
+
+const bumpResetVersion = (state: State, key: string) => {
+    state.resetVersionByKey = state.resetVersionByKey ?? {};
+    state.resetVersionByKey[key] = (state.resetVersionByKey[key] ?? 0) + 1;
 };
 
 export const slice = createSlice({
@@ -56,18 +63,31 @@ export const slice = createSlice({
 
         clearPagination: (state, action: PayloadAction<{ key: string }>) => {
             delete state.byKey[action.payload.key];
+            bumpResetVersion(state, action.payload.key);
         },
 
         clearPaginationByRootRoute: (state, action: PayloadAction<{ rootRoute: string }>) => {
             const rootRoutePrefix = `/${action.payload.rootRoute}`;
 
-            state.byKey = Object.fromEntries(
-                Object.entries(state.byKey).filter(
-                    ([key]) =>
-                        !key.startsWith(`custom-table-pagination:${rootRoutePrefix}`) &&
-                        !key.startsWith(`paged-custom-table-pagination:${rootRoutePrefix}`),
-                ),
-            );
+            for (const key of Object.keys(state.byKey)) {
+                if (
+                    key.startsWith(`custom-table-pagination:${rootRoutePrefix}`) ||
+                    key.startsWith(`paged-custom-table-pagination:${rootRoutePrefix}`)
+                ) {
+                    delete state.byKey[key];
+                    bumpResetVersion(state, key);
+                }
+            }
+        },
+
+        clearPaginationByPath: (state, action: PayloadAction<{ pathname: string }>) => {
+            const prefix = `custom-table-pagination:${action.payload.pathname}:`;
+            for (const key of Object.keys(state.byKey)) {
+                if (key.startsWith(prefix)) {
+                    delete state.byKey[key];
+                    bumpResetVersion(state, key);
+                }
+            }
         },
 
         setActiveRootRoute: (state, action: PayloadAction<{ rootRoute: string }>) => {
@@ -85,10 +105,27 @@ const pagination =
 
 const activeRootRoute = (reduxStore: any): string | undefined => state(reduxStore).activeRootRoute;
 
+const hasResettableStateForPath =
+    (pathname: string) =>
+    (reduxStore: any): boolean => {
+        const prefix = `custom-table-pagination:${pathname}:`;
+        return Object.entries(state(reduxStore).byKey).some(
+            ([key, value]) =>
+                key.startsWith(prefix) && ((value.page ?? 1) > 1 || (value.pageSize ?? 10) !== 10 || !!value.search || !!value.sortColumn),
+        );
+    };
+
+const resetVersionForKey =
+    (key: string) =>
+    (reduxStore: any): number =>
+        state(reduxStore).resetVersionByKey?.[key] ?? 0;
+
 export const selectors = {
     state,
     pagination,
     activeRootRoute,
+    hasResettableStateForPath,
+    resetVersionForKey,
 };
 
 export const actions = slice.actions;

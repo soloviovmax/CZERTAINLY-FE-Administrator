@@ -196,4 +196,9 @@ test.describe('PagedList', () => {
 
         await expect(component.locator('text=You are about to delete')).toHaveCount(0);
     });
+
+    test('does not show the reset-view button when the view is at its defaults', async ({ mount, page }) => {
+        await mount(renderPagedList());
+        await expect(page.getByTestId('reset-view-icon')).toHaveCount(0);
+    });
 });

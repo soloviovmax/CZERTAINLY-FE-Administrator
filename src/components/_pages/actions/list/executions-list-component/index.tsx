@@ -8,7 +8,7 @@ import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { actions as actionGroupsActions, selectors as rulesSelectors } from 'ducks/rules';
 import { actions as listFilterActions, selectors as listFilterSelectors } from 'ducks/list-filters';
-import { WorkflowListKey } from 'utils/listViewState';
+import { WorkflowListKey, useListViewReset } from 'utils/listViewState';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import Select from 'components/Select';
@@ -20,6 +20,7 @@ const LIST_FILTER_KEY = WorkflowListKey.executions;
 const ExecutionsList = () => {
     const executions = useSelector(rulesSelectors.executions);
     const dispatch = useDispatch();
+    const { canReset, resetView } = useListViewReset(LIST_FILTER_KEY);
     const navigate = useNavigate();
 
     const resourceTypeEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.Resource));
@@ -153,6 +154,7 @@ const ExecutionsList = () => {
                 titleSize="large"
                 title="Executions"
                 refreshAction={getFreshListActionGroups}
+                resetViewAction={canReset ? resetView : undefined}
                 busy={isBusy && (!isFetchingList || executions.length > 0)}
                 widgetButtons={buttons}
                 widgetInfoCard={{

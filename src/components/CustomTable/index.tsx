@@ -113,13 +113,6 @@ function CustomTable({
                 : `custom-table-pagination:${internalPaginationRouteKey}:${tableSignature}`,
         [paginationPersistKey, internalPaginationRouteKey, tableSignature],
     );
-    const currentRootRoute = useMemo(() => {
-        const normalizedRoute = internalPaginationRouteKey.startsWith('/')
-            ? internalPaginationRouteKey.slice(1)
-            : internalPaginationRouteKey;
-
-        return normalizedRoute.split('/')[0] || '';
-    }, [internalPaginationRouteKey]);
     const selectInternalPagination = useMemo(
         () => tablePaginationSelectors.pagination(internalPaginationStorageKey),
         [internalPaginationStorageKey],
@@ -130,24 +123,18 @@ function CustomTable({
     const [searchKey, setSearchKey] = useState<string>(() =>
         internalPaginationEnabled && canSearch ? (persistedInternalPagination.search ?? '') : '',
     );
-    const activeRootRoute = useSelector(tablePaginationSelectors.activeRootRoute);
     const dispatch = useDispatch();
 
+    const resetVersion = useSelector(tablePaginationSelectors.resetVersionForKey(internalPaginationStorageKey));
+    const lastResetVersionRef = useRef(resetVersion);
     useEffect(() => {
-        if (!currentRootRoute) {
-            return;
-        }
-
-        if (!activeRootRoute) {
-            dispatch(tablePaginationActions.setActiveRootRoute({ rootRoute: currentRootRoute }));
-            return;
-        }
-
-        if (activeRootRoute !== currentRootRoute) {
-            dispatch(tablePaginationActions.clearPaginationByRootRoute({ rootRoute: activeRootRoute }));
-            dispatch(tablePaginationActions.setActiveRootRoute({ rootRoute: currentRootRoute }));
-        }
-    }, [activeRootRoute, currentRootRoute, dispatch]);
+        if (lastResetVersionRef.current === resetVersion) return;
+        lastResetVersionRef.current = resetVersion;
+        if (!internalPaginationEnabled) return;
+        setPage(1);
+        setPageSize(10);
+        if (canSearch) setSearchKey('');
+    }, [resetVersion, internalPaginationEnabled, canSearch]);
 
     useLayoutEffect(() => {
         if (!internalPaginationEnabled) {
@@ -290,7 +277,7 @@ function CustomTable({
     );
 
     useEffect(() => {
-        if (internalPaginationEnabled && persistedInternalPagination.sortColumn) {
+        if (hasPagination && persistedInternalPagination.sortColumn) {
             const sortColumn = persistedInternalPagination.sortColumn;
             const sortDirection = persistedInternalPagination.sortDirection ?? 'asc';
             setTblHeaders(
@@ -301,7 +288,7 @@ function CustomTable({
             return;
         }
         setTblHeaders(headers);
-    }, [headers, internalPaginationEnabled, persistedInternalPagination.sortColumn, persistedInternalPagination.sortDirection]);
+    }, [headers, hasPagination, persistedInternalPagination.sortColumn, persistedInternalPagination.sortDirection]);
 
     useEffect(() => {
         if (!tblHeaders) return;
@@ -504,11 +491,11 @@ function CustomTable({
 
             setTblHeaders(headers);
 
-            if (internalPaginationEnabled) {
+            if (hasPagination) {
                 dispatch(tablePaginationActions.setSort({ key: internalPaginationStorageKey, sortColumn, sortDirection: sort }));
             }
         },
-        [tblHeaders, internalPaginationEnabled, internalPaginationStorageKey, dispatch],
+        [tblHeaders, hasPagination, internalPaginationStorageKey, dispatch],
     );
 
     const onPageSizeChange = useCallback(

@@ -1,6 +1,7 @@
 import type React from 'react';
 import { useMemo } from 'react';
 import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router';
 import { of } from 'rxjs';
 import { createMockStore } from 'utils/test-helpers';
 import FilterWidget from './index';
@@ -152,16 +153,18 @@ export default function FilterWidgetTestWrapper({
 
     return (
         <Provider store={store}>
-            <FilterWidget
-                title={title}
-                entity={entity}
-                getAvailableFiltersApi={getAvailableFiltersApi}
-                onFilterUpdate={onFilterUpdate}
-                disableBadgeRemove={disableBadgeRemove}
-                busyBadges={busyBadges}
-                extraFilterComponent={extraFilterComponent}
-                filterGridCols={filterGridCols}
-            />
+            <MemoryRouter>
+                <FilterWidget
+                    title={title}
+                    entity={entity}
+                    getAvailableFiltersApi={getAvailableFiltersApi}
+                    onFilterUpdate={onFilterUpdate}
+                    disableBadgeRemove={disableBadgeRemove}
+                    busyBadges={busyBadges}
+                    extraFilterComponent={extraFilterComponent}
+                    filterGridCols={filterGridCols}
+                />
+            </MemoryRouter>
         </Provider>
     );
 }

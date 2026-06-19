@@ -6,7 +6,7 @@ import Dialog from 'components/Dialog';
 import Widget from 'components/Widget';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { actions as listFilterActions, selectors as listFilterSelectors } from 'ducks/list-filters';
-import { WorkflowListKey } from 'utils/listViewState';
+import { WorkflowListKey, useListViewReset } from 'utils/listViewState';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
 import { Link } from 'react-router';
@@ -30,6 +30,7 @@ const RulesList = () => {
         (resource?: Resource) => dispatch(listFilterActions.setListResource({ key: LIST_FILTER_KEY, resource })),
         [dispatch],
     );
+    const { canReset, resetView } = useListViewReset(LIST_FILTER_KEY);
     const isFetchingList = useSelector(rulesSelectors.isFetchingRulesList);
     const isDeleting = useSelector(rulesSelectors.isDeletingRule);
     const isBulkDeleting = useSelector(rulesSelectors.isBulkDeletingRules);
@@ -137,6 +138,7 @@ const RulesList = () => {
                 titleSize="large"
                 title="Rules"
                 refreshAction={getFreshList}
+                resetViewAction={canReset ? resetView : undefined}
                 busy={isBusy && (!isFetchingList || rules.length > 0)}
                 widgetButtons={buttons}
                 widgetInfoCard={{

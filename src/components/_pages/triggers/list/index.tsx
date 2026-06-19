@@ -8,7 +8,7 @@ import Widget from 'components/Widget';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { actions as rulesActions, selectors as rulesSelectors } from 'ducks/rules';
 import { actions as listFilterActions, selectors as listFilterSelectors } from 'ducks/list-filters';
-import { WorkflowListKey } from 'utils/listViewState';
+import { WorkflowListKey, useListViewReset } from 'utils/listViewState';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
 import { Link } from 'react-router';
@@ -23,6 +23,7 @@ const LIST_FILTER_KEY = WorkflowListKey.triggers;
 const TriggerList = () => {
     const triggers = useSelector(rulesSelectors.triggers);
     const dispatch = useDispatch();
+    const { canReset, resetView } = useListViewReset(LIST_FILTER_KEY);
 
     const resourceTypeEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.Resource));
     const eventNameEnum = useSelector(enumSelectors.platformEnum(PlatformEnum.ResourceEvent));
@@ -200,6 +201,7 @@ const TriggerList = () => {
                 titleSize="large"
                 title="Triggers"
                 refreshAction={getFreshList}
+                resetViewAction={canReset ? resetView : undefined}
                 busy={isBusy && (!isFetchingList || triggers.length > 0)}
                 widgetButtons={buttons}
                 widgetInfoCard={{

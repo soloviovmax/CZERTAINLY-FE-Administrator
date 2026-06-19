@@ -695,6 +695,30 @@ test.describe('CustomTable', () => {
         await table.unmount();
     });
 
+    test('persists the active sort in server-side mode (paginationData) under the route key', async ({ mount }) => {
+        const store = createMockStore();
+        const routeKey = 'custom-table-pagination:/roles:name|email|status|no-checkboxes|no-details';
+
+        const table = await mount(
+            withProviders(
+                <CustomTable
+                    headers={mockHeaders}
+                    data={mockData}
+                    hasPagination={true}
+                    paginationData={{ page: 1, pageSize: 10, totalItems: 3, totalPages: 1, loadedPageSize: 10 }}
+                    onPageChanged={() => {}}
+                    onPageSizeChanged={() => {}}
+                />,
+                { store, initialRoute: '/roles' },
+            ),
+        );
+
+        await table.getByText('Name').click();
+        await expect.poll(() => (store.getState() as any).tablePagination.byKey[routeKey]?.sortColumn).toBe('name');
+        await expect.poll(() => (store.getState() as any).tablePagination.byKey[routeKey]?.sortDirection).toBe('asc');
+        await table.unmount();
+    });
+
     test('should render skeleton when isLoading is true', async ({ mount }) => {
         const paginationData = {
             page: 1,
@@ -941,22 +965,6 @@ test.describe('CustomTable', () => {
         await nameHeader.click();
         await nameHeader.click();
         await expect(component.locator('tbody tr')).toHaveCount(mockData.length);
-    });
-
-    test('should clear pagination when activeRootRoute differs from current route', async ({ mount }) => {
-        const store = createMockStore({
-            tablePagination: {
-                byKey: { 'custom-table-pagination:/roles:name|email|status|no-checkboxes|no-details': { page: 3, pageSize: 10 } },
-                activeRootRoute: 'roles',
-            } as any,
-        });
-        const component = await mount(
-            withProviders(<CustomTable headers={mockHeaders} data={mockData} hasPagination={true} />, {
-                store,
-                initialRoute: '/users',
-            }),
-        );
-        await expect(component.locator('table')).toBeVisible();
     });
 
     test('should use provided detailHeaders when count matches detailColumns length', async ({ mount }) => {
