@@ -52,8 +52,8 @@ type MenuItemMapping = {
 function toTestIdSlug(value: string): string {
     return value
         .replace(/^\//, '')
-        .replace(/\//g, '-')
-        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .replaceAll('/', '-')
+        .replaceAll(/([a-z0-9])([A-Z])/g, '$1-$2')
         .toLowerCase();
 }
 
@@ -63,7 +63,7 @@ function SidebarSubmenuItem({
     totalCount,
     parentSlug,
 }: Readonly<{ child: { name: string; link: string }; index: number; totalCount: number; parentSlug: string }>) {
-    const childSlug = child.link.split('/').filter(Boolean).pop() ?? toTestIdSlug(child.link);
+    const childSlug = child.link.split('/').findLast(Boolean) ?? toTestIdSlug(child.link);
     return (
         <li className={cn({ 'mb-2': index === totalCount - 1 })}>
             <NavLink
