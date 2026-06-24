@@ -229,7 +229,7 @@ export default function ScepProfileForm({ scepProfileId, onCancel, onSuccess }: 
                 enableIntune: values.enableIntune,
                 intuneTenant: values.intuneTenant,
                 intuneApplicationId: values.intuneApplicationId,
-                intuneApplicationKey: values.intuneApplicationKey || undefined,
+                intuneApplicationKey: values.intuneApplicationKey,
                 caCertificateUuid: values.certificate,
                 issueCertificateAttributes: collectFormAttributes(
                     'issuanceAttributes',
@@ -448,19 +448,14 @@ export default function ScepProfileForm({ scepProfileId, onCancel, onSuccess }: 
                         <Controller
                             name="challengePassword"
                             control={control}
-                            rules={
-                                requiresChallengePassword && !editMode
-                                    ? buildValidationRules([validateRequired()])
-                                    : buildValidationRules([])
-                            }
+                            rules={requiresChallengePassword ? buildValidationRules([validateRequired()]) : buildValidationRules([])}
                             render={({ field, fieldState }) => (
                                 <TextInput
                                     {...field}
                                     id="challengePassword"
                                     type="password"
                                     label="Challenge Password"
-                                    required={requiresChallengePassword && !editMode}
-                                    placeholder={editMode ? 'Leave blank to keep current' : undefined}
+                                    required={requiresChallengePassword}
                                     invalid={fieldState.error && fieldState.isTouched}
                                     error={getFieldErrorMessage(fieldState)}
                                 />
@@ -559,16 +554,15 @@ export default function ScepProfileForm({ scepProfileId, onCancel, onSuccess }: 
                         <Controller
                             name="intuneApplicationKey"
                             control={control}
-                            rules={watchedEnableIntune && !editMode ? buildValidationRules([validateRequired()]) : buildValidationRules([])}
+                            rules={watchedEnableIntune ? buildValidationRules([validateRequired()]) : buildValidationRules([])}
                             render={({ field, fieldState }) => (
                                 <TextInput
                                     {...field}
                                     id="intuneApplicationKey"
                                     type="password"
                                     label="Intune Application Key"
-                                    required={watchedEnableIntune && !editMode}
+                                    required={watchedEnableIntune}
                                     disabled={!watchedEnableIntune}
-                                    placeholder={editMode ? 'Leave blank to keep current' : undefined}
                                     invalid={fieldState.error && fieldState.isTouched}
                                     error={getFieldErrorMessage(fieldState)}
                                 />
