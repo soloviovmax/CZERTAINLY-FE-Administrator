@@ -325,11 +325,7 @@ export const slice = createSlice({
                 customAttributes: ScepProfileResponseModel['customAttributes'];
             }>,
         ) => {
-            if (
-                action.payload.resource === Resource.ScepProfiles &&
-                state.scepProfile &&
-                state.scepProfile.uuid === action.payload.resourceUuid
-            ) {
+            if (action.payload.resource === Resource.ScepProfiles && state.scepProfile?.uuid === action.payload.resourceUuid) {
                 state.scepProfile.customAttributes = action.payload.customAttributes;
             }
         };

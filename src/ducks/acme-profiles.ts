@@ -308,11 +308,7 @@ export const slice = createSlice({
                 customAttributes: AcmeProfileResponseModel['customAttributes'];
             }>,
         ) => {
-            if (
-                action.payload.resource === Resource.AcmeProfiles &&
-                state.acmeProfile &&
-                state.acmeProfile.uuid === action.payload.resourceUuid
-            ) {
+            if (action.payload.resource === Resource.AcmeProfiles && state.acmeProfile?.uuid === action.payload.resourceUuid) {
                 state.acmeProfile.customAttributes = action.payload.customAttributes;
             }
         };
