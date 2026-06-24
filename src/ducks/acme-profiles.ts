@@ -1,4 +1,6 @@
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { Resource } from 'types/openapi';
+import { slice as customAttributesSlice } from './customAttributes';
 import type {
     AcmeProfileAddRequestModel,
     AcmeProfileEditRequestModel,
@@ -295,6 +297,28 @@ export const slice = createSlice({
         bulkDisableAcmeProfilesFailure: (state, action: PayloadAction<{ error: string | undefined }>) => {
             state.isBulkDisabling = false;
         },
+    },
+
+    extraReducers: (builder) => {
+        const syncCustomAttributes = (
+            state: State,
+            action: PayloadAction<{
+                resource: Resource;
+                resourceUuid: string;
+                customAttributes: AcmeProfileResponseModel['customAttributes'];
+            }>,
+        ) => {
+            if (
+                action.payload.resource === Resource.AcmeProfiles &&
+                state.acmeProfile &&
+                state.acmeProfile.uuid === action.payload.resourceUuid
+            ) {
+                state.acmeProfile.customAttributes = action.payload.customAttributes;
+            }
+        };
+
+        builder.addCase(customAttributesSlice.actions.updateCustomAttributeContentSuccess, syncCustomAttributes);
+        builder.addCase(customAttributesSlice.actions.removeCustomAttributeContentSuccess, syncCustomAttributes);
     },
 });
 
