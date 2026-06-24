@@ -115,19 +115,27 @@ export default function CredentialForm({ credentialId, onCancel, onSuccess, uses
     }, [editMode, id, credentialSelector]);
 
     useEffect(() => {
-        if (editMode && credentialProviders && credentialProviders.length > 0 && credential?.uuid === id) {
-            if (!credential?.connectorUuid) return;
-            const provider = credentialProviders.find((p) => p.uuid === credential.connectorUuid);
-            if (!provider) return;
+        if (!editMode || !credential || credential.uuid !== id) return;
 
+        const provider = credentialProviders?.find(
+            (p) => (credential.connectorUuid && p.uuid === credential.connectorUuid) || p.name === credential.connectorName,
+        );
+        const connectorUuid = credential.connectorUuid ?? provider?.uuid;
+        if (!connectorUuid) return;
+
+        if (provider) {
             setCredentialProvider(provider);
+        }
 
+        const key = `${connectorUuid}-${credential.kind}`;
+        if (fetchedDescriptorsKeyRef.current !== key) {
             dispatch(
                 actions.getCredentialProviderAttributesDescriptors({
-                    uuid: credential.connectorUuid,
+                    uuid: connectorUuid,
                     kind: credential.kind,
                 }),
             );
+            fetchedDescriptorsKeyRef.current = key;
         }
     }, [credential, credentialProviders, dispatch, editMode, id]);
 
@@ -431,7 +439,6 @@ export default function CredentialForm({ credentialId, onCancel, onSuccess, uses
                                 {
                                     title: 'Connector Attributes',
                                     content:
-                                        credentialProvider &&
                                         watchedStoreKind &&
                                         credentialProviderAttributeDescriptors &&
                                         credentialProviderAttributeDescriptors.length > 0 ? (
