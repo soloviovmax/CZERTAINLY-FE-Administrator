@@ -1,6 +1,6 @@
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { Resource } from 'types/openapi';
-import { slice as customAttributesSlice } from './customAttributes';
+import { attachCustomAttributesSync } from './customAttributesSync';
 import type { CertificateListResponseDto, CertificateListResponseModel } from 'types/certificate';
 import type { BulkActionModel } from 'types/connectors';
 import type {
@@ -317,21 +317,7 @@ export const slice = createSlice({
     },
 
     extraReducers: (builder) => {
-        const syncCustomAttributes = (
-            state: State,
-            action: PayloadAction<{
-                resource: Resource;
-                resourceUuid: string;
-                customAttributes: ScepProfileResponseModel['customAttributes'];
-            }>,
-        ) => {
-            if (action.payload.resource === Resource.ScepProfiles && state.scepProfile?.uuid === action.payload.resourceUuid) {
-                state.scepProfile.customAttributes = action.payload.customAttributes;
-            }
-        };
-
-        builder.addCase(customAttributesSlice.actions.updateCustomAttributeContentSuccess, syncCustomAttributes);
-        builder.addCase(customAttributesSlice.actions.removeCustomAttributeContentSuccess, syncCustomAttributes);
+        attachCustomAttributesSync(builder, Resource.ScepProfiles, (state) => state.scepProfile);
     },
 });
 
