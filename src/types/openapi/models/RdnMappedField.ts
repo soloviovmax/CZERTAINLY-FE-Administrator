@@ -11,15 +11,11 @@
  * Do not edit the class manually.
  */
 
+import type { FieldSource, FieldType, MappedField } from './';
+
 /**
- *
+ * @type RdnMappedField
+ * Maps an attribute value to an X.509 RDN component
  * @export
- * @enum {string}
  */
-export enum OidCategory {
-    RdnAttributeType = 'rdnAttributeType',
-    ExtendedKeyUsage = 'extendedKeyUsage',
-    QcStatement = 'qcStatement',
-    CertificateExtension = 'certificateExtension',
-    Generic = 'generic',
-}
+export type RdnMappedField = MappedField;

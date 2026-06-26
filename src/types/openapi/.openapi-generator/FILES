@@ -151,6 +151,7 @@ models/CertificateDownloadResponseDto.ts
 models/CertificateDto.ts
 models/CertificateEventHistoryDto.ts
 models/CertificateExtension.ts
+models/CertificateExtensionOidPropertiesDto.ts
 models/CertificateFormat.ts
 models/CertificateFormatEncoding.ts
 models/CertificateInLocationDto.ts
@@ -327,7 +328,13 @@ models/ExecutionItemDto.ts
 models/ExecutionItemRequestDto.ts
 models/ExecutionRequestDto.ts
 models/ExecutionType.ts
+models/ExtensionMappedField.ts
+models/ExtensionValueEncoding.ts
 models/FeatureFlag.ts
+models/FieldMapping.ts
+models/FieldMappingFieldsInner.ts
+models/FieldSource.ts
+models/FieldType.ts
 models/FileAttributeContentData.ts
 models/FileAttributeContentV2.ts
 models/FileAttributeContentV3.ts
@@ -339,6 +346,7 @@ models/FloatAttributeContentV2.ts
 models/FloatAttributeContentV3.ts
 models/FunctionGroupCode.ts
 models/FunctionGroupDto.ts
+models/GeneralNameType.ts
 models/GenericSecretContent.ts
 models/GlobalMetadataCreateRequestDto.ts
 models/GlobalMetadataDefinitionDetailDto.ts
@@ -383,6 +391,7 @@ models/LoginProviderDto.ts
 models/ManagedSigningRequestSchemeInterface.ts
 models/ManagedSigningSchemeInterface.ts
 models/ManagedSigningType.ts
+models/MappedField.ts
 models/MetadataAttributeProperties.ts
 models/MetadataAttributeV2.ts
 models/MetadataAttributeV3.ts
@@ -409,6 +418,7 @@ models/ObjectAttributeContentV3.ts
 models/ObjectEventHistoryDto.ts
 models/ObjectPermissionsDto.ts
 models/ObjectPermissionsRequestDto.ts
+models/ObjectType.ts
 models/OidCategory.ts
 models/OneTimeKeyManagedSigningDto.ts
 models/OneTimeKeyManagedSigningRequestDto.ts
@@ -461,6 +471,7 @@ models/RangeAttributeConstraintData.ts
 models/RawSigningWorkflowDto.ts
 models/RawSigningWorkflowRequestDto.ts
 models/RdnAttributeTypeOidPropertiesDto.ts
+models/RdnMappedField.ts
 models/RecipientType.ts
 models/RegexpAttributeConstraint.ts
 models/RemoveCertificateDto.ts
@@ -496,6 +507,7 @@ models/RoleRequestDto.ts
 models/RuleDetailDto.ts
 models/RuleDto.ts
 models/RuleRequestDto.ts
+models/SanMappedField.ts
 models/ScepProfileDetailDto.ts
 models/ScepProfileDto.ts
 models/ScepProfileEditRequestDto.ts
@@ -545,6 +557,7 @@ models/SigningWorkflowType.ts
 models/SimplifiedComplianceProfileDto.ts
 models/SimplifiedRaProfileDto.ts
 models/SimplifiedSigningProfileDto.ts
+models/SourceParam.ts
 models/SourceRecord.ts
 models/StaticKeyManagedSigningDto.ts
 models/StaticKeyManagedSigningRequestDto.ts
@@ -609,6 +622,8 @@ models/UserProfileDetailDto.ts
 models/UserProfilePermissionsDto.ts
 models/UtilsSettingsDto.ts
 models/UuidDto.ts
+models/ValueSource.ts
+models/ValueSourceType.ts
 models/VaultInstanceDetailDto.ts
 models/VaultInstanceDto.ts
 models/VaultInstanceRequestDto.ts
