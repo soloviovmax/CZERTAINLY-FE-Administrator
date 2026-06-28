@@ -1,6 +1,7 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import cn from 'classnames';
+import { useRef } from 'react';
 import Button, { type ButtonColor, type ButtonVariant } from 'components/Button';
 import {
     Trash2,
@@ -80,6 +81,8 @@ export default function Dialog({
     icon,
     noBorder = false,
 }: Readonly<Props>) {
+    const contentRef = useRef<HTMLDivElement>(null);
+
     const renderIcon = () => {
         if (!icon) return null;
         const iconColor: Record<string, string> = {
@@ -179,9 +182,16 @@ export default function Dialog({
             <RadixDialog.Portal>
                 <RadixDialog.Overlay data-testid="dialog-overlay" className="fixed inset-0 z-[80] bg-black/50" />
                 <RadixDialog.Content
+                    ref={contentRef}
+                    tabIndex={-1}
                     data-testid={dataTestId}
                     onPointerDownOutside={(event) => event.preventDefault()}
                     onInteractOutside={(event) => event.preventDefault()}
+                    onOpenAutoFocus={(event) => {
+                        // Focus the dialog container instead of the close button so its tooltip doesn't auto-open
+                        event.preventDefault();
+                        contentRef.current?.focus();
+                    }}
                     className={cn(
                         'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[80] w-full',
                         sizeClasses[size],
