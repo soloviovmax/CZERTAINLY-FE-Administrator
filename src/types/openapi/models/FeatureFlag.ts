@@ -24,4 +24,7 @@ export enum FeatureFlag {
     ContentSigning = 'contentSigning',
     Timestamping = 'timestamping',
     CertificateRegistration = 'certificateRegistration',
+    CertificateStatusPolling = 'certificateStatusPolling',
+    CertificateRequestStructured = 'certificateRequestStructured',
+    CertificateIdentityOverride = 'certificateIdentityOverride',
 }

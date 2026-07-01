@@ -11,15 +11,11 @@
  * Do not edit the class manually.
  */
 
+import type { ExtensionValueEncoding, FieldSource, FieldType, GeneralNameType, MappedField } from './';
+
 /**
- *
+ * @type SanMappedField
+ * Maps an attribute value to a Subject Alternative Name entry
  * @export
- * @enum {string}
  */
-export enum OidCategory {
-    RdnAttributeType = 'rdnAttributeType',
-    ExtendedKeyUsage = 'extendedKeyUsage',
-    QcStatement = 'qcStatement',
-    CertificateExtension = 'certificateExtension',
-    Generic = 'generic',
-}
+export type SanMappedField = MappedField;

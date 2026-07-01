@@ -16,10 +16,12 @@
  * @export
  * @enum {string}
  */
-export enum OidCategory {
-    RdnAttributeType = 'rdnAttributeType',
-    ExtendedKeyUsage = 'extendedKeyUsage',
-    QcStatement = 'qcStatement',
-    CertificateExtension = 'certificateExtension',
-    Generic = 'generic',
+export enum GeneralNameType {
+    Dns = 'dns',
+    Email = 'email',
+    Ip = 'ip',
+    Uri = 'uri',
+    OtherName = 'otherName',
+    DirectoryName = 'directoryName',
+    RegisteredId = 'registeredId',
 }
