@@ -216,6 +216,10 @@ export default function ScepProfileForm({ scepProfileId, onCancel, onSuccess }: 
         name: 'enableChallengePassword',
     });
 
+    const challengePasswordRequired =
+        watchedEnableChallengePassword && !(editMode && (scepProfileSelector?.enableChallengePassword ?? false));
+    const intuneKeyRequired = watchedEnableIntune && !(editMode && (scepProfileSelector?.enableIntune ?? false));
+
     useEffect(() => {
         setIntune(watchedEnableIntune);
     }, [watchedEnableIntune]);
@@ -465,18 +469,14 @@ export default function ScepProfileForm({ scepProfileId, onCancel, onSuccess }: 
                         <Controller
                             name="challengePassword"
                             control={control}
-                            rules={
-                                watchedEnableChallengePassword && !editMode
-                                    ? buildValidationRules([validateRequired()])
-                                    : buildValidationRules([])
-                            }
+                            rules={challengePasswordRequired ? buildValidationRules([validateRequired()]) : buildValidationRules([])}
                             render={({ field, fieldState }) => (
                                 <TextInput
                                     {...field}
                                     id="challengePassword"
                                     type="password"
                                     label="Challenge Password"
-                                    required={watchedEnableChallengePassword && !editMode}
+                                    required={challengePasswordRequired}
                                     disabled={!watchedEnableChallengePassword}
                                     placeholder={editMode ? 'Leave blank to keep current' : undefined}
                                     invalid={fieldState.error && fieldState.isTouched}
@@ -577,14 +577,14 @@ export default function ScepProfileForm({ scepProfileId, onCancel, onSuccess }: 
                         <Controller
                             name="intuneApplicationKey"
                             control={control}
-                            rules={watchedEnableIntune && !editMode ? buildValidationRules([validateRequired()]) : buildValidationRules([])}
+                            rules={intuneKeyRequired ? buildValidationRules([validateRequired()]) : buildValidationRules([])}
                             render={({ field, fieldState }) => (
                                 <TextInput
                                     {...field}
                                     id="intuneApplicationKey"
                                     type="password"
                                     label="Intune Application Key"
-                                    required={watchedEnableIntune && !editMode}
+                                    required={intuneKeyRequired}
                                     disabled={!watchedEnableIntune}
                                     placeholder={editMode ? 'Leave blank to keep current' : undefined}
                                     invalid={fieldState.error && fieldState.isTouched}
