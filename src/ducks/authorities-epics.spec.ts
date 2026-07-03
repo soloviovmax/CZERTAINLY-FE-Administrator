@@ -145,6 +145,54 @@ describe('authorities epics - listAuthorityProviders', () => {
         expect(emitted[1].type).toBe(appRedirectActions.fetchError.type);
     });
 
+    test('keeps providers when the deprecated function group is unavailable (404)', async () => {
+        const emitted = await runEpic(listAuthorityProviders, slice.actions.listAuthorityProviders(), {
+            connectors: {
+                listConnectors: (args: any) =>
+                    args.functionGroup === FunctionGroupCode.LegacyAuthorityProvider
+                        ? throwError(() => ajaxError(404))
+                        : of([legacyConnector('legacy-1', 'Legacy CA')]),
+            },
+        });
+
+        expect(emitted[0].type).toBe(slice.actions.listAuthorityProvidersSuccess.type);
+        expect(emitted[0].payload.connectors.map((c: any) => c.uuid)).toEqual(['legacy-1']);
+    });
+
+    test('surfaces failure when the deprecated function group fails with a non-404 error', async () => {
+        const emitted = await runEpic(
+            listAuthorityProviders,
+            slice.actions.listAuthorityProviders(),
+            {
+                connectors: {
+                    listConnectors: (args: any) =>
+                        args.functionGroup === FunctionGroupCode.LegacyAuthorityProvider
+                            ? throwError(() => ajaxError(500))
+                            : of([legacyConnector('legacy-1', 'Legacy CA')]),
+                },
+            },
+            2,
+        );
+
+        expect(emitted[0].type).toBe(slice.actions.listAuthorityProvidersFailure.type);
+        expect(emitted[1].type).toBe(appRedirectActions.fetchError.type);
+    });
+
+    test('surfaces failure when the NG interface query fails with a non-AjaxError', async () => {
+        const emitted = await runEpic(
+            listAuthorityProviders,
+            slice.actions.listAuthorityProviders(),
+            {
+                connectors: { listConnectors: () => of([legacyConnector('legacy-1', 'Legacy CA')]) },
+                connectorsV2: { listConnectorsV2: () => throwError(() => new Error('network down')) },
+            },
+            2,
+        );
+
+        expect(emitted[0].type).toBe(slice.actions.listAuthorityProvidersFailure.type);
+        expect(emitted[1].type).toBe(appRedirectActions.fetchError.type);
+    });
+
     test('emits failure and fetchError when the legacy query fails', async () => {
         const emitted = await runEpic(
             listAuthorityProviders,
