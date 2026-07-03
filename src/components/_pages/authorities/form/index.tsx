@@ -43,6 +43,13 @@ interface FormValues {
     interfaceUuid?: string;
 }
 
+const resolveAuthorityFunctionGroupCode = (connector: ConnectorResponseModel): FunctionGroupCode =>
+    connector.functionGroups.find(
+        (fg) =>
+            fg.functionGroupCode === FunctionGroupCode.AuthorityProvider ||
+            fg.functionGroupCode === FunctionGroupCode.LegacyAuthorityProvider,
+    )?.functionGroupCode ?? connector.functionGroups[0].functionGroupCode;
+
 export default function AuthorityForm({ authorityId, onCancel, onSuccess }: Readonly<AuthorityFormProps>) {
     const dispatch = useDispatch();
     const navigate = useNavigate();
@@ -159,7 +166,7 @@ export default function AuthorityForm({ authorityId, onCancel, onSuccess }: Read
                 } else if (authoritySelector.kind) {
                     const descriptorKey = `${authoritySelector.connectorUuid}-${authoritySelector.kind}`;
                     if (fetchedDescriptorsRef.current !== descriptorKey && descriptorsEmpty) {
-                        const functionGroup = provider.functionGroups[0].functionGroupCode;
+                        const functionGroup = resolveAuthorityFunctionGroupCode(provider);
                         fetchedDescriptorsRef.current = descriptorKey;
                         dispatch(
                             authorityActions.getAuthorityProviderAttributesDescriptors({
@@ -269,6 +276,8 @@ export default function AuthorityForm({ authorityId, onCancel, onSuccess }: Read
         name: 'interfaceUuid',
     });
 
+    const generationSelected = isNgProvider ? watchedInterfaceUuid : watchedStoreKind;
+
     const onAuthorityProviderChange = useCallback(
         (value: string) => {
             if (!value) return;
@@ -300,7 +309,7 @@ export default function AuthorityForm({ authorityId, onCancel, onSuccess }: Read
 
             dispatch(connectorActions.clearCallbackData());
             setGroupAttributesCallbackAttributes([]);
-            const functionGroup = authorityProvider.functionGroups[0].functionGroupCode;
+            const functionGroup = resolveAuthorityFunctionGroupCode(authorityProvider);
             dispatch(
                 authorityActions.getAuthorityProviderAttributesDescriptors({
                     uuid: authorityProvider.uuid,
@@ -577,7 +586,7 @@ export default function AuthorityForm({ authorityId, onCancel, onSuccess }: Read
                                             title: 'Connector Attributes',
                                             content:
                                                 authorityProvider &&
-                                                (isNgProvider ? watchedInterfaceUuid : watchedStoreKind) &&
+                                                generationSelected &&
                                                 authorityProviderAttributeDescriptors &&
                                                 authorityProviderAttributeDescriptors.length > 0 ? (
                                                     <AttributeEditor
