@@ -19,6 +19,10 @@ import {
 import { transformConnectorDtoV2ToModel, transformConnectorResponseDtoToModel } from './transform/connectors';
 import { transformSearchRequestModelToDto } from './transform/certificates';
 
+// The NG connector listing is paginated; authority connectors per environment are far below this,
+// so a single large page is fetched instead of following pagination.
+const NG_CONNECTORS_PAGE_SIZE = 1000;
+
 const listAuthorities: AppEpic = (action$, state$, deps) => {
     return action$.pipe(
         filter(slice.actions.listAuthorities.match),
@@ -79,7 +83,7 @@ const listAuthorityProviders: AppEpic = (action$, state, deps) => {
                 ng: deps.apiClients.connectorsV2
                     .listConnectorsV2({
                         searchRequestDto: transformSearchRequestModelToDto({
-                            itemsPerPage: 1000,
+                            itemsPerPage: NG_CONNECTORS_PAGE_SIZE,
                             pageNumber: 1,
                             filters: [
                                 {
