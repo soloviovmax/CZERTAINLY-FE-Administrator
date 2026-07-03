@@ -12,22 +12,17 @@
  */
 
 import type {
-    AttributeCallback,
-    AttributeContentType,
-    AttributeType,
-    AttributeVersion,
-    BaseAttributeConstraint,
-    BaseAttributeContentDtoV3,
-    DataAttributeProperties,
-    DataAttributeV2,
-    DataAttributeV3,
-    FieldMapping,
-    ValueSource,
+    ExtensionMappedField,
+    ExtensionValueEncoding,
+    FieldSource,
+    FieldType,
+    GeneralNameType,
+    RdnMappedField,
+    SanMappedField,
 } from './';
 
 /**
- * @type DataAttribute
- * Data Attribute
+ * @type FieldMappingFieldsInner
  * @export
  */
-export type DataAttribute = DataAttributeV2 | DataAttributeV3;
+export type FieldMappingFieldsInner = ExtensionMappedField | RdnMappedField | SanMappedField;

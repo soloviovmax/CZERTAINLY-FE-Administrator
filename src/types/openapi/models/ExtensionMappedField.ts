@@ -11,15 +11,11 @@
  * Do not edit the class manually.
  */
 
+import type { FieldSource, FieldType, MappedField } from './';
+
 /**
- *
+ * @type ExtensionMappedField
+ * Maps an attribute value to an X.509 extension
  * @export
- * @enum {string}
  */
-export enum OidCategory {
-    RdnAttributeType = 'rdnAttributeType',
-    ExtendedKeyUsage = 'extendedKeyUsage',
-    QcStatement = 'qcStatement',
-    CertificateExtension = 'certificateExtension',
-    Generic = 'generic',
-}
+export type ExtensionMappedField = MappedField;

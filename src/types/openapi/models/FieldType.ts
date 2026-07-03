@@ -16,10 +16,8 @@
  * @export
  * @enum {string}
  */
-export enum OidCategory {
-    RdnAttributeType = 'rdnAttributeType',
-    ExtendedKeyUsage = 'extendedKeyUsage',
-    QcStatement = 'qcStatement',
-    CertificateExtension = 'certificateExtension',
-    Generic = 'generic',
+export enum FieldType {
+    Rdn = 'rdn',
+    San = 'san',
+    Extension = 'extension',
 }
