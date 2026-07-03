@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 import { firstValueFrom, of, throwError } from 'rxjs';
+import { AjaxError } from 'rxjs/ajax';
 import { take, toArray } from 'rxjs/operators';
 
 import authoritiesEpics from './authorities-epics';
@@ -31,6 +32,10 @@ type EpicDeps = {
 };
 
 const emptyPage = { items: [], totalItems: 0, pageNumber: 1, itemsPerPage: 1000, totalPages: 0 };
+
+function ajaxError(status: number): AjaxError {
+    return Object.assign(Object.create(AjaxError.prototype), { status, message: `HTTP ${status}` });
+}
 
 function createDeps(overrides: Partial<EpicDeps['apiClients']> = {}): EpicDeps {
     return {
@@ -121,14 +126,29 @@ describe('authorities epics - listAuthorityProviders', () => {
         expect(connectors[0].interfaces[0].code).toBe(ConnectorInterface.Authority);
     });
 
-    test('still returns legacy connectors when the NG interface query fails', async () => {
+    test('still returns legacy connectors when the NG interface query is unavailable (404)', async () => {
         const emitted = await runEpic(LIST_AUTHORITY_PROVIDERS, slice.actions.listAuthorityProviders(), {
             connectors: { listConnectors: () => of([legacyConnector('legacy-1', 'Legacy CA')]) },
-            connectorsV2: { listConnectorsV2: () => throwError(() => new Error('interface filter unsupported')) },
+            connectorsV2: { listConnectorsV2: () => throwError(() => ajaxError(404)) },
         });
 
         expect(emitted[0].type).toBe(slice.actions.listAuthorityProvidersSuccess.type);
         expect(emitted[0].payload.connectors.map((c: any) => c.uuid)).toEqual(['legacy-1']);
+    });
+
+    test('surfaces failure when the NG interface query fails with a non-404 error', async () => {
+        const emitted = await runEpic(
+            LIST_AUTHORITY_PROVIDERS,
+            slice.actions.listAuthorityProviders(),
+            {
+                connectors: { listConnectors: () => of([legacyConnector('legacy-1', 'Legacy CA')]) },
+                connectorsV2: { listConnectorsV2: () => throwError(() => ajaxError(500)) },
+            },
+            2,
+        );
+
+        expect(emitted[0].type).toBe(slice.actions.listAuthorityProvidersFailure.type);
+        expect(emitted[1].type).toBe(appRedirectActions.fetchError.type);
     });
 
     test('emits failure and fetchError when the legacy query fails', async () => {

@@ -1,5 +1,6 @@
 import type { AppEpic } from 'ducks';
-import { forkJoin, iif, of } from 'rxjs';
+import { forkJoin, iif, of, throwError } from 'rxjs';
+import { AjaxError } from 'rxjs/ajax';
 import { catchError, filter, map, mergeMap, switchMap } from 'rxjs/operators';
 import { ConnectorInterface, FilterConditionOperator, FilterFieldSource, FunctionGroupCode } from 'types/openapi';
 import { extractError } from 'utils/net';
@@ -74,7 +75,7 @@ const listAuthorityProviders: AppEpic = (action$, state, deps) => {
                 legacy: deps.apiClients.connectors.listConnectors({ functionGroup: FunctionGroupCode.AuthorityProvider }),
                 legacyDeprecated: deps.apiClients.connectors
                     .listConnectors({ functionGroup: FunctionGroupCode.LegacyAuthorityProvider })
-                    .pipe(catchError(() => of([]))),
+                    .pipe(catchError((err) => (err instanceof AjaxError && err.status === 404 ? of([]) : throwError(() => err)))),
                 ng: deps.apiClients.connectorsV2
                     .listConnectorsV2({
                         searchRequestDto: transformSearchRequestModelToDto({
@@ -90,7 +91,11 @@ const listAuthorityProviders: AppEpic = (action$, state, deps) => {
                             ],
                         }),
                     })
-                    .pipe(catchError(() => of({ items: [], totalItems: 0 }))),
+                    .pipe(
+                        catchError((err) =>
+                            err instanceof AjaxError && err.status === 404 ? of({ items: [], totalItems: 0 }) : throwError(() => err),
+                        ),
+                    ),
             }).pipe(
                 map(({ legacy, legacyDeprecated, ng }) => {
                     const byUuid = new Map(
