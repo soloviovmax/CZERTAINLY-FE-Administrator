@@ -261,6 +261,7 @@ export default function CustomFlowNode({ data, dragging, selected, xPos, yPos, i
                                             color="primary"
                                             data-testid="flow-node-toggle-hidden"
                                             title={isExpanded ? 'Hide nested nodes' : 'Show nested nodes'}
+                                            aria-label={isExpanded ? 'Hide nested nodes' : 'Show nested nodes'}
                                             onClick={() => {
                                                 toggleHiddenNodes();
                                             }}
