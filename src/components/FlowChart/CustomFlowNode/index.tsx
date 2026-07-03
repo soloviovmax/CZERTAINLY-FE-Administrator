@@ -261,6 +261,7 @@ export default function CustomFlowNode({ data, dragging, selected, xPos, yPos, i
                                 {data.otherProperties && (
                                     <Button
                                         color="primary"
+                                        title={isNodeExpanded ? 'Collapse details' : 'Expand details'}
                                         onClick={expandToggle}
                                         className={cn(
                                             '!rounded-full !w-[26px] !h-[26px] !p-0 !text-[10px]',
@@ -280,6 +281,7 @@ export default function CustomFlowNode({ data, dragging, selected, xPos, yPos, i
                                         <Button
                                             color="primary"
                                             data-testid="flow-node-toggle-hidden"
+                                            title={expandedHiddenNodeId === id ? 'Hide nested nodes' : 'Show nested nodes'}
                                             onClick={() => {
                                                 toggleHiddenNodes();
                                             }}
