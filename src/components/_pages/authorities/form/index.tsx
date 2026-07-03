@@ -227,7 +227,7 @@ export default function AuthorityForm({ authorityId, onCancel, onSuccess }: Read
         [authorityProvider],
     );
 
-    const isNgProvider = authorityInterfaces.length > 0;
+    const isNgProvider = editMode ? !!authority?.connectorInterface : authorityInterfaces.length > 0;
 
     const optionsForInterfaceVersions = useMemo(
         () =>
