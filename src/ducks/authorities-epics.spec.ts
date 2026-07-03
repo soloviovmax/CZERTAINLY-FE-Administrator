@@ -3,7 +3,7 @@ import { firstValueFrom, of, throwError } from 'rxjs';
 import { AjaxError } from 'rxjs/ajax';
 import { take, toArray } from 'rxjs/operators';
 
-import authoritiesEpics from './authorities-epics';
+import { getAuthorityInstanceAttributesDescriptors, listAuthorityProviders } from './authorities-epics';
 import { slice } from './authorities';
 import { actions as appRedirectActions } from './app-redirect';
 import { alertsSlice } from './alert-slice';
@@ -56,14 +56,8 @@ function createDeps(overrides: Partial<EpicDeps['apiClients']> = {}): EpicDeps {
     };
 }
 
-/** Index of listAuthorityProviders in the exported epics array. */
-const LIST_AUTHORITY_PROVIDERS = 2;
-/** Index of getAuthorityInstanceAttributesDescriptors in the exported epics array. */
-const GET_INSTANCE_ATTRS = 4;
-
-async function runEpic(epicIndex: number, action: any, depsOverrides: Partial<EpicDeps['apiClients']> = {}, takeCount = 1): Promise<any[]> {
+async function runEpic(epic: any, action: any, depsOverrides: Partial<EpicDeps['apiClients']> = {}, takeCount = 1): Promise<any[]> {
     const deps = createDeps(depsOverrides);
-    const epic = authoritiesEpics[epicIndex] as any;
     const state$ = of({}) as any;
     state$.value = {};
     const output$ = epic(of(action), state$, deps as any);
@@ -91,7 +85,7 @@ const ngConnector = (uuid: string, name: string) => ({
 
 describe('authorities epics - listAuthorityProviders', () => {
     test('merges legacy (function group) and NG (interface) connectors', async () => {
-        const emitted = await runEpic(LIST_AUTHORITY_PROVIDERS, slice.actions.listAuthorityProviders(), {
+        const emitted = await runEpic(listAuthorityProviders, slice.actions.listAuthorityProviders(), {
             connectors: { listConnectors: () => of([legacyConnector('legacy-1', 'Legacy CA')]) },
             connectorsV2: { listConnectorsV2: () => of({ ...emptyPage, items: [ngConnector('ng-1', 'NG CA')], totalItems: 1 }) },
         });
@@ -103,7 +97,7 @@ describe('authorities epics - listAuthorityProviders', () => {
 
     test('queries the NG list filtered by the Authority connector interface', async () => {
         const listConnectorsV2 = vi.fn((_args: any) => of(emptyPage));
-        await runEpic(LIST_AUTHORITY_PROVIDERS, slice.actions.listAuthorityProviders(), {
+        await runEpic(listAuthorityProviders, slice.actions.listAuthorityProviders(), {
             connectors: { listConnectors: () => of([]) },
             connectorsV2: { listConnectorsV2 },
         });
@@ -115,7 +109,7 @@ describe('authorities epics - listAuthorityProviders', () => {
     });
 
     test('dedupes by uuid, preferring the NG model that carries interfaces', async () => {
-        const emitted = await runEpic(LIST_AUTHORITY_PROVIDERS, slice.actions.listAuthorityProviders(), {
+        const emitted = await runEpic(listAuthorityProviders, slice.actions.listAuthorityProviders(), {
             connectors: { listConnectors: () => of([legacyConnector('shared', 'Shared CA')]) },
             connectorsV2: { listConnectorsV2: () => of({ ...emptyPage, items: [ngConnector('shared', 'Shared CA')], totalItems: 1 }) },
         });
@@ -127,7 +121,7 @@ describe('authorities epics - listAuthorityProviders', () => {
     });
 
     test('still returns legacy connectors when the NG interface query is unavailable (404)', async () => {
-        const emitted = await runEpic(LIST_AUTHORITY_PROVIDERS, slice.actions.listAuthorityProviders(), {
+        const emitted = await runEpic(listAuthorityProviders, slice.actions.listAuthorityProviders(), {
             connectors: { listConnectors: () => of([legacyConnector('legacy-1', 'Legacy CA')]) },
             connectorsV2: { listConnectorsV2: () => throwError(() => ajaxError(404)) },
         });
@@ -138,7 +132,7 @@ describe('authorities epics - listAuthorityProviders', () => {
 
     test('surfaces failure when the NG interface query fails with a non-404 error', async () => {
         const emitted = await runEpic(
-            LIST_AUTHORITY_PROVIDERS,
+            listAuthorityProviders,
             slice.actions.listAuthorityProviders(),
             {
                 connectors: { listConnectors: () => of([legacyConnector('legacy-1', 'Legacy CA')]) },
@@ -153,7 +147,7 @@ describe('authorities epics - listAuthorityProviders', () => {
 
     test('emits failure and fetchError when the legacy query fails', async () => {
         const emitted = await runEpic(
-            LIST_AUTHORITY_PROVIDERS,
+            listAuthorityProviders,
             slice.actions.listAuthorityProviders(),
             { connectors: { listConnectors: () => throwError(() => new Error('list failed')) } },
             2,
@@ -165,7 +159,7 @@ describe('authorities epics - listAuthorityProviders', () => {
 
     test('queries and merges both AuthorityProvider and LegacyAuthorityProvider function groups', async () => {
         const queried: string[] = [];
-        const emitted = await runEpic(LIST_AUTHORITY_PROVIDERS, slice.actions.listAuthorityProviders(), {
+        const emitted = await runEpic(listAuthorityProviders, slice.actions.listAuthorityProviders(), {
             connectors: {
                 listConnectors: (args: any) => {
                     queried.push(args.functionGroup);
@@ -187,7 +181,7 @@ describe('authorities epics - getAuthorityInstanceAttributesDescriptors (NG/v3)'
     test('lists attributes by connectorUuid + interfaceUuid and emits success', async () => {
         const listAuthorityInstanceAttributes = vi.fn((_args: any) => of([]));
         const emitted = await runEpic(
-            GET_INSTANCE_ATTRS,
+            getAuthorityInstanceAttributesDescriptors,
             slice.actions.getAuthorityInstanceAttributesDescriptors({ connectorUuid: 'conn-1', interfaceUuid: 'iface-1' }),
             { authorities: { listAuthorityInstanceAttributes } },
         );
@@ -199,7 +193,7 @@ describe('authorities epics - getAuthorityInstanceAttributesDescriptors (NG/v3)'
 
     test('emits failure + fetchError when the listing fails', async () => {
         const emitted = await runEpic(
-            GET_INSTANCE_ATTRS,
+            getAuthorityInstanceAttributesDescriptors,
             slice.actions.getAuthorityInstanceAttributesDescriptors({ connectorUuid: 'conn-1', interfaceUuid: 'iface-1' }),
             { authorities: { listAuthorityInstanceAttributes: () => throwError(() => new Error('boom')) } },
             2,

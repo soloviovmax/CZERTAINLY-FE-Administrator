@@ -365,4 +365,5 @@ const epics = [
     bulkForceDeleteAuthority,
 ];
 
+export { listAuthorityProviders, getAuthorityInstanceAttributesDescriptors };
 export default epics;
