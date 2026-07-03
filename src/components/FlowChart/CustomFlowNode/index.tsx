@@ -52,10 +52,17 @@ function CertificateIcon({ size = 24, className }: Readonly<{ size?: number; cla
 }
 
 // Layout of revealed nested nodes. Their `parentId` makes them reactflow subflow children, so the
-// position is RELATIVE to the parent: each child cascades down (step Y clears the parent card) and
-// slightly right (step X) so successive children never overlap the parent or each other.
+// position is RELATIVE to the parent: each child cascades down (step Y) and slightly right (step X)
+// so successive children never overlap each other. When the parent also has its details expanded it
+// grows to w-[600px] and taller, so children are pushed clear of that widened card horizontally.
 const NESTED_NODE_STEP_X = 50;
 const NESTED_NODE_STEP_Y = 150;
+const NESTED_NODE_EXPANDED_X_OFFSET = 620;
+
+const nestedChildPosition = (childIndex: number, parentDetailsExpanded: boolean) => ({
+    x: (parentDetailsExpanded ? NESTED_NODE_EXPANDED_X_OFFSET : 0) + (childIndex + 1) * NESTED_NODE_STEP_X,
+    y: (childIndex + 1) * NESTED_NODE_STEP_Y,
+});
 
 export default function CustomFlowNode({ data, dragging, selected, xPos, yPos, id }: Readonly<EntityNodeProps>) {
     const [isNodeExpanded, setIsNodeExpanded] = useState(data.expandedByDefault ?? false);
@@ -95,13 +102,30 @@ export default function CustomFlowNode({ data, dragging, selected, xPos, yPos, i
             const childIndex = orderedChildIds.indexOf(node.id);
             return {
                 ...node,
-                position: { x: (childIndex + 1) * NESTED_NODE_STEP_X, y: (childIndex + 1) * NESTED_NODE_STEP_Y },
+                position: nestedChildPosition(childIndex, isNodeExpanded),
                 hidden: false,
             };
         });
 
         if (updatedNodes) dispatch(userInterfaceActions.updateReactFlowNodes(updatedNodes));
-    }, [flowChartNoedesState, dispatch, id, isExpanded]);
+    }, [flowChartNoedesState, dispatch, id, isExpanded, isNodeExpanded]);
+
+    // Reposition already-revealed children when the parent's details are toggled: the card resizes,
+    // so re-apply the offset to keep children from sliding under the (now wider) parent, or to pull
+    // them back once the details collapse.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: run only when the details toggle flips
+    useEffect(() => {
+        if (!isExpanded) return;
+        const visibleChildIds = (flowChartNoedesState ?? [])
+            .filter((node) => node?.parentId === id && node.hidden === false)
+            .map((node) => node.id);
+        if (visibleChildIds.length === 0) return;
+        const updatedNodes = (flowChartNoedesState ?? []).map((node) => {
+            if (node?.parentId !== id || node.hidden !== false) return node;
+            return { ...node, position: nestedChildPosition(visibleChildIds.indexOf(node.id), isNodeExpanded) };
+        });
+        dispatch(userInterfaceActions.updateReactFlowNodes(updatedNodes));
+    }, [isNodeExpanded]);
 
     const expandToggle = useCallback(() => {
         setIsNodeExpanded(!isNodeExpanded);
