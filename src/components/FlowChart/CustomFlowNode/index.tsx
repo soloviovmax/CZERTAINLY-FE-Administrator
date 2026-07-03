@@ -345,13 +345,13 @@ export default function CustomFlowNode({ data, dragging, selected, xPos, yPos, i
                             </div>
                         </div>
                     )}
-                    <div className="flex items-center mb-2">
-                        <div className="mr-2">{getIconComponent()}</div>
-                        <h6 className="text-[var(--dark-gray-color)] font-bold text-lg">{data.customNodeCardTitle}</h6>
+                    <div className="flex items-center mb-2 w-full">
+                        <div className="mr-2 shrink-0">{getIconComponent()}</div>
+                        <h6 className="text-[var(--dark-gray-color)] font-bold text-lg min-w-0 break-words">{data.customNodeCardTitle}</h6>
                     </div>
 
                     {data.entityLabel ? (
-                        <div className="flex font-medium text-[#64748b] [&>*]:min-w-0 [&>*]:flex-shrink [&>*]:break-words">
+                        <div className="flex w-full font-medium text-[#64748b] [&>*]:min-w-0 [&>*]:flex-shrink [&>*]:break-words">
                             <h6>Entity Name:</h6>
                             &nbsp;
                             {data.redirectUrl ? (
