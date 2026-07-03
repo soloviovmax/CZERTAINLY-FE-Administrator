@@ -103,6 +103,7 @@ models/AttributeContentType.ts
 models/AttributeDefinitionDto.ts
 models/AttributeMappingDto.ts
 models/AttributeResource.ts
+models/AttributeSetMergeMode.ts
 models/AttributeType.ts
 models/AttributeValueTarget.ts
 models/AttributeVersion.ts
@@ -162,6 +163,8 @@ models/CertificateProtocolDto.ts
 models/CertificateQcStatementsDto.ts
 models/CertificateRelationType.ts
 models/CertificateRelationsDto.ts
+models/CertificateRequestAttributesSettingsDto.ts
+models/CertificateRequestAttributesSettingsUpdateDto.ts
 models/CertificateRequestDto.ts
 models/CertificateRequestFormat.ts
 models/CertificateResponseDto.ts
@@ -459,6 +462,8 @@ models/PushToLocationRequestDto.ts
 models/QcType.ts
 models/RaProfileAcmeDetailResponseDto.ts
 models/RaProfileAssociationRequestDto.ts
+models/RaProfileCertificateRequestAttributesDto.ts
+models/RaProfileCertificateRequestAttributesUpdateDto.ts
 models/RaProfileCertificateValidationSettingsDto.ts
 models/RaProfileCertificateValidationSettingsUpdateDto.ts
 models/RaProfileCmpDetailResponseDto.ts
@@ -623,6 +628,7 @@ models/UserProfilePermissionsDto.ts
 models/UtilsSettingsDto.ts
 models/UuidDto.ts
 models/ValueSource.ts
+models/ValueSourceBindingDto.ts
 models/ValueSourceType.ts
 models/VaultInstanceDetailDto.ts
 models/VaultInstanceDto.ts
