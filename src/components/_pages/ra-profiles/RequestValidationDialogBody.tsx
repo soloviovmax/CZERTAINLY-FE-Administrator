@@ -55,12 +55,12 @@ export default function RequestValidationDialogBody({ raProfile, platformSetting
 
     const onSubmit = useCallback(
         (values: RequestValidationFormValues) => {
-            if (!raProfile) return;
+            if (!raProfile?.authorityInstanceUuid) return;
 
             dispatch(
                 actions.updateRaProfileRequestAttributes({
                     profileUuid: raProfile.uuid,
-                    authorityInstanceUuid: raProfile.authorityInstanceUuid ?? 'unknown',
+                    authorityInstanceUuid: raProfile.authorityInstanceUuid,
                     requestAttributes: requestValidationFormValuesToUpdateDto(values, raProfile.certificateRequestAttributes),
                 }),
             );

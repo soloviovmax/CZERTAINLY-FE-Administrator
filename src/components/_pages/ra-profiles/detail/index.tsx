@@ -1224,11 +1224,13 @@ export default function RaProfileDetail() {
             <Dialog
                 isOpen={requestValidationDialog}
                 caption="Edit Request Validation Settings"
-                body={RequestValidationDialogBody({
-                    platformSettings,
-                    onClose: () => setRequestValidationDialog(false),
-                    raProfile,
-                })}
+                body={
+                    <RequestValidationDialogBody
+                        platformSettings={platformSettings}
+                        onClose={() => setRequestValidationDialog(false)}
+                        raProfile={raProfile}
+                    />
+                }
                 toggle={() => setRequestValidationDialog(false)}
                 buttons={[]}
                 size="md"
