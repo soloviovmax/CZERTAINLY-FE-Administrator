@@ -1031,7 +1031,7 @@ export default function RaProfileDetail() {
                                 {
                                     title: 'Validation',
                                     content: (
-                                        <Container className="md:flex-row">
+                                        <Container className="lg:flex-row">
                                             <Widget
                                                 title="Certificate Validation Details"
                                                 widgetButtons={certificateValidationButtons}
@@ -1039,7 +1039,7 @@ export default function RaProfileDetail() {
                                                 refreshAction={getFreshRaProfileDetail}
                                                 widgetLockName={LockWidgetNameEnum.PlatformSettings}
                                                 lockSize="large"
-                                                className="w-full md:w-1/2"
+                                                className="w-full lg:flex-1 lg:min-w-0"
                                             >
                                                 <CustomTable headers={certificateValidationHeaders} data={certificateValidationData} />
                                             </Widget>
@@ -1050,7 +1050,7 @@ export default function RaProfileDetail() {
                                                 refreshAction={getFreshRaProfileDetail}
                                                 widgetLockName={LockWidgetNameEnum.PlatformSettings}
                                                 lockSize="large"
-                                                className="w-full md:w-1/2"
+                                                className="w-full lg:flex-1 lg:min-w-0"
                                                 dataTestId="request-validation-widget"
                                             >
                                                 <CustomTable headers={certificateValidationHeaders} data={requestValidationData} />
