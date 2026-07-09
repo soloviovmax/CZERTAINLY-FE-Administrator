@@ -24,6 +24,7 @@ import Switch from 'components/Switch';
 
 import Badge from 'components/Badge';
 import type { UserDetailModel } from 'types/auth';
+import type { AttributeRequestModel } from 'types/attributes';
 import type { CertificateDetailResponseModel, CertificateListResponseModel } from 'types/certificate';
 
 import { EntityType } from 'ducks/filters';
@@ -141,6 +142,7 @@ function UserForm({ userId, onCancel, onSuccess }: UserFormProps) {
     const [certUploadDialog, setCertUploadDialog] = useState(false);
     const [certToUpload, setCertToUpload] = useState<CertificateDetailResponseModel>();
     const [certFileContent, setCertFileContent] = useState<string>();
+    const [certCustomAttributes, setCertCustomAttributes] = useState<AttributeRequestModel[]>();
 
     /* Load first page of certificates & all roles available */
 
@@ -273,6 +275,7 @@ function UserForm({ userId, onCancel, onSuccess }: UserFormProps) {
                             certificateUuid: values.inputType === 'select' ? values.certificateUuid : undefined,
                             certificateData: values.inputType === 'upload' ? certFileContent : undefined,
                             customAttributes: collectFormAttributes('customUser', resourceCustomAttributes, values),
+                            certificateCustomAttributes: values.inputType === 'upload' ? certCustomAttributes : undefined,
                         },
                     }),
                 );
@@ -291,12 +294,13 @@ function UserForm({ userId, onCancel, onSuccess }: UserFormProps) {
                             certificateData: values.inputType === 'upload' ? certFileContent : undefined,
                             certificateUuid: values.inputType === 'select' ? values.certificateUuid : undefined,
                             customAttributes: collectFormAttributes('customUser', resourceCustomAttributes, values),
+                            certificateCustomAttributes: values.inputType === 'upload' ? certCustomAttributes : undefined,
                         },
                     }),
                 );
             }
         },
-        [user, certFileContent, dispatch, editMode, userRoles, resourceCustomAttributes],
+        [user, certFileContent, certCustomAttributes, dispatch, editMode, userRoles, resourceCustomAttributes],
     );
 
     const submitTitle = useMemo(() => (editMode ? 'Save' : 'Create'), [editMode]);
@@ -735,11 +739,11 @@ function UserForm({ userId, onCancel, onSuccess }: UserFormProps) {
                 body={
                     <CertificateUploadDialog
                         okButtonTitle="Choose"
-                        showCustomAttributes={false}
                         onCancel={() => setCertUploadDialog(false)}
                         onUpload={(data) => {
                             setCertToUpload(data.certificate);
                             setCertFileContent(data.fileContent);
+                            setCertCustomAttributes(data.customAttributes);
                             setCertUploadDialog(false);
                         }}
                     />
