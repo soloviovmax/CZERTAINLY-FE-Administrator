@@ -171,6 +171,8 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
 
     const onRaProfileChange = useCallback(
         (raProfileUuid: string) => {
+            // Validation errors belong to the previous profile's request — drop them on any change.
+            dispatch(certificateActions.clearIssueValidationErrors());
             const profile = raProfiles.find((p) => p.uuid === raProfileUuid);
             if (!profile?.authorityInstanceUuid) return;
             dispatch(connectorActions.clearCallbackData());
@@ -339,6 +341,8 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                             onChange={(selected) => {
                                                 const source = (selected ?? '') as 'external' | 'existing';
                                                 onChange(source);
+                                                // Stale validation errors from the other source must not linger.
+                                                dispatch(certificateActions.clearIssueValidationErrors());
                                                 if (source === 'external') {
                                                     setValue('tokenProfileUuid', undefined);
                                                     setValue('keyUuid', undefined);
@@ -381,12 +385,6 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                     />
 
                                     {certificate && <CertificateAttributes csr certificate={certificate} />}
-
-                                    {issueValidationErrors?.length ? (
-                                        <div className="mt-4">
-                                            <ComplianceErrorsPanel errors={issueValidationErrors} />
-                                        </div>
-                                    ) : null}
                                 </>
                             ) : null}
 
@@ -474,6 +472,13 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                             ]}
                                         />
                                     ) : null}
+                                </div>
+                            ) : null}
+
+                            {/* Compliance/validation errors apply to any issuance mode, not just external CSR. */}
+                            {selectedRaProfile && issueValidationErrors?.length ? (
+                                <div className="mt-4">
+                                    <ComplianceErrorsPanel errors={issueValidationErrors} />
                                 </div>
                             ) : null}
                         </Widget>

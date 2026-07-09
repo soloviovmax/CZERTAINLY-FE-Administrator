@@ -36,8 +36,11 @@ export function requestValidationFormValuesToUpdateDto(
         requestAttributes: currentConfiguration?.requestAttributes,
         mergeMode: currentConfiguration?.mergeMode,
         valueSourceBindings: currentConfiguration?.valueSourceBindings,
-        externalCsrValidationStrict: values.usePlatformSettings ? null : values.strict,
-    } as unknown as RaProfileCertificateRequestAttributesUpdateDto;
+        // `null` means "inherit the platform default", but the generated model types this field as
+        // `boolean | undefined` (the spec omits `nullable`). Narrow the cast to just this field so the
+        // rest of the literal stays type-checked against the DTO.
+        externalCsrValidationStrict: (values.usePlatformSettings ? null : values.strict) as unknown as boolean | undefined,
+    };
 }
 
 function complianceErrorMessage(item: unknown): string | undefined {
