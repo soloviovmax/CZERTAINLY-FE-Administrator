@@ -14,6 +14,7 @@ const CertificateSettings = ({ platformSettings }: Props) => {
             {
                 id: 'setting',
                 content: 'Setting',
+                width: '40%',
             },
             {
                 id: 'value',
@@ -23,9 +24,8 @@ const CertificateSettings = ({ platformSettings }: Props) => {
         [],
     );
 
-    const data: TableDataRow[] = useMemo(() => {
+    const validationData: TableDataRow[] = useMemo(() => {
         const validation = platformSettings?.certificates?.validation;
-        const registration = platformSettings?.certificates?.registration;
         const rows: TableDataRow[] = [];
 
         if (validation) {
@@ -50,6 +50,13 @@ const CertificateSettings = ({ platformSettings }: Props) => {
             }
         }
 
+        return rows;
+    }, [platformSettings]);
+
+    const registrationData: TableDataRow[] = useMemo(() => {
+        const registration = platformSettings?.certificates?.registration;
+        const rows: TableDataRow[] = [];
+
         if (registration) {
             rows.push(
                 {
@@ -67,8 +74,15 @@ const CertificateSettings = ({ platformSettings }: Props) => {
     }, [platformSettings]);
 
     return (
-        <div style={{ paddingTop: '1.5em', paddingBottom: '1.5em' }}>
-            <CustomTable headers={headers} data={data} />
+        <div style={{ paddingTop: '1.5em', paddingBottom: '1.5em' }} className="space-y-6">
+            <div className="space-y-2">
+                <h3 className="text-lg font-bold text-[var(--dark-gray-color)] dark:text-neutral-200">Validation</h3>
+                <CustomTable headers={headers} data={validationData} />
+            </div>
+            <div className="space-y-2">
+                <h3 className="text-lg font-bold text-[var(--dark-gray-color)] dark:text-neutral-200">Registration</h3>
+                <CustomTable headers={headers} data={registrationData} />
+            </div>
         </div>
     );
 };
