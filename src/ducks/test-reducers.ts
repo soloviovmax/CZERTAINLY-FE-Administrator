@@ -528,12 +528,22 @@ export type CertificatesTestState = {
     finalizingIssueCertificateUuids: string[];
     confirmingRevokeCertificateUuids: string[];
     cancelingPendingCertificateUuids: string[];
+    issuanceAttributes: Record<string, any[]>;
+    csrAttributeDescriptors: any[];
+    isIssuing: boolean;
+    isRegistering: boolean;
+    issueValidationErrors?: string[];
 };
 
 const certificatesTestInitialState: CertificatesTestState = {
     finalizingIssueCertificateUuids: [],
     confirmingRevokeCertificateUuids: [],
     cancelingPendingCertificateUuids: [],
+    issuanceAttributes: {},
+    csrAttributeDescriptors: [],
+    isIssuing: false,
+    isRegistering: false,
+    issueValidationErrors: undefined,
 };
 
 function certificatesTestReducer(state: CertificatesTestState | undefined, _action: UnknownAction): CertificatesTestState {
@@ -630,14 +640,96 @@ function raProfileRequestAttributesTestReducer(
 
 export type RaProfilesTestState = {
     isUpdating: boolean;
+    raProfiles: any[];
 };
 
 const raProfilesTestInitialState: RaProfilesTestState = {
     isUpdating: false,
+    raProfiles: [],
 };
 
 function raProfilesTestReducer(state: RaProfilesTestState | undefined, _action: UnknownAction): RaProfilesTestState {
     return state ?? raProfilesTestInitialState;
+}
+
+export type UtilsCertificateRequestTestState = {
+    parsedCertificateRequest?: any;
+    parseError?: string;
+};
+
+const utilsCertificateRequestTestInitialState: UtilsCertificateRequestTestState = {
+    parsedCertificateRequest: undefined,
+    parseError: undefined,
+};
+
+function utilsCertificateRequestTestReducer(
+    state: UtilsCertificateRequestTestState | undefined,
+    _action: UnknownAction,
+): UtilsCertificateRequestTestState {
+    return state ?? utilsCertificateRequestTestInitialState;
+}
+
+export type CryptographicOperationsTestState = {
+    signatureAttributeDescriptors: any[];
+    altSignatureAttributeDescriptors: any[];
+};
+
+const cryptographicOperationsTestInitialState: CryptographicOperationsTestState = {
+    signatureAttributeDescriptors: [],
+    altSignatureAttributeDescriptors: [],
+};
+
+function cryptographicOperationsTestReducer(
+    state: CryptographicOperationsTestState | undefined,
+    _action: UnknownAction,
+): CryptographicOperationsTestState {
+    return state ?? cryptographicOperationsTestInitialState;
+}
+
+// Reducer key must match the real slice.name ('tokenprofiles', lowercase p) so the real
+// token-profiles selectors (used by RenderTokenProfile) can find this state.
+export type TokenProfilesTestState = {
+    tokenProfiles: any[];
+};
+
+const tokenProfilesTestInitialState: TokenProfilesTestState = {
+    tokenProfiles: [],
+};
+
+function tokenProfilesTestReducer(state: TokenProfilesTestState | undefined, _action: UnknownAction): TokenProfilesTestState {
+    return state ?? tokenProfilesTestInitialState;
+}
+
+// Reducer key must match the real slice.name ('cryptographicKeys') so the real
+// cryptographic-keys selectors (used by RenderRequestKey) can find this state.
+export type CryptographicKeysTestState = {
+    cryptographicKeyPairs: any[];
+    altCryptographicKeyPairs: any[];
+};
+
+const cryptographicKeysTestInitialState: CryptographicKeysTestState = {
+    cryptographicKeyPairs: [],
+    altCryptographicKeyPairs: [],
+};
+
+function cryptographicKeysTestReducer(state: CryptographicKeysTestState | undefined, _action: UnknownAction): CryptographicKeysTestState {
+    return state ?? cryptographicKeysTestInitialState;
+}
+
+export type SettingsTestState = {
+    platformSettings?: any;
+    isFetchingPlatform: boolean;
+    isUpdatingPlatform: boolean;
+};
+
+const settingsTestInitialState: SettingsTestState = {
+    platformSettings: undefined,
+    isFetchingPlatform: false,
+    isUpdatingPlatform: false,
+};
+
+function settingsTestReducer(state: SettingsTestState | undefined, _action: UnknownAction): SettingsTestState {
+    return state ?? settingsTestInitialState;
 }
 
 export const testReducers = combineReducers({
@@ -661,6 +753,11 @@ export const testReducers = combineReducers({
     utilsActuator: utilsActuatorTestReducer,
     signingRecordsDashboard: signingRecordsDashboardTestReducer,
     raprofiles: raProfilesTestReducer,
+    cryptographicOperations: cryptographicOperationsTestReducer,
+    utilsCertificateRequest: utilsCertificateRequestTestReducer,
+    settings: settingsTestReducer,
+    tokenprofiles: tokenProfilesTestReducer,
+    cryptographicKeys: cryptographicKeysTestReducer,
 });
 
 export const testInitialState = {
@@ -684,4 +781,9 @@ export const testInitialState = {
     utilsActuator: utilsActuatorTestInitialState,
     signingRecordsDashboard: signingRecordsDashboardTestInitialState,
     raprofiles: raProfilesTestInitialState,
+    cryptographicOperations: cryptographicOperationsTestInitialState,
+    utilsCertificateRequest: utilsCertificateRequestTestInitialState,
+    settings: settingsTestInitialState,
+    tokenprofiles: tokenProfilesTestInitialState,
+    cryptographicKeys: cryptographicKeysTestInitialState,
 };

@@ -5,13 +5,15 @@ import type {
     CertificateChainResponseDto,
     CertificateComplianceResultDto,
     CertificateDetailDto,
+    CertificateRegistrationDetailDto,
     CertificateSearchRequestDto,
     CertificateValidationCheck,
     CertificateValidationCheckDto,
     CertificateValidationResultDto,
     CertificateValidationStatus,
+    ClientCertificateIssueRequestDto,
+    ClientCertificateRegistrationRequest,
     ClientCertificateRevocationDto,
-    ClientCertificateSignRequestDto,
     MultipleCertificateObjectUpdateDto,
     RemoveCertificateDto,
     SearchFieldDataByGroupDto,
@@ -19,6 +21,7 @@ import type {
 } from './openapi';
 
 export type {
+    CertificateRegistrationDetailDto as CertificateRegistrationDetailModel,
     CertificateValidationCheckDto as ValidationCertificateCheckDto,
     CertificateValidationResultDto as ValidationCertificateResultDto,
     SearchFilterRequestDto as SearchFilterDto,
@@ -30,7 +33,7 @@ export type {
     CertificateDetailDto as CertificateDetailResponseDto,
     CertificateDto as CertificateListResponseDto,
     CertificateDto as CertificateListResponseModel,
-    ClientCertificateSignRequestDto as CertificateSignRequestDto,
+    ClientCertificateIssueRequestDto as CertificateSignRequestDto,
     ClientCertificateRevocationDto as CertificateRevokeRequestDto,
     ClientCertificateRenewRequestDto as CertificateRenewRequestDto,
     ClientCertificateRenewRequestDto as CertificateRenewRequestModel,
@@ -87,10 +90,11 @@ export type CertificateDetailResponseModel = Omit<
     groups?: Array<CertificateGroupResponseModel>;
     nonCompliantRules?: Array<CertificateComplianceResponseModel>;
     customAttributes?: Array<AttributeResponseModel>;
+    registration?: import('./openapi').CertificateRegistrationDetailDto;
 };
 
 export type CertificateSignRequestModel = Omit<
-    ClientCertificateSignRequestDto,
+    ClientCertificateIssueRequestDto,
     'attributes | customAttributes | csrAttributes | signatureAttributes'
 > & {
     attributes: Array<AttributeRequestModel>;
@@ -116,4 +120,13 @@ export type CertificateBulkDeleteRequestModel = Omit<RemoveCertificateDto, 'filt
 
 export type CertificateChainResponseModel = Omit<CertificateChainResponseDto, 'certificates'> & {
     certificates?: Array<CertificateDetailResponseModel>;
+};
+
+export type CertificateRegistrationRequestModel = Omit<
+    ClientCertificateRegistrationRequest,
+    'attributes | customAttributes | csrAttributes'
+> & {
+    attributes?: Array<AttributeRequestModel>;
+    customAttributes?: Array<AttributeRequestModel>;
+    csrAttributes?: Array<AttributeRequestModel>;
 };

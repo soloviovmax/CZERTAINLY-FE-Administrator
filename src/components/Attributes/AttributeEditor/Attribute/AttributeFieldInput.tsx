@@ -197,6 +197,9 @@ export function AttributeFieldInput({ name, descriptor, busy, deleteButton }: Re
     const showLabel = descriptor.properties.visible && descriptor.contentType !== AttributeContentType.Boolean;
     const showDescriptionAndError = descriptor.properties.visible;
     const regexpConstraint = getRegexpConstraint(descriptor);
+    // Request attributes carry a description equal to their label; showing it just repeats the label
+    // under the field, so only render the description when it adds information.
+    const showDescription = !!descriptor.description && descriptor.description.trim() !== (descriptor.properties.label ?? '').trim();
 
     return (
         <Controller
@@ -206,11 +209,13 @@ export function AttributeFieldInput({ name, descriptor, busy, deleteButton }: Re
             render={({ field, fieldState }) => (
                 <>
                     {showLabel && (
-                        <Label htmlFor={name} required={descriptor.properties.required}>
-                            {descriptor.properties.label}
-                        </Label>
+                        <div className="flex items-center gap-2 mb-2">
+                            <Label htmlFor={name} required={descriptor.properties.required} className="!mb-0">
+                                {descriptor.properties.label}
+                            </Label>
+                            <RequestAttributeMappingBadge fieldMapping={getFieldMapping(descriptor)} />
+                        </div>
                     )}
-                    {showLabel && <RequestAttributeMappingBadge fieldMapping={getFieldMapping(descriptor)} />}
                     <div className="flex items-center">
                         <StandardInputControl
                             name={name}
@@ -224,7 +229,7 @@ export function AttributeFieldInput({ name, descriptor, busy, deleteButton }: Re
                     </div>
                     {showDescriptionAndError && (
                         <>
-                            {descriptor.description && (
+                            {showDescription && (
                                 <p
                                     className={cn('text-xs text-gray-400 dark:text-neutral-400', {
                                         'block -mt-2': descriptor.contentType === AttributeContentType.Boolean,
