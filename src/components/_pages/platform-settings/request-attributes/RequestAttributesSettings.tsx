@@ -1,0 +1,81 @@
+import Container from 'components/Container';
+import ProgressButton from 'components/ProgressButton';
+import RequestAttributeAuthoringEditor from 'components/RequestAttributes/RequestAttributeAuthoringEditor';
+import Widget from 'components/Widget';
+import { actions, selectors } from 'ducks/raProfileRequestAttributes';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    buildPlatformDefaultUpdateDto,
+    emptyAuthoringForm,
+    parsePlatformDefaultDto,
+    type RequestAttributeAuthoringFormValues,
+} from 'utils/requestAttributeAuthoring';
+
+/**
+ * Platform-wide default request-attribute set editor. Reads/writes the `/platform`
+ * `CertificateSettings.requestAttributes` sub-section through the duck (no bespoke endpoint,
+ * no merge mode).
+ */
+export default function RequestAttributesSettings() {
+    const dispatch = useDispatch();
+
+    const defaultSet = useSelector(selectors.defaultSet);
+    const isFetching = useSelector(selectors.isFetchingDefaultSet);
+    const isUpdating = useSelector(selectors.isUpdatingDefaultSet);
+
+    const [form, setForm] = useState<RequestAttributeAuthoringFormValues>(emptyAuthoringForm());
+    const [loaded, setLoaded] = useState(false);
+
+    useEffect(() => {
+        dispatch(actions.getPlatformDefaultRequestAttributes());
+    }, [dispatch]);
+
+    // Seed the form once, on the undefined → defined transition of the fetched set. Re-seeding on
+    // every `defaultSet` reference change would clobber in-progress edits when a late fetch resolves.
+    useEffect(() => {
+        if (defaultSet !== undefined && !loaded) {
+            setForm({ ...emptyAuthoringForm(), attributes: parsePlatformDefaultDto(defaultSet) });
+            setLoaded(true);
+        }
+    }, [defaultSet, loaded]);
+
+    const onSave = useCallback(() => {
+        // Guard against saving the empty initial form before the fetch has seeded it, which would
+        // PUT requestAttributes: [] and wipe the platform default set (the epic's read-merge only
+        // preserves the sibling externalCsrValidationStrict, not the array).
+        if (!loaded) return;
+        dispatch(
+            actions.updatePlatformDefaultRequestAttributes({
+                data: buildPlatformDefaultUpdateDto(form.attributes),
+            }),
+        );
+    }, [dispatch, form.attributes, loaded]);
+
+    const editor = useMemo(
+        // Platform default set: no merge mode and no value-source bindings (not in the platform DTO).
+        () => <RequestAttributeAuthoringEditor value={form} onChange={setForm} showBindings={false} disabled={isUpdating || !loaded} />,
+        [form, isUpdating, loaded],
+    );
+
+    return (
+        <Widget title="Default Request Attributes" titleSize="large" busy={isFetching} enableBusyOverlay noBorder>
+            <div className="space-y-4">
+                <p className="text-sm text-gray-500">
+                    The platform default request-attribute set is the terminal fallback used when an RA Profile does not define its own set.
+                </p>
+                {editor}
+                <Container className="flex-row justify-end" gap={4}>
+                    <ProgressButton
+                        title="Save Default Request Attributes"
+                        inProgressTitle="Saving..."
+                        inProgress={isUpdating}
+                        disabled={!loaded}
+                        onClick={onSave}
+                        type="button"
+                    />
+                </Container>
+            </div>
+        </Widget>
+    );
+}
