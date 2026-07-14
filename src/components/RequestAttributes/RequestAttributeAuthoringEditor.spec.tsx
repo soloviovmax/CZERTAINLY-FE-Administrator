@@ -72,6 +72,127 @@ test.describe('RequestAttributeAuthoringEditor', () => {
         expect(parsed.attributes[0].mappingRdnCode).toBe('CN');
     });
 
+    test('static list source requires at least one value, then persists the values', async ({ mount, page }) => {
+        const component = await mount(withProviders(<RequestAttributeAuthoringEditorHarness showMergeMode />));
+
+        await component.getByTestId('request-attribute-authoring-attribute-add').click();
+        await page.locator('#ra-attr-name').click();
+        await page.locator('#ra-attr-name').fill('environment');
+        await page.locator('#ra-attr-label').click();
+        await page.locator('#ra-attr-label').fill('Environment');
+
+        await page.getByTestId('select-ra-attr-value-source-trigger').click();
+        await page.getByRole('option', { name: 'Static list' }).click();
+
+        const saveButton = page.getByRole('button', { name: 'Save', exact: true });
+        await expect(saveButton).toBeDisabled();
+
+        await page.getByTestId('request-attribute-authoring-static-value-add').click();
+        await page.locator('#ra-attr-static-value-0').click();
+        await page.locator('#ra-attr-static-value-0').fill('prod');
+        await page.getByTestId('request-attribute-authoring-static-value-add').click();
+        await page.locator('#ra-attr-static-value-1').click();
+        await page.locator('#ra-attr-static-value-1').fill('staging');
+
+        await expect(saveButton).toBeEnabled();
+        await saveButton.click();
+
+        await expect(component.getByTestId('request-attribute-authoring-attribute-row')).toContainText('Static list');
+        const attr = JSON.parse((await component.getByTestId('value-json').textContent()) ?? '{}').attributes[0];
+        expect(attr.valueSourceType).toBe('staticList');
+        expect(attr.staticValues).toEqual(['prod', 'staging']);
+    });
+
+    test('static list rejects duplicate values', async ({ mount, page }) => {
+        const component = await mount(withProviders(<RequestAttributeAuthoringEditorHarness showMergeMode />));
+
+        await component.getByTestId('request-attribute-authoring-attribute-add').click();
+        await page.locator('#ra-attr-name').click();
+        await page.locator('#ra-attr-name').fill('environment');
+        await page.locator('#ra-attr-label').click();
+        await page.locator('#ra-attr-label').fill('Environment');
+
+        await page.getByTestId('select-ra-attr-value-source-trigger').click();
+        await page.getByRole('option', { name: 'Static list' }).click();
+
+        await page.getByTestId('request-attribute-authoring-static-value-add').click();
+        await page.locator('#ra-attr-static-value-0').click();
+        await page.locator('#ra-attr-static-value-0').fill('prod');
+        await page.getByTestId('request-attribute-authoring-static-value-add').click();
+        await page.locator('#ra-attr-static-value-1').click();
+        await page.locator('#ra-attr-static-value-1').fill('prod');
+
+        await expect(page.getByTestId('request-attribute-authoring-static-values-duplicate')).toBeVisible();
+        const saveButton = page.getByRole('button', { name: 'Save', exact: true });
+        await expect(saveButton).toBeDisabled();
+
+        await page.locator('#ra-attr-static-value-1').fill('staging');
+        await expect(page.getByTestId('request-attribute-authoring-static-values-duplicate')).toHaveCount(0);
+        await expect(saveButton).toBeEnabled();
+    });
+
+    test('selecting a static list locks the List toggle on', async ({ mount, page }) => {
+        const component = await mount(withProviders(<RequestAttributeAuthoringEditorHarness showMergeMode />));
+
+        await component.getByTestId('request-attribute-authoring-attribute-add').click();
+        await page.locator('#ra-attr-name').click();
+        await page.locator('#ra-attr-name').fill('environment');
+        await page.locator('#ra-attr-label').click();
+        await page.locator('#ra-attr-label').fill('Environment');
+
+        await expect(page.locator('#ra-attr-list')).not.toBeChecked();
+        await expect(page.locator('#ra-attr-list')).toBeEnabled();
+
+        await page.getByTestId('select-ra-attr-value-source-trigger').click();
+        await page.getByRole('option', { name: 'Static list' }).click();
+
+        await expect(page.locator('#ra-attr-list')).toBeChecked();
+        await expect(page.locator('#ra-attr-list')).toBeDisabled();
+
+        await page.getByTestId('request-attribute-authoring-static-value-add').click();
+        await page.locator('#ra-attr-static-value-0').click();
+        await page.locator('#ra-attr-static-value-0').fill('prod');
+        await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+        const attr = JSON.parse((await component.getByTestId('value-json').textContent()) ?? '{}').attributes[0];
+        expect(attr.list).toBe(true);
+        expect(attr.valueSourceType).toBe('staticList');
+    });
+
+    test('does not offer a static list for a content type without a scalar editor', async ({ mount, page }) => {
+        const component = await mount(withProviders(<RequestAttributeAuthoringEditorHarness showMergeMode />));
+
+        await component.getByTestId('request-attribute-authoring-attribute-add').click();
+
+        await page.getByTestId('select-ra-attr-content-type-trigger').click();
+        await page.getByRole('option', { name: 'Secret' }).click();
+
+        // The static-list option must be absent so the editor never dereferences a missing content
+        // configuration and crashes.
+        await page.getByTestId('select-ra-attr-value-source-trigger').click();
+        await expect(page.getByRole('option', { name: 'Static list' })).toHaveCount(0);
+        await expect(page.getByRole('option', { name: 'Free input' })).toBeVisible();
+    });
+
+    test('resets a chosen static list when switching to an unsupported content type', async ({ mount, page }) => {
+        const component = await mount(withProviders(<RequestAttributeAuthoringEditorHarness showMergeMode />));
+
+        await component.getByTestId('request-attribute-authoring-attribute-add').click();
+        await page.locator('#ra-attr-name').click();
+        await page.locator('#ra-attr-name').fill('environment');
+        await page.locator('#ra-attr-label').click();
+        await page.locator('#ra-attr-label').fill('Environment');
+
+        await page.getByTestId('select-ra-attr-value-source-trigger').click();
+        await page.getByRole('option', { name: 'Static list' }).click();
+        await expect(page.getByTestId('request-attribute-authoring-static-values')).toBeVisible();
+
+        // Switching to Secret (no scalar editor) drops back to free input, tearing down the value rows.
+        await page.getByTestId('select-ra-attr-content-type-trigger').click();
+        await page.getByRole('option', { name: 'Secret' }).click();
+        await expect(page.getByTestId('request-attribute-authoring-static-values')).toHaveCount(0);
+    });
+
     test('a binding requires a uuid or name before it can be saved', async ({ mount, page }) => {
         const component = await mount(withProviders(<RequestAttributeAuthoringEditorHarness showMergeMode />));
 
@@ -128,6 +249,7 @@ test.describe('RequestAttributeAuthoringEditor', () => {
                     readOnly: false,
                     list: false,
                     multiSelect: false,
+                    staticValues: [],
                     valueSourceType: 'none' as const,
                 },
             ],
@@ -158,6 +280,7 @@ test.describe('RequestAttributeAuthoringEditor', () => {
                     readOnly: false,
                     list: false,
                     multiSelect: false,
+                    staticValues: [],
                     valueSourceType: 'none' as const,
                 },
             ],
