@@ -651,8 +651,8 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                                           attributeDescriptors={
                                                               issuanceAttributeDescriptors[selectedRaProfileUuid || ''] || []
                                                           }
-                                                          callbackParentUuid={selectedRaProfile?.authorityInstanceUuid}
-                                                          callbackResource={Resource.RaProfiles}
+                                                          callbackParentUuid={selectedRaProfile?.uuid}
+                                                          callbackResource={Resource.Certificates}
                                                           groupAttributesCallbackAttributes={groupAttributesCallbackAttributes}
                                                           setGroupAttributesCallbackAttributes={setGroupAttributesCallbackAttributes}
                                                       />

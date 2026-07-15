@@ -178,6 +178,24 @@ export const getAttributeFormValue = (
     if (contentType === AttributeContentType.Secret) {
         return { data: { secret: item } } as SecretAttributeContentV2;
     }
+    if (contentType === AttributeContentType.Resource) {
+        // A RESOURCE selection must serialise as a secret-free { resource, uuid, name } reference —
+        // never the raw option object, which may carry expanded content Core resolved for display.
+        // Empty picker stubs keep their empty data so stripEmptyResourceContent can drop them.
+        const source: any = item && typeof item === 'object' && 'value' in item ? item.value : item;
+        if (source && typeof source === 'object' && ('data' in source || 'reference' in source)) {
+            const rawData = source.data;
+            const data =
+                rawData && typeof rawData === 'object' ? { resource: rawData.resource, uuid: rawData.uuid, name: rawData.name } : rawData;
+            const reference = source.reference;
+            return reference != null && reference !== '' ? { data, reference } : { data };
+        }
+        if (source && typeof source === 'object') {
+            const { resource, uuid, name } = source;
+            return uuid || name ? { data: { resource, uuid, name } } : { data: '' };
+        }
+        return { data: source };
+    }
     if (item && typeof item === 'object' && ('data' in item || 'reference' in item)) {
         return normalizeContentItem(item);
     }
@@ -294,7 +312,7 @@ function shouldSkipAttribute(
     attributes: Record<string, unknown>,
     deletedAttributes: string[],
     descriptors: AttributeDescriptorModel[],
-): { skip: true } | { skip: false; descriptor: AttributeDescriptorModel; attributeName: string } {
+): { skip: true } | { skip: false; descriptor: DataAttributeModel | CustomAttributeModel; attributeName: string } {
     if (!Object.hasOwn(attributes, attribute)) return { skip: true };
     const attributeName = attribute.split(':')[0];
     if (deletedAttributes.includes(attributeName)) return { skip: true };

@@ -284,3 +284,74 @@ test.describe('AttributeEditor', () => {
         await expect(switchOrCheck).not.toBeChecked();
     });
 });
+
+test.describe('AttributeEditor NG (dependsOn) callbacks', () => {
+    // The mock store has no epics, so a dispatched callback leaves isRunningCallback=true and the
+    // editor's busy spinner stays visible — its presence is the observable "callback fired" signal.
+    const ngDropdown = (dependsOn: string[], overrides: Partial<DataAttributeModel> = {}): DataAttributeModel =>
+        dataDescriptor({
+            name: 'endpoint',
+            uuid: 'ng-uuid-1',
+            properties: { label: 'Endpoint', required: false, readOnly: false, visible: true, list: true, multiSelect: false } as any,
+            attributeCallback: { mappings: [], dependsOn } as any,
+            ...overrides,
+        });
+
+    test('dependsOn: [] fires once on mount', async ({ mount, page }) => {
+        await mount(<AttributeEditorTestWrapper id={editorId} attributeDescriptors={[ngDropdown([])]} connectorUuid="conn-1" kind="k" />);
+        await expect(page.getByTestId('spinner')).toBeVisible({ timeout: 10000 });
+    });
+
+    test('non-empty dependsOn does not fire while a dependency has no value', async ({ mount, page }) => {
+        const descriptors: AttributeDescriptorModel[] = [
+            dataDescriptor({ name: 'region', uuid: 'dep-uuid-1', properties: { label: 'Region', required: false } as any }),
+            ngDropdown(['region']),
+        ];
+        await mount(<AttributeEditorTestWrapper id={editorId} attributeDescriptors={descriptors} connectorUuid="conn-1" kind="k" />);
+        await expect(page.getByText('Endpoint')).toBeVisible({ timeout: 10000 });
+        await page.waitForTimeout(1200); // past the ~600ms callback debounce
+        await expect(page.getByTestId('spinner')).toHaveCount(0);
+    });
+
+    test('fires when the named dependency gains a value', async ({ mount, page }) => {
+        const descriptors: AttributeDescriptorModel[] = [
+            dataDescriptor({
+                name: 'region',
+                uuid: 'dep-uuid-1',
+                properties: { label: 'Region', required: false, readOnly: false, visible: true, list: true, multiSelect: false } as any,
+                content: [{ data: 'eu-west' }, { data: 'us-east' }] as any,
+            }),
+            ngDropdown(['region']),
+        ];
+        await mount(<AttributeEditorTestWrapper id={editorId} attributeDescriptors={descriptors} connectorUuid="conn-1" kind="k" />);
+        const regionSelect = page.getByTestId('select-__attributes__testEditor__.regionSelect-trigger');
+        await expect(regionSelect).toBeVisible({ timeout: 10000 });
+        await regionSelect.click();
+        await page.getByRole('option', { name: 'eu-west' }).click();
+        // past the ~600ms callback debounce the dependent's NG callback must dispatch
+        await expect(page.getByTestId('spinner')).toBeVisible({ timeout: 10000 });
+    });
+
+    test('warns once when dependsOn names an attribute not mounted in the form', async ({ mount, page }) => {
+        const warnings: string[] = [];
+        page.on('console', (message) => {
+            if (message.type() === 'warning') warnings.push(message.text());
+        });
+        await mount(
+            <AttributeEditorTestWrapper
+                id={editorId}
+                attributeDescriptors={[ngDropdown(['data_caName'])]}
+                connectorUuid="conn-1"
+                kind="k"
+            />,
+        );
+        await expect(page.getByText('Endpoint')).toBeVisible({ timeout: 10000 });
+        await expect
+            .poll(() => warnings.filter((text) => text.includes('"endpoint"') && text.includes('data_caName')).length, {
+                timeout: 5000,
+            })
+            .toBeGreaterThanOrEqual(1);
+        // and the dependent never fires
+        await expect(page.getByTestId('spinner')).toHaveCount(0);
+    });
+});

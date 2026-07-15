@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { firstValueFrom, of, throwError } from 'rxjs';
+import { defer, firstValueFrom, of, throwError } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
 import connectorsEpics from './connectors-epic';
@@ -843,6 +843,79 @@ describe('connectors epics', () => {
             } as any,
         });
         expect(emitted[0]).toEqual(slice.actions.callbackSuccess({ callbackId: 'res-cb-1', data }));
+    });
+
+    test('callbackResource discards a stale response superseded by a newer dispatch', async () => {
+        const action = slice.actions.callbackResource({
+            callbackId: 'res-cb-1',
+            callbackResource: { resource: 'raProfiles', parentObjectUuid: 'p-1', requestAttributeCallback: { mappings: [] } } as any,
+        });
+        // The dispatch is captured at seq 1; the response arrives after a newer dispatch bumped it to 2.
+        const stateValue: any = { connectors: { callbackSeq: { 'res-cb-1': 1 } } };
+        const deps = createDeps({
+            callback: {
+                resourceCallback: () =>
+                    defer(() => {
+                        stateValue.connectors.callbackSeq['res-cb-1'] = 2;
+                        return of({ result: 'stale' });
+                    }),
+            } as any,
+        });
+        const state$ = of(stateValue) as any;
+        state$.value = stateValue;
+        const epic = connectorsEpics[18] as any;
+        const emitted = await firstValueFrom(epic(of(action), state$, deps as any).pipe(toArray()));
+        expect(emitted).toEqual([]);
+    });
+
+    test('callbackResource discards a stale failure (no failure state, no error toast)', async () => {
+        const action = slice.actions.callbackResource({
+            callbackId: 'res-cb-2',
+            callbackResource: { resource: 'raProfiles', parentObjectUuid: 'p-1', requestAttributeCallback: { mappings: [] } } as any,
+        });
+        const stateValue: any = { connectors: { callbackSeq: { 'res-cb-2': 5 } } };
+        const deps = createDeps({
+            callback: {
+                resourceCallback: () =>
+                    defer(() => {
+                        stateValue.connectors.callbackSeq['res-cb-2'] = 6;
+                        return throwError(() => new Error('stale failure'));
+                    }),
+            } as any,
+        });
+        const state$ = of(stateValue) as any;
+        state$.value = stateValue;
+        const epic = connectorsEpics[18] as any;
+        const emitted = await firstValueFrom(epic(of(action), state$, deps as any).pipe(toArray()));
+        expect(emitted).toEqual([]);
+    });
+
+    test('callbackConnector discards a stale response superseded by a newer dispatch', async () => {
+        const action = slice.actions.callbackConnector({
+            callbackId: 'cb-stale',
+            callbackConnector: { uuid: 'c-1', functionGroup: 'FG', kind: 'kind', requestAttributeCallback: { mappings: [] } } as any,
+        });
+        const stateValue: any = {
+            connectors: {
+                connectors: [{ uuid: 'c-1', version: ConnectorVersion.V2 }],
+                callbackSeq: { 'cb-stale': 1 },
+            },
+        };
+        const deps = createDeps({
+            callback: {
+                callback: vi.fn(() => of({})),
+                callbackV2: () =>
+                    defer(() => {
+                        stateValue.connectors.callbackSeq['cb-stale'] = 2;
+                        return of({ result: 'stale' });
+                    }),
+            } as any,
+        });
+        const state$ = of(stateValue) as any;
+        state$.value = stateValue;
+        const epic = connectorsEpics[17] as any;
+        const emitted = await firstValueFrom(epic(of(action), state$, deps as any).pipe(toArray()));
+        expect(emitted).toEqual([]);
     });
 
     test('callbackConnector with missing uuid emits callbackFailure immediately', async () => {

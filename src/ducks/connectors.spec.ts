@@ -449,6 +449,33 @@ describe('connectors slice', () => {
         next = reducer(next, actions.callbackFailure({ callbackId: 'cb' }));
         expect(next.isRunningCallback.cb).toBe(false);
     });
+
+    test('each callback dispatch increments callbackSeq per callbackId; responses leave it unchanged', () => {
+        const connectorPayload = {
+            callbackId: 'cb1',
+            callbackConnector: { uuid: 'x', functionGroup: 'fg', kind: 'k', requestAttributeCallback: { mappings: [] } } as any,
+        };
+        let next = reducer(initialState, actions.callbackConnector(connectorPayload));
+        expect(next.callbackSeq.cb1).toBe(1);
+
+        next = reducer(next, actions.callbackConnector(connectorPayload));
+        expect(next.callbackSeq.cb1).toBe(2);
+
+        next = reducer(
+            next,
+            actions.callbackResource({
+                callbackId: 'cb2',
+                callbackResource: { resource: 'raProfiles', parentObjectUuid: 'p', requestAttributeCallback: {} as any } as any,
+            }),
+        );
+        expect(next.callbackSeq.cb2).toBe(1);
+        expect(next.callbackSeq.cb1).toBe(2);
+
+        next = reducer(next, actions.callbackSuccess({ callbackId: 'cb1', data: {} }));
+        next = reducer(next, actions.callbackFailure({ callbackId: 'cb2' }));
+        expect(next.callbackSeq.cb1).toBe(2);
+        expect(next.callbackSeq.cb2).toBe(1);
+    });
 });
 
 describe('connectors selectors', () => {

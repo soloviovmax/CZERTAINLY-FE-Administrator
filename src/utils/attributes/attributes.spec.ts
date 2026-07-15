@@ -233,6 +233,31 @@ describe('attributes utils', () => {
             });
             expect(result).toEqual({ data: 3.5, reference: 'Threshold' });
         });
+
+        test('serializes a RESOURCE selection as a secret-free { resource, uuid, name } reference', () => {
+            const result = getAttributeFormValue(AttributeContentType.Resource, undefined, {
+                data: {
+                    resource: 'raProfiles',
+                    uuid: 'ra-1',
+                    name: 'acme-prod',
+                    // anything Core expanded for display must never be sent back
+                    attributes: [{ name: 'credential', content: [{ data: { secret: 'p4ss' } }] }],
+                    secretValue: 'leak',
+                },
+                reference: 'acme-prod',
+            });
+            expect(result).toEqual({
+                data: { resource: 'raProfiles', uuid: 'ra-1', name: 'acme-prod' },
+                reference: 'acme-prod',
+            });
+        });
+
+        test('sanitizes a RESOURCE selection wrapped in a select option value', () => {
+            const result = getAttributeFormValue(AttributeContentType.Resource, undefined, {
+                value: { data: { resource: 'authorities', uuid: 'a-1', name: 'ca-1', extra: 'drop-me' } },
+            });
+            expect(result).toEqual({ data: { resource: 'authorities', uuid: 'a-1', name: 'ca-1' } });
+        });
     });
 
     describe('transformAttributes', () => {

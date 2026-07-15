@@ -52,6 +52,7 @@ export type State = {
     isAuthorizing: boolean;
     isBulkAuthorizing: boolean;
     isRunningCallback: { [key: string]: boolean };
+    callbackSeq: { [key: string]: number };
 };
 
 function removeConnectorsByUuids(state: State, uuids: string[]) {
@@ -99,6 +100,7 @@ export const initialState: State = {
     isAuthorizing: false,
     isBulkAuthorizing: false,
     isRunningCallback: {},
+    callbackSeq: {},
 };
 
 export const slice = createSlice({
@@ -488,6 +490,7 @@ export const slice = createSlice({
             if (state.callbackData[action.payload.callbackId]) state.callbackData[action.payload.callbackId] = undefined;
 
             state.isRunningCallback[action.payload.callbackId] = true;
+            state.callbackSeq[action.payload.callbackId] = (state.callbackSeq[action.payload.callbackId] ?? 0) + 1;
         },
 
         callbackResource: (
@@ -500,6 +503,7 @@ export const slice = createSlice({
             if (state.callbackData[action.payload.callbackId]) state.callbackData[action.payload.callbackId] = undefined;
 
             state.isRunningCallback[action.payload.callbackId] = true;
+            state.callbackSeq[action.payload.callbackId] = (state.callbackSeq[action.payload.callbackId] ?? 0) + 1;
         },
 
         callbackSuccess: (state, action: PayloadAction<{ callbackId: string; data: object }>) => {
