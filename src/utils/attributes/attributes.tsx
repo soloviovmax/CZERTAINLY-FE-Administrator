@@ -135,6 +135,27 @@ export const getAttributeContent = (contentType: AttributeContentType, content: 
     return content.map((content) => mapping(content) ?? checkFileNameAndMimeType(content) ?? '').join(', ');
 };
 
+/**
+ * A RESOURCE selection must serialise as a secret-free { resource, uuid, name } reference — never
+ * the raw option object, which may carry expanded content Core resolved for display. Empty picker
+ * stubs keep their empty data so stripEmptyResourceContent can drop them.
+ */
+const getResourceFormValue = (item: any) => {
+    const source: any = item && typeof item === 'object' && 'value' in item ? item.value : item;
+    if (source && typeof source === 'object' && ('data' in source || 'reference' in source)) {
+        const rawData = source.data;
+        const data =
+            rawData && typeof rawData === 'object' ? { resource: rawData.resource, uuid: rawData.uuid, name: rawData.name } : rawData;
+        const reference = source.reference;
+        return reference != null && reference !== '' ? { data, reference } : { data };
+    }
+    if (source && typeof source === 'object') {
+        const { resource, uuid, name } = source;
+        return uuid || name ? { data: { resource, uuid, name } } : { data: '' };
+    }
+    return { data: source };
+};
+
 export const getAttributeFormValue = (
     contentType: AttributeContentType,
     descriptorContent: BaseAttributeContentModel[] | undefined,
@@ -178,24 +199,7 @@ export const getAttributeFormValue = (
     if (contentType === AttributeContentType.Secret) {
         return { data: { secret: item } } as SecretAttributeContentV2;
     }
-    if (contentType === AttributeContentType.Resource) {
-        // A RESOURCE selection must serialise as a secret-free { resource, uuid, name } reference —
-        // never the raw option object, which may carry expanded content Core resolved for display.
-        // Empty picker stubs keep their empty data so stripEmptyResourceContent can drop them.
-        const source: any = item && typeof item === 'object' && 'value' in item ? item.value : item;
-        if (source && typeof source === 'object' && ('data' in source || 'reference' in source)) {
-            const rawData = source.data;
-            const data =
-                rawData && typeof rawData === 'object' ? { resource: rawData.resource, uuid: rawData.uuid, name: rawData.name } : rawData;
-            const reference = source.reference;
-            return reference != null && reference !== '' ? { data, reference } : { data };
-        }
-        if (source && typeof source === 'object') {
-            const { resource, uuid, name } = source;
-            return uuid || name ? { data: { resource, uuid, name } } : { data: '' };
-        }
-        return { data: source };
-    }
+    if (contentType === AttributeContentType.Resource) return getResourceFormValue(item);
     if (item && typeof item === 'object' && ('data' in item || 'reference' in item)) {
         return normalizeContentItem(item);
     }

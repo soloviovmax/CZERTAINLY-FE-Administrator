@@ -309,7 +309,9 @@ test.describe('AttributeEditor NG (dependsOn) callbacks', () => {
         ];
         await mount(<AttributeEditorTestWrapper id={editorId} attributeDescriptors={descriptors} connectorUuid="conn-1" kind="k" />);
         await expect(page.getByText('Endpoint')).toBeVisible({ timeout: 10000 });
-        await page.waitForTimeout(1200); // past the ~600ms callback debounce
+        // Negative check: no observable condition exists for "the debounce window elapsed with no
+        // dispatch" — the wait must simply outlast the editor's ~600ms callback debounce.
+        await page.waitForTimeout(1200); // NOSONAR(S2925)
         await expect(page.getByTestId('spinner')).toHaveCount(0);
     });
 

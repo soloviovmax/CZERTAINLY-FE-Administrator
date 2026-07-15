@@ -1,5 +1,5 @@
 import type { AppEpic } from 'ducks';
-import { EMPTY, of } from 'rxjs';
+import { EMPTY, type Observable, of } from 'rxjs';
 import { catchError, filter, map, mergeMap, startWith, switchMap } from 'rxjs/operators';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import { AuthType, ConnectorVersion } from 'types/openapi';
@@ -458,6 +458,17 @@ const staleGuard = (state: any, callbackId: string): (() => boolean) => {
     return () => currentCallbackSeq(state, callbackId) !== seq;
 };
 
+// Maps a callback API response to success/failure actions, discarding superseded (stale) responses.
+const toCallbackActions = (callbackId: string, isStale: () => boolean, failureMessage: string) => (api$: Observable<object>) =>
+    api$.pipe(
+        mergeMap((data) => (isStale() ? EMPTY : of(slice.actions.callbackSuccess({ callbackId, data })))),
+        catchError((error) =>
+            isStale()
+                ? EMPTY
+                : of(slice.actions.callbackFailure({ callbackId }), appRedirectActions.fetchError({ error, message: failureMessage })),
+        ),
+    );
+
 const callbackConnector: AppEpic = (action$, state, deps) => {
     return action$.pipe(
         filter(slice.actions.callbackConnector.match),
@@ -485,20 +496,7 @@ const callbackConnector: AppEpic = (action$, state, deps) => {
                       requestAttributeCallback,
                   });
 
-            return api$.pipe(
-                mergeMap((data) =>
-                    isStale() ? EMPTY : of(slice.actions.callbackSuccess({ callbackId: action.payload.callbackId, data })),
-                ),
-
-                catchError((error) =>
-                    isStale()
-                        ? EMPTY
-                        : of(
-                              slice.actions.callbackFailure({ callbackId: action.payload.callbackId }),
-                              appRedirectActions.fetchError({ error, message: 'Connector callback failure' }),
-                          ),
-                ),
-            );
+            return api$.pipe(toCallbackActions(action.payload.callbackId, isStale, 'Connector callback failure'));
         }),
 
         catchError((error) =>
@@ -522,20 +520,7 @@ const callbackResource: AppEpic = (action$, state, deps) => {
                         action.payload.callbackResource.requestAttributeCallback,
                     ),
                 })
-                .pipe(
-                    mergeMap((data) =>
-                        isStale() ? EMPTY : of(slice.actions.callbackSuccess({ callbackId: action.payload.callbackId, data })),
-                    ),
-
-                    catchError((error) =>
-                        isStale()
-                            ? EMPTY
-                            : of(
-                                  slice.actions.callbackFailure({ callbackId: action.payload.callbackId }),
-                                  appRedirectActions.fetchError({ error, message: 'Resource callback failure' }),
-                              ),
-                    ),
-                );
+                .pipe(toCallbackActions(action.payload.callbackId, isStale, 'Resource callback failure'));
         }),
 
         catchError((error) =>

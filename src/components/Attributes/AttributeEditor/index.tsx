@@ -622,7 +622,7 @@ function AttributeEditorInner({
         if (!isDataAttributeModel(descriptor) && !isGroupAttributeModel(descriptor)) return undefined;
         if (isDataAttributeModel(descriptor) && descriptor.contentType === AttributeContentType.Resource) return undefined;
         const callback = descriptor.attributeCallback;
-        if (!callback || callback.dependsOn === undefined || callback.callbackContext) return undefined;
+        if (callback?.dependsOn === undefined || callback.callbackContext) return undefined;
         return callback.dependsOn;
     }, []);
 
@@ -651,7 +651,6 @@ function AttributeEditorInner({
             const depDescriptors = mounted.filter((d) => dependsOn.includes(d.name));
             const currentValues = collectFormAttributes(id, depDescriptors, formValues);
             const hasValue = (attribute: (typeof currentValues)[number]) =>
-                attribute.content.length > 0 &&
                 attribute.content.some((item: any) => item?.reference != null || (item?.data != null && item?.data !== ''));
             const presentValues = currentValues.filter(hasValue);
             if (presentValues.length !== dependsOn.length) return undefined;
@@ -662,6 +661,27 @@ function AttributeEditorInner({
     );
 
     /* c8 ignore start */
+    /**
+     * Fires a descriptor's callback once per descriptor instance. An NG dependsOn: [] fires on
+     * mount; a non-empty set fires initially only when every dependency already has a value (edit
+     * mode with loaded data) — otherwise the change-driven pass fires it once the values arrive.
+     */
+    const runInitialCallback = useCallback(
+        (descriptor: DataAttributeModel | GroupAttributeModel, formAttributeName: string) => {
+            if (!descriptor.attributeCallback) return;
+            const key = `${connectorUuid ?? 'global'}:${descriptor.uuid}:${formAttributeName}`;
+            if (initialCallbackRunRef.current.has(key)) return;
+
+            const dependsOn = getNgDependsOn(descriptor);
+            const payload = dependsOn ? buildNgCallbackPayload(descriptor, dependsOn) : buildCallbackMappings(descriptor);
+            if (!payload) return;
+
+            executeCallback(payload, descriptor, formAttributeName);
+            initialCallbackRunRef.current.add(key);
+        },
+        [buildCallbackMappings, buildNgCallbackPayload, getNgDependsOn, executeCallback, connectorUuid],
+    );
+
     const getAttributeStaticOptions = useCallback(
         (descriptor: DataAttributeModel | CustomAttributeModel | GroupAttributeModel, formAttributeName: string) => {
             let newOptions = {};
@@ -690,34 +710,11 @@ function AttributeEditorInner({
             }
 
             if (isDataAttributeModel(descriptor) || isGroupAttributeModel(descriptor)) {
-                // Perform initial callbacks only once per descriptor
-                if (descriptor.attributeCallback) {
-                    const key = `${connectorUuid ?? 'global'}:${descriptor.uuid}:${formAttributeName}`;
-                    if (!initialCallbackRunRef.current.has(key)) {
-                        const dependsOn = getNgDependsOn(descriptor);
-                        if (dependsOn) {
-                            // NG: dependsOn [] fires once on mount; a non-empty set fires initially only
-                            // when every dependency already has a value (edit mode with loaded data) —
-                            // otherwise the change-driven pass fires it once the values arrive.
-                            const payload = buildNgCallbackPayload(descriptor, dependsOn);
-                            if (payload) {
-                                executeCallback(payload, descriptor, formAttributeName);
-                                initialCallbackRunRef.current.add(key);
-                            }
-                        } else {
-                            // Legacy: fire from "static" mappings
-                            const mappings = buildCallbackMappings(descriptor);
-                            if (mappings) {
-                                executeCallback(mappings, descriptor, formAttributeName);
-                                initialCallbackRunRef.current.add(key);
-                            }
-                        }
-                    }
-                }
+                runInitialCallback(descriptor, formAttributeName);
             }
             return newOptions;
         },
-        [buildCallbackMappings, buildNgCallbackPayload, getNgDependsOn, executeCallback, connectorUuid],
+        [runInitialCallback],
     );
     /* c8 ignore stop */
     /**
@@ -859,6 +856,47 @@ function AttributeEditorInner({
 
     /* c8 ignore start */
     /**
+     * NG change handler: re-fires when a named dependency changed and all have values; a dependency
+     * that lost its value resets the dependent's content and options locally instead (an empty
+     * options list disables its select). dependsOn: [] fires only once on mount, never on change.
+     * Re-dispatching while the field's own callback is in flight is fine — the epic's per-callbackId
+     * stale discard drops the superseded response.
+     */
+    const applyNgChange = useCallback(
+        (descriptor: AttributeDescriptorModel, formAttributeName: string, dependsOn: string[], changedNames: Set<string>) => {
+            if (dependsOn.length === 0) return;
+            if (!dependsOn.some((name) => changedNames.has(name))) return;
+
+            const payload = buildNgCallbackPayload(descriptor, dependsOn);
+            if (payload) {
+                executeCallback(payload, descriptor, formAttributeName);
+            } else {
+                setValue(formAttributeName, undefined, { shouldValidate: true });
+                setOptions((prev) => ({ ...prev, [formAttributeName]: [] }));
+            }
+        },
+        [buildNgCallbackPayload, executeCallback, setValue],
+    );
+
+    /** Legacy change handler: re-fires the mapping callback when any of its 'from' attributes changed. */
+    const applyLegacyChange = useCallback(
+        (descriptor: DataAttributeModel | GroupAttributeModel, formAttributeName: string, changedNames: Set<string>) => {
+            const fromNames = (descriptor.attributeCallback?.mappings ?? [])
+                .map((mapping) => mapping.from)
+                .filter((from): from is string => !!from);
+
+            for (const fromName of fromNames) {
+                const attributeName = fromName.includes('.') ? fromName.split('.')[0] : fromName;
+                if (changedNames.has(attributeName)) {
+                    const mappings = buildCallbackMappings(descriptor);
+                    if (mappings) executeCallback(mappings, descriptor, formAttributeName);
+                }
+            }
+        },
+        [buildCallbackMappings, executeCallback],
+    );
+
+    /**
      * Called on every form change
      * Evaluates changed attributes and eventually performs a callback whenever necessary
      */
@@ -872,82 +910,36 @@ function AttributeEditorInner({
 
         previousAttributesRef.current = cloneForCompare(currentAttributes);
 
-        const changedAttributes: { [name: string]: { previous: any; current: any } } = {};
-
-        // get changed attributes and their current values
+        const changedNames = new Set<string>();
         const keys = new Set([...Object.keys(previousAttributes || {}), ...Object.keys(currentAttributes || {})]);
         keys.forEach((attrKey) => {
-            const prev = previousAttributes?.[attrKey];
-            const cur = currentAttributes?.[attrKey];
-            if (!deepEqual(prev, cur)) {
-                changedAttributes[attrKey] = { previous: prev, current: cur };
-            }
+            if (!deepEqual(previousAttributes?.[attrKey], currentAttributes?.[attrKey])) changedNames.add(attrKey);
         });
 
         // For each changed attribute, fire the callbacks of the descriptors depending on it. Gating is
         // per callbackId (the old global in-flight drop consumed edits without dispatching them):
-        // NG re-dispatches even while its own callback is in flight (the epic discards the stale
-        // response); legacy skips while its own callback runs, keeping the edit-mode storm suppression.
+        // NG re-dispatches even while its own callback is in flight; legacy skips while its own
+        // callback runs, keeping the edit-mode storm suppression.
         [...attributeDescriptors, ...groupAttributesCallbackAttributes].forEach((descriptor) => {
-            if (isDataAttributeModel(descriptor) || isGroupAttributeModel(descriptor)) {
-                const formAttributeName = `__attributes__${id}__.${descriptor.name}`;
+            if (!isDataAttributeModel(descriptor) && !isGroupAttributeModel(descriptor)) return;
+            const formAttributeName = `__attributes__${id}__.${descriptor.name}`;
 
-                const dependsOn = getNgDependsOn(descriptor);
-                if (dependsOn) {
-                    // dependsOn: [] fires only once on mount (initial pass), never on change
-                    if (dependsOn.length === 0) return;
-                    if (!dependsOn.some((name) => changedAttributes[name])) return;
-
-                    const payload = buildNgCallbackPayload(descriptor, dependsOn);
-                    if (payload) {
-                        executeCallback(payload, descriptor, formAttributeName);
-                    } else {
-                        // A dependency lost its value: the callback must not fire — reset the dependent's
-                        // content and options locally instead (an empty options list disables its select).
-                        setValue(formAttributeName, undefined, { shouldValidate: true });
-                        setOptions((prev) => ({ ...prev, [formAttributeName]: [] }));
-                    }
-                    return;
-                }
-
-                if (isRunningCallback[formAttributeName]) return;
-
-                // list all 'from' mappings (get attribute names from the descriptor)
-                const fromNames: string[] = [];
-                descriptor.attributeCallback?.mappings?.forEach((mapping) => {
-                    if (mapping.from) {
-                        fromNames.push(mapping.from);
-                    }
-                });
-
-                // check if any of the changed attributes is in the 'from' list
-                for (const fromName in fromNames) {
-                    const attributeName = fromNames[fromName].includes('.') ? fromNames[fromName].split('.')[0] : fromNames[fromName];
-
-                    // if there is any attribute changed on which the current descriptor depends, clear the form field and perform the callback
-                    if (changedAttributes[attributeName]) {
-                        const mappings = buildCallbackMappings(descriptor);
-
-                        if (mappings) {
-                            // removed it as it was causing form value to be cleared  , it does not seem to be necessary and other places it is working without it
-                            // form.mutators.setAttribute(formAttributeName, undefined);
-                            executeCallback(mappings, descriptor, formAttributeName);
-                        }
-                    }
-                }
+            const dependsOn = getNgDependsOn(descriptor);
+            if (dependsOn) {
+                applyNgChange(descriptor, formAttributeName, dependsOn, changedNames);
+            } else if (!isRunningCallback[formAttributeName]) {
+                applyLegacyChange(descriptor, formAttributeName, changedNames);
             }
         });
     }, [
         attributeDescriptors,
         groupAttributesCallbackAttributes,
-        buildCallbackMappings,
-        buildNgCallbackPayload,
+        applyLegacyChange,
+        applyNgChange,
         getNgDependsOn,
         formValues,
         id,
         isRunningCallback,
-        executeCallback,
-        setValue,
     ]);
 
     const doCallbacksLatestRef = useRef(doCallbacks);
