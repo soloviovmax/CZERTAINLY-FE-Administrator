@@ -231,6 +231,7 @@ function RaProfileList() {
             <Widget
                 title="List of RA Profiles"
                 busy={isBusy && (!isFetching || raProfiles.length > 0)}
+                disableRefresh={isBusy}
                 widgetLockName={LockWidgetNameEnum.ListOfRAProfiles}
                 widgetButtons={buttons}
                 titleSize="large"
