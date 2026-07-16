@@ -1,5 +1,6 @@
 import { test, expect } from '../../../../playwright/ct-test';
 import { AttributeEditorTestWrapper } from './AttributeEditorTestWrapper';
+import { CALLBACK_DEBOUNCE_MS } from './index';
 import type { DataAttributeModel, CustomAttributeModel, InfoAttributeModel, AttributeDescriptorModel } from 'types/attributes';
 import { AttributeContentType, AttributeType } from 'types/openapi';
 
@@ -310,8 +311,8 @@ test.describe('AttributeEditor NG (dependsOn) callbacks', () => {
         await mount(<AttributeEditorTestWrapper id={editorId} attributeDescriptors={descriptors} connectorUuid="conn-1" kind="k" />);
         await expect(page.getByText('Endpoint')).toBeVisible({ timeout: 10000 });
         // Negative check: no observable condition exists for "the debounce window elapsed with no
-        // dispatch" — the wait must simply outlast the editor's ~600ms callback debounce.
-        await page.waitForTimeout(1200); // NOSONAR(S2925)
+        // dispatch" — the wait must simply outlast the editor's callback debounce (shared constant).
+        await page.waitForTimeout(CALLBACK_DEBOUNCE_MS * 2); // NOSONAR(S2925)
         await expect(page.getByTestId('spinner')).toHaveCount(0);
     });
 

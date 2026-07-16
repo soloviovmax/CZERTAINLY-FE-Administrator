@@ -57,6 +57,21 @@ function cloneForCompare<T>(value: T): T {
 const emptyAttributes: AttributeResponseModel[] = [];
 const emptyGroupAttributesCallbackAttributes: AttributeDescriptorModel[] = [];
 
+/** Form changes are collected for this long before the change-driven callback pass runs. */
+export const CALLBACK_DEBOUNCE_MS = 600;
+
+/**
+ * Select-option label for a content item: reference first, then a RESOURCE-style object's name
+ * (never the object's default stringification), then the primitive value. Null-safe.
+ */
+const contentItemLabel = (value: any): string => {
+    if (value?.reference) return value.reference;
+    const data = value?.data;
+    if (data == null) return '';
+    if (typeof data === 'object') return typeof data.name === 'string' ? data.name : String(data);
+    return String(data);
+};
+
 export type Props = {
     id: string;
     attributeDescriptors: AttributeDescriptorModel[];
@@ -695,12 +710,7 @@ function AttributeEditorInner({
                 if (shouldHaveStaticOptions && Array.isArray(typedDescriptor.content)) {
                     const safeOptions = typedDescriptor.content
                         .filter((item: any) => item != null)
-                        .map((data: any) => {
-                            const ref = data?.reference;
-                            const val = data?.data;
-                            const label = ref ?? (val == null ? '' : String(val));
-                            return { label, value: data };
-                        });
+                        .map((data: any) => ({ label: contentItemLabel(data), value: data }));
 
                     newOptions = {
                         ...newOptions,
@@ -949,7 +959,7 @@ function AttributeEditorInner({
     }, [doCallbacks]);
 
     /* istanbul ignore next */
-    const debouncedDoCallbacksRef = useRef(debounce(() => doCallbacksLatestRef.current(), 600));
+    const debouncedDoCallbacksRef = useRef(debounce(() => doCallbacksLatestRef.current(), CALLBACK_DEBOUNCE_MS));
 
     /* istanbul ignore next */
     useEffect(() => {
@@ -1034,7 +1044,7 @@ function AttributeEditorInner({
                 if (isDataAttributeModel(attr) || isInfoAttributeModel(attr)) {
                     const formAttributeName = `__attributes__${id}__.${attr.name}`;
                     const optionsFromGroupCallback = attr.content?.map((value: any) => ({
-                        label: value.reference ?? value.data.toString(),
+                        label: contentItemLabel(value),
                         value,
                     }));
                     const callbackContentOpts = optionsFromGroupCallback ? { [formAttributeName]: optionsFromGroupCallback } : {};
@@ -1044,18 +1054,13 @@ function AttributeEditorInner({
                 return { ...acc };
             }, {});
 
-            const mapCallbackItemToOption = (value: any) => {
-                // RESOURCE options come back as { data: { resource, uuid, name } } — label by name,
-                // never by the object's default stringification.
-                const objectLabel =
-                    value.data && typeof value.data === 'object' && typeof value.data.name === 'string' ? value.data.name : undefined;
-                return { label: value.reference ?? objectLabel ?? value.data?.toString?.() ?? String(value.data), value };
-            };
             // Only update options for callbackId when the callback returned actual content values,
             // not just group attribute descriptors. An empty update would overwrite existing options with [].
             const nonDescriptorCallbackValues = callbackData[callbackId].filter((v: any) => !isAttributeDescriptorModel(v));
             const callbackContentOpts =
-                nonDescriptorCallbackValues.length > 0 ? { [callbackId]: nonDescriptorCallbackValues.map(mapCallbackItemToOption) } : {};
+                nonDescriptorCallbackValues.length > 0
+                    ? { [callbackId]: nonDescriptorCallbackValues.map((value: any) => ({ label: contentItemLabel(value), value })) }
+                    : {};
 
             // multiple effects can modify opts during single render call
             // eslint-disable-next-line react-hooks/exhaustive-deps
