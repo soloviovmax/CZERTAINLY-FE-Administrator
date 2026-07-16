@@ -456,8 +456,10 @@ export default function CertificateDetail() {
 
         setConfirmRemove(false);
 
+        const entityUuidByLocation = new Map(certLocations?.map((l) => [l.uuid, l.entityInstanceUuid]));
+
         locationsCheckedRows.forEach((uuid) => {
-            const entityUuid = certLocations?.find((l) => l.uuid === uuid)?.entityInstanceUuid;
+            const entityUuid = entityUuidByLocation.get(uuid);
             if (!entityUuid) return;
 
             dispatch(
