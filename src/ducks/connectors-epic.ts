@@ -1,5 +1,5 @@
 import type { AppEpic } from 'ducks';
-import { of } from 'rxjs';
+import { EMPTY, type Observable, of } from 'rxjs';
 import { catchError, filter, map, mergeMap, startWith, switchMap } from 'rxjs/operators';
 import { LockWidgetNameEnum } from 'types/user-interface';
 import { AuthType, ConnectorVersion } from 'types/openapi';
@@ -449,6 +449,26 @@ const bulkForceDeleteConnectors: AppEpic = (action$, state, deps) => {
     );
 };
 
+const currentCallbackSeq = (state: any, callbackId: string): number => (state.value ?? state)?.connectors?.callbackSeq?.[callbackId] ?? 0;
+
+// Captures the dispatch sequence; a response arriving after a newer dispatch for the same
+// callbackId is stale and must be discarded (kept out of callbackData, no failure state, no toast).
+const staleGuard = (state: any, callbackId: string): (() => boolean) => {
+    const seq = currentCallbackSeq(state, callbackId);
+    return () => currentCallbackSeq(state, callbackId) !== seq;
+};
+
+// Maps a callback API response to success/failure actions, discarding superseded (stale) responses.
+const toCallbackActions = (callbackId: string, isStale: () => boolean, failureMessage: string) => (api$: Observable<object>) =>
+    api$.pipe(
+        mergeMap((data) => (isStale() ? EMPTY : of(slice.actions.callbackSuccess({ callbackId, data })))),
+        catchError((error) =>
+            isStale()
+                ? EMPTY
+                : of(slice.actions.callbackFailure({ callbackId }), appRedirectActions.fetchError({ error, message: failureMessage })),
+        ),
+    );
+
 const callbackConnector: AppEpic = (action$, state, deps) => {
     return action$.pipe(
         filter(slice.actions.callbackConnector.match),
@@ -463,6 +483,7 @@ const callbackConnector: AppEpic = (action$, state, deps) => {
             const connectorsState: any = rootState.connectors;
             const connector = connectorsState?.connectors?.find((c: any) => c.uuid === payload.uuid) ?? connectorsState?.connector;
             const isV2 = payload.version === ConnectorVersion.V2 || connector?.version === ConnectorVersion.V2;
+            const isStale = staleGuard(state, action.payload.callbackId);
             const api$ = isV2
                 ? deps.apiClients.callback.callbackV2({
                       uuid: payload.uuid,
@@ -475,18 +496,7 @@ const callbackConnector: AppEpic = (action$, state, deps) => {
                       requestAttributeCallback,
                   });
 
-            return api$.pipe(
-                map((data) => {
-                    return slice.actions.callbackSuccess({ callbackId: action.payload.callbackId, data });
-                }),
-
-                catchError((error) =>
-                    of(
-                        slice.actions.callbackFailure({ callbackId: action.payload.callbackId }),
-                        appRedirectActions.fetchError({ error, message: 'Connector callback failure' }),
-                    ),
-                ),
-            );
+            return api$.pipe(toCallbackActions(action.payload.callbackId, isStale, 'Connector callback failure'));
         }),
 
         catchError((error) =>
@@ -501,27 +511,17 @@ const callbackConnector: AppEpic = (action$, state, deps) => {
 const callbackResource: AppEpic = (action$, state, deps) => {
     return action$.pipe(
         filter(slice.actions.callbackResource.match),
-        mergeMap((action) =>
-            deps.apiClients.callback
+        mergeMap((action) => {
+            const isStale = staleGuard(state, action.payload.callbackId);
+            return deps.apiClients.callback
                 .resourceCallback({
                     ...action.payload.callbackResource,
                     requestAttributeCallback: transformCallbackAttributeModelToDto(
                         action.payload.callbackResource.requestAttributeCallback,
                     ),
                 })
-                .pipe(
-                    map((data) => {
-                        return slice.actions.callbackSuccess({ callbackId: action.payload.callbackId, data });
-                    }),
-
-                    catchError((error) =>
-                        of(
-                            slice.actions.callbackFailure({ callbackId: action.payload.callbackId }),
-                            appRedirectActions.fetchError({ error, message: 'Resource callback failure' }),
-                        ),
-                    ),
-                ),
-        ),
+                .pipe(toCallbackActions(action.payload.callbackId, isStale, 'Resource callback failure'));
+        }),
 
         catchError((error) =>
             of(
