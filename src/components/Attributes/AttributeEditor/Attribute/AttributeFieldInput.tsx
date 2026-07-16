@@ -231,7 +231,7 @@ export function AttributeFieldInput({ name, descriptor, busy, deleteButton }: Re
                         <>
                             {showDescription && (
                                 <p
-                                    className={cn('text-xs text-gray-400 dark:text-neutral-400', {
+                                    className={cn('text-xs text-gray-700 dark:text-neutral-400', {
                                         'block -mt-2': descriptor.contentType === AttributeContentType.Boolean,
                                         'mt-1': descriptor.contentType !== AttributeContentType.Boolean,
                                     })}
@@ -245,7 +245,7 @@ export function AttributeFieldInput({ name, descriptor, busy, deleteButton }: Re
                                     <div className="mt-1 text-sm text-red-600">
                                         {typeof fieldState.error === 'string' ? fieldState.error : fieldState.error?.message}
                                         {(regexpConstraint?.description || regexpConstraint?.data) && (
-                                            <div className="mt-1 text-xs text-gray-600 dark:text-neutral-400">
+                                            <div className="mt-1 text-xs text-gray-700 dark:text-neutral-400">
                                                 {regexpConstraint.description && <div>{regexpConstraint.description}</div>}
                                                 {regexpConstraint?.data && (
                                                     <details className="mt-1">
