@@ -77,6 +77,7 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
     const isUpdatingRequestAttributes = useSelector(requestAttributesSelectors.isUpdatingRaProfileSet);
     const updateRequestAttributesSucceeded = useSelector(requestAttributesSelectors.updateRaProfileSetSucceeded);
     const [requestAttributesForm, setRequestAttributesForm] = useState<RequestAttributeAuthoringFormValues>(emptyAuthoringForm());
+    const [requestAttributesDirty, setRequestAttributesDirty] = useState(false);
 
     const isBusy = useMemo(
         () => isFetchingDetail || isCreating || isUpdating || isFetchingAuthorityRAProfileAttributes || isFetchingResourceCustomAttributes,
@@ -154,6 +155,8 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
         reset,
     } = methods;
 
+    const isSaving = isSubmitting || isCreating || isUpdating || isUpdatingRequestAttributes;
+
     const watchedAuthority = useWatch({
         control,
         name: 'authority',
@@ -182,8 +185,10 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
     useEffect(() => {
         if (editMode && raProfileSelector?.uuid === id) {
             setRequestAttributesForm(parseRaProfileRequestAttributesDto(raProfileSelector.certificateRequestAttributes));
+            setRequestAttributesDirty(false);
         } else if (!editMode) {
             setRequestAttributesForm(emptyAuthoringForm());
+            setRequestAttributesDirty(false);
         }
     }, [editMode, id, raProfileSelector]);
 
@@ -212,18 +217,10 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
     // server-side read-merge).
     const requestAttributesSeeded = editMode && raProfileSelector?.uuid === id && !isFetchingDetail;
 
-    const onSaveRequestAttributes = useCallback(() => {
-        if (!id || !requestAttributesSeeded) return;
-        const authorityUuid = raProfile?.authorityInstanceUuid || authorityId;
-        if (!authorityUuid) return;
-        dispatch(
-            requestAttributesActions.updateRaProfileRequestAttributes({
-                authorityUuid,
-                raProfileUuid: id,
-                data: buildRaProfileRequestAttributesUpdateDto(requestAttributesForm),
-            }),
-        );
-    }, [dispatch, id, raProfile, authorityId, requestAttributesForm, requestAttributesSeeded]);
+    const onChangeRequestAttributes = useCallback((next: RequestAttributeAuthoringFormValues) => {
+        setRequestAttributesForm(next);
+        setRequestAttributesDirty(true);
+    }, []);
 
     const onAuthorityChange = useCallback(
         (authorityUuid: string) => {
@@ -246,6 +243,18 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
         (values: FormValues) => {
             if (editMode) {
                 if (!id) return;
+                if (requestAttributesDirty && requestAttributesSeeded) {
+                    const authorityUuid = raProfile?.authorityInstanceUuid || authorityId;
+                    if (authorityUuid) {
+                        dispatch(
+                            requestAttributesActions.updateRaProfileRequestAttributes({
+                                authorityUuid,
+                                raProfileUuid: id,
+                                data: buildRaProfileRequestAttributesUpdateDto(requestAttributesForm),
+                            }),
+                        );
+                    }
+                }
                 dispatch(
                     raProfilesActions.updateRaProfile({
                         profileUuid: id,
@@ -281,7 +290,19 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
                 );
             }
         },
-        [dispatch, editMode, id, raProfile, raProfileAttributeDescriptors, groupAttributesCallbackAttributes, resourceCustomAttributes],
+        [
+            dispatch,
+            editMode,
+            id,
+            raProfile,
+            raProfileAttributeDescriptors,
+            groupAttributesCallbackAttributes,
+            resourceCustomAttributes,
+            requestAttributesDirty,
+            requestAttributesSeeded,
+            requestAttributesForm,
+            authorityId,
+        ],
     );
 
     const renderCustomAttributesEditor = useMemo(() => {
@@ -346,6 +367,7 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
                                         <Select
                                             id="authoritySelect"
                                             label="Select Authority"
+                                            required
                                             value={field.value || ''}
                                             onChange={(value) => {
                                                 field.onChange(value);
@@ -396,23 +418,14 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
                                     title: 'Request Attributes',
                                     content: editMode ? (
                                         <div className="space-y-4">
+                                            <p className="text-sm text-gray-500">Changes are saved when you click Update.</p>
                                             <RequestAttributeAuthoringEditor
                                                 value={requestAttributesForm}
-                                                onChange={setRequestAttributesForm}
+                                                onChange={onChangeRequestAttributes}
                                                 showMergeMode
                                                 connectorAttributeOptions={connectorAttributeOptions}
                                                 disabled={isUpdatingRequestAttributes || !requestAttributesSeeded}
                                             />
-                                            <Container className="flex-row justify-end" gap={4}>
-                                                <ProgressButton
-                                                    title="Save Request Attributes"
-                                                    inProgressTitle="Saving..."
-                                                    inProgress={isUpdatingRequestAttributes}
-                                                    disabled={!requestAttributesSeeded}
-                                                    onClick={onSaveRequestAttributes}
-                                                    type="button"
-                                                />
-                                            </Container>
                                         </div>
                                     ) : (
                                         <p className="text-sm text-gray-500">
@@ -424,14 +437,14 @@ export default function RaProfileForm({ raProfileId, authorityId: propAuthorityI
                         />
 
                         <Container className="flex-row justify-end modal-footer" gap={4}>
-                            <Button variant="outline" onClick={onCancel} disabled={isSubmitting} type="button">
+                            <Button variant="outline" onClick={onCancel} disabled={isSaving} type="button">
                                 Cancel
                             </Button>
                             <ProgressButton
                                 title={editMode ? 'Update' : 'Create'}
                                 inProgressTitle={editMode ? 'Updating...' : 'Creating...'}
-                                inProgress={isSubmitting}
-                                disabled={!isDirty || isSubmitting || !isValid}
+                                inProgress={isSaving}
+                                disabled={(!isDirty && !requestAttributesDirty) || isSaving || !isValid}
                                 type="submit"
                             />
                         </Container>
