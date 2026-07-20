@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { defer, firstValueFrom, of, throwError } from 'rxjs';
+import { defer, firstValueFrom, of, Subject, throwError } from 'rxjs';
 import { take, toArray } from 'rxjs/operators';
 
 import connectorsEpics from './connectors-epic';
@@ -929,7 +929,7 @@ describe('connectors epics', () => {
         expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: 'cb-missing' }));
     });
 
-    test('callbackConnector outer catchError emits callbackFailure and fetchError when callback throws', async () => {
+    test('callbackConnector reports a synchronous throw against the real callbackId', async () => {
         const action = slice.actions.callbackConnector({
             callbackId: 'cb-1',
             callbackConnector: { uuid: 'c-1', functionGroup: 'FG', kind: 'kind', requestAttributeCallback: { mappings: [] } } as any,
@@ -944,9 +944,54 @@ describe('connectors epics', () => {
                     },
                 } as any,
             },
-            1,
+            2,
         );
-        expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: '' }));
+        // An empty callbackId would leave isRunningCallback[realId] stuck true and the field spinning.
+        expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: 'cb-1' }));
+        expect(emitted[1]).toEqual(
+            appRedirectActions.fetchError({ error: expect.any(Error), message: 'Failed to perform connector callback' }),
+        );
+    });
+
+    test('callbackConnector survives a synchronous throw and still serves later actions', async () => {
+        const action$ = new Subject<any>();
+        const state$: any = of({});
+        state$.value = {};
+        const callbackV2Mock = vi.fn(() => of({ ok: true }));
+        const deps = createDeps({
+            callback: {
+                callback: () => {
+                    throw new Error('sync boom');
+                },
+                callbackV2: callbackV2Mock,
+            } as any,
+        });
+
+        const emitted: any[] = [];
+        const completed = new Promise<void>((resolve) => {
+            (connectorsEpics[17] as any)(action$, state$, deps as any).subscribe({
+                next: (a: any) => emitted.push(a),
+                complete: () => resolve(),
+            });
+        });
+
+        action$.next(
+            slice.actions.callbackConnector({
+                callbackId: 'first',
+                callbackConnector: { uuid: 'c-1', functionGroup: 'FG', kind: 'k', requestAttributeCallback: {} } as any,
+            }),
+        );
+        action$.next(
+            slice.actions.callbackConnector({
+                callbackId: 'second',
+                callbackConnector: { uuid: 'c-1', interfaceUuid: 'iface-1', requestAttributeCallback: {} } as any,
+            }),
+        );
+        action$.complete();
+        await completed;
+
+        expect(callbackV2Mock).toHaveBeenCalledTimes(1);
+        expect(emitted).toContainEqual(slice.actions.callbackSuccess({ callbackId: 'second', data: { ok: true } }));
     });
 
     test('callbackConnector without functionGroup/kind fails with the real callbackId instead of calling v1', async () => {
@@ -997,7 +1042,7 @@ describe('connectors epics', () => {
         });
     });
 
-    test('callbackResource outer catchError emits callbackFailure and fetchError when resourceCallback throws', async () => {
+    test('callbackResource reports a synchronous throw against the real callbackId', async () => {
         const action = slice.actions.callbackResource({
             callbackId: 'res-1',
             callbackResource: {
@@ -1019,7 +1064,7 @@ describe('connectors epics', () => {
             },
             2,
         );
-        expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: '' }));
+        expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: 'res-1' }));
         expect(emitted[1]).toEqual(
             appRedirectActions.fetchError({ error: expect.any(Error), message: 'Failed to perform resource callback' }),
         );
