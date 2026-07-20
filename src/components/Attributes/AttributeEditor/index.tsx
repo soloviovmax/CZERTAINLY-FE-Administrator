@@ -356,7 +356,7 @@ function AttributeEditorInner({
                     : connectorActions.callbackConnector({
                           callbackId: formAttributeName,
                           callbackConnector: {
-                              uuid: connectorUuid ?? '',
+                              uuid: connectorUuid,
                               kind,
                               functionGroup: functionGroupCode,
                               interfaceUuid,
