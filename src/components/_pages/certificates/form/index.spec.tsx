@@ -20,6 +20,28 @@ const selectableRaProfile = {
     enabled: true,
 } as any;
 
+const ownerUser = {
+    uuid: 'user-1',
+    username: 'jdoe',
+    firstName: 'Jane',
+    lastName: 'Doe',
+    enabled: true,
+} as any;
+
+const certificateGroup = {
+    uuid: 'group-1',
+    name: 'Group One',
+} as any;
+
+const customAttrDescriptor: AttributeDescriptorModel = {
+    type: AttributeType.Custom,
+    name: 'customField',
+    uuid: 'custom-uuid-1',
+    contentType: AttributeContentType.String,
+    // required so the editor renders an editable input directly (optional custom attrs hide behind an add-control).
+    properties: { label: 'Custom Field', required: true, readOnly: false, visible: true, list: false, multiSelect: false },
+} as AttributeDescriptorModel;
+
 test.describe('CertificateForm', () => {
     test('request mode radio is labelled "Request now"', async ({ mount, page }) => {
         await mount(<CertificateFormTestWrapper />);
@@ -180,5 +202,163 @@ test.describe('CertificateForm', () => {
         await expect(page.getByTestId('csrAttributes-empty')).toBeVisible();
         await expect(page.getByTestId('csrAttributes-empty')).toContainText('This RA Profile has no request attributes.');
         await expect(page.getByTestId('csrAttributes-hint')).toHaveCount(0);
+    });
+
+    test('Pre-register mode groups fields into Request Attributes / Custom Attributes / Ownership tabs, Challenge stays inline', async ({
+        mount,
+        page,
+    }) => {
+        await mount(<CertificateFormTestWrapper />);
+
+        await page.getByTestId('requestType-register').click();
+
+        await expect(page.getByRole('tab', { name: 'Request Attributes' })).toBeVisible();
+        await expect(page.getByRole('tab', { name: 'Custom Attributes' })).toBeVisible();
+        await expect(page.getByRole('tab', { name: 'Ownership' })).toBeVisible();
+
+        // The required Challenge is inline (not hidden behind a tab), visible without any tab click.
+        await expect(page.getByTestId('authorizationSecret')).toBeVisible();
+    });
+
+    test('Pre-register Ownership tab shows optional Owner and Groups fields', async ({ mount, page }) => {
+        await mount(<CertificateFormTestWrapper />);
+
+        await page.getByTestId('requestType-register').click();
+        await page.getByRole('tab', { name: 'Ownership' }).click();
+
+        await expect(page.getByTestId('select-registerOwner-trigger')).toBeVisible();
+        await expect(page.getByTestId('select-registerGroups-trigger')).toBeVisible();
+
+        // Both are optional: no required (red-star) indicator on their labels.
+        await expect(page.getByTestId('label-registerOwner').locator('.text-red-500')).toHaveCount(0);
+        await expect(page.getByTestId('label-registerGroups').locator('.text-red-500')).toHaveCount(0);
+    });
+
+    test('Issue now mode does not show the Owner or Groups fields', async ({ mount, page }) => {
+        await mount(<CertificateFormTestWrapper />);
+
+        await expect(page.getByTestId('select-registerOwner-trigger')).toHaveCount(0);
+        await expect(page.getByTestId('select-registerGroups-trigger')).toHaveCount(0);
+        await expect(page.getByRole('tab', { name: 'Ownership' })).toHaveCount(0);
+    });
+
+    test('Owner field lists users; Groups field is multi-select and lists groups', async ({ mount, page }) => {
+        await mount(
+            <CertificateFormTestWrapper
+                preloadedState={{
+                    users: { ...testInitialState.users, users: [ownerUser] },
+                    certificateGroups: { ...testInitialState.certificateGroups, certificateGroups: [certificateGroup] },
+                }}
+            />,
+        );
+
+        await page.getByTestId('requestType-register').click();
+        await page.getByRole('tab', { name: 'Ownership' }).click();
+
+        await page.getByTestId('select-registerOwner-trigger').click();
+        await expect(page.getByRole('option', { name: 'Jane Doe (jdoe)' })).toBeVisible();
+        await page.getByRole('option', { name: 'Jane Doe (jdoe)' }).click();
+        await expect(page.getByTestId('select-registerOwner-trigger')).toContainText('Jane Doe (jdoe)');
+
+        // Groups is a multi-select: selecting a group keeps the listbox open for further choices.
+        await page.getByTestId('select-registerGroups-trigger').click();
+        await page.getByRole('option', { name: 'Group One' }).click();
+        await expect(page.getByTestId('select-registerGroups-trigger')).toContainText('Group One');
+    });
+
+    test('Owner (optional) can be cleared back to empty after a selection', async ({ mount, page }) => {
+        await mount(<CertificateFormTestWrapper preloadedState={{ users: { ...testInitialState.users, users: [ownerUser] } }} />);
+
+        await page.getByTestId('requestType-register').click();
+        await page.getByRole('tab', { name: 'Ownership' }).click();
+
+        await page.getByTestId('select-registerOwner-trigger').click();
+        await page.getByRole('option', { name: 'Jane Doe (jdoe)' }).click();
+        await expect(page.getByTestId('select-registerOwner-trigger')).toContainText('Jane Doe (jdoe)');
+
+        // Optional owner must be resettable to empty (omitting ownerUuid means the registering user owns it).
+        await page.getByTestId('select-registerOwner-clear').click();
+        await expect(page.getByTestId('select-registerOwner-trigger')).toContainText('Select Owner');
+    });
+
+    test('Custom Attributes values survive an Issue<->Pre-register mode switch', async ({ mount, page }) => {
+        await mount(
+            <CertificateFormTestWrapper
+                preloadedState={{
+                    customAttributes: { ...testInitialState.customAttributes, resourceCustomAttributes: [customAttrDescriptor] },
+                }}
+            />,
+        );
+
+        const customField = page.getByTestId('text-input-__attributes__customCertificate__.customField');
+
+        await page.getByRole('tab', { name: 'Custom Attributes' }).click();
+        // Text inputs are readonly-until-focus (anti-autofill), so focus before filling.
+        await customField.click();
+        await customField.fill('keep-me');
+        await expect(customField).toHaveValue('keep-me');
+
+        // Toggle to Pre-register and back — the shared, always-mounted Custom Attributes editor must not remount/clear.
+        await page.getByTestId('requestType-register').click();
+        await page.getByTestId('requestType-issue').click();
+
+        await page.getByRole('tab', { name: 'Custom Attributes' }).click();
+        await expect(page.getByTestId('text-input-__attributes__customCertificate__.customField')).toHaveValue('keep-me');
+    });
+
+    async function fillRegisterBasics(page: import('@playwright/test').Page) {
+        await page.getByTestId('requestType-register').click();
+        await page.getByTestId('select-raProfile-trigger').click();
+        await page.getByRole('option', { name: 'RA One' }).click();
+        await page.getByTestId('authorizationSecret').fill('challenge-secret');
+    }
+
+    test('registerCertificate payload includes selected owner/groups', async ({ mount, page }) => {
+        const dispatched: { type: string; payload?: any }[] = [];
+
+        await mount(
+            <CertificateFormTestWrapper
+                onAction={(a) => dispatched.push(a)}
+                preloadedState={{
+                    raprofiles: { ...testInitialState.raprofiles, raProfiles: [selectableRaProfile] },
+                    users: { ...testInitialState.users, users: [ownerUser] },
+                    certificateGroups: { ...testInitialState.certificateGroups, certificateGroups: [certificateGroup] },
+                }}
+            />,
+        );
+
+        await fillRegisterBasics(page);
+        await page.getByRole('tab', { name: 'Ownership' }).click();
+        await page.getByTestId('select-registerOwner-trigger').click();
+        await page.getByRole('option', { name: 'Jane Doe (jdoe)' }).click();
+        await page.getByTestId('select-registerGroups-trigger').click();
+        await page.getByRole('option', { name: 'Group One' }).click();
+
+        await page.getByRole('button', { name: 'Create' }).click();
+
+        await expect.poll(() => dispatched.find((a) => a.type === 'certificates/registerCertificate')).toBeTruthy();
+        const action = dispatched.find((a) => a.type === 'certificates/registerCertificate');
+        expect(action?.payload.registerRequest.ownerUuid).toBe('user-1');
+        expect(action?.payload.registerRequest.groupUuids).toEqual(['group-1']);
+    });
+
+    test('registerCertificate payload omits owner/groups when left empty', async ({ mount, page }) => {
+        const dispatched: { type: string; payload?: any }[] = [];
+
+        await mount(
+            <CertificateFormTestWrapper
+                onAction={(a) => dispatched.push(a)}
+                preloadedState={{ raprofiles: { ...testInitialState.raprofiles, raProfiles: [selectableRaProfile] } }}
+            />,
+        );
+
+        await fillRegisterBasics(page);
+        await page.getByRole('button', { name: 'Create' }).click();
+
+        await expect.poll(() => dispatched.find((a) => a.type === 'certificates/registerCertificate')).toBeTruthy();
+        const action = dispatched.find((a) => a.type === 'certificates/registerCertificate');
+        // Empty selections must be omitted (undefined) so issuance won't overwrite existing owner/groups.
+        expect(action?.payload.registerRequest.ownerUuid).toBeUndefined();
+        expect(action?.payload.registerRequest.groupUuids).toBeUndefined();
     });
 });

@@ -8,6 +8,8 @@ import { actions as connectorActions } from 'ducks/connectors';
 import { selectors as cryptographyOperationSelectors } from 'ducks/cryptographic-operations';
 import { actions as raProfileActions, selectors as raProfileSelectors } from 'ducks/ra-profiles';
 import { actions as tokenProfileActions } from 'ducks/token-profiles';
+import { actions as userActions, selectors as userSelectors } from 'ducks/users';
+import { actions as certificateGroupActions, selectors as certificateGroupSelectors } from 'ducks/certificateGroups';
 import type * as React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -55,6 +57,8 @@ type CertificateFormValues = {
     altKeyUuid?: string;
     authorizationSecret?: string;
     expiresAt?: string;
+    ownerUuid?: string;
+    groupUuids?: string[];
 };
 
 function useDescriptorState() {
@@ -128,6 +132,8 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
     const navigate = useNavigate();
 
     const raProfiles = useSelector(raProfileSelectors.raProfiles);
+    const users = useSelector(userSelectors.users);
+    const certificateGroups = useSelector(certificateGroupSelectors.certificateGroups);
     const issuanceAttributeDescriptors = useSelector(certificateSelectors.issuanceAttributes);
     const resourceCustomAttributes = useSelector(customAttributesSelectors.resourceCustomAttributes);
     const isFetchingResourceCustomAttributes = useSelector(customAttributesSelectors.isFetchingResourceCustomAttributes);
@@ -152,6 +158,7 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
     const [altSignatureAttributesCallbackAttributes, setAltSignatureAttributesCallbackAttributes] = useDescriptorState();
     const [fileContent, setFileContent] = useState<string>('');
     const [certificate, setCertificate] = useState<CertificateDetailResponseModel | undefined>();
+    const [activeRequestTab, setActiveRequestTab] = useState(0);
 
     const [attributeValuesMap] = useState<Record<string, Record<string, any>>>({});
     const attributeValuesRef = useRef<Record<string, any>>({});
@@ -242,8 +249,19 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
         } else {
             setValue('authorizationSecret', undefined);
             setValue('expiresAt', undefined);
+            setValue('ownerUuid', undefined);
+            setValue('groupUuids', undefined);
         }
     }, [isRegister, setValue]);
+
+    useEffect(() => {
+        // Owner/Groups options are only needed by the Pre-register Ownership tab; fetch them when that
+        // mode is entered rather than on every Add Certificate mount.
+        if (isRegister) {
+            dispatch(userActions.list());
+            dispatch(certificateGroupActions.listGroups());
+        }
+    }, [isRegister, dispatch]);
 
     const onRaProfileChange = useCallback(
         (raProfileUuid: string) => {
@@ -282,6 +300,17 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
         [raProfiles],
     );
 
+    const ownerOptions = useMemo(
+        () =>
+            users.map((user) => ({
+                label: `${user.firstName ? user.firstName + ' ' : ''}${user.lastName ? user.lastName + ' ' : ''}(${user.username})`,
+                value: user.uuid,
+            })),
+        [users],
+    );
+
+    const groupOptions = useMemo(() => certificateGroups.map((group) => ({ label: group.name, value: group.uuid })), [certificateGroups]);
+
     const keySourceOptions = useMemo(
         () => [
             { label: 'External', value: 'external' },
@@ -292,6 +321,22 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
 
     const isExternalSource = uploadCsrSource === 'external';
     const isExistingKeySource = uploadCsrSource === 'existing';
+
+    // A single Request Properties tab strip serves both modes; tabs are shown/hidden per mode so the
+    // Custom Attributes editor stays mounted across an Issue<->Pre-register switch (remounting it would
+    // wipe entered values). Register: Request Attributes | Custom Attributes | Ownership. Issue-now:
+    // Request Attributes (existing key) | Signature | [Alt Signature] | Custom Attributes | Connector.
+    const showRequestAttributesTab = isRegister || (isExistingKeySource && !!tokenProfileUuid);
+    const showSignatureTab = !isRegister && isExistingKeySource && !!tokenProfileUuid;
+    const showAltSignatureTab = !isRegister && includeAltKey && !!altTokenProfileUuid;
+    const showConnectorTab = !isRegister;
+    const showOwnershipTab = isRegister;
+
+    useEffect(() => {
+        // Reset to the first visible tab whenever the visible tab set changes, so a carried-over index
+        // never lands the user on a different tab than the one they had selected.
+        setActiveRequestTab(0);
+    }, [showRequestAttributesTab, showSignatureTab, showAltSignatureTab, showConnectorTab, showOwnershipTab]);
 
     const submitCallback = useCallback(
         (formValues: CertificateFormValues) => {
@@ -317,6 +362,8 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                             csrAttributes: csrAttrs,
                             customAttributes: customAttrs,
                             attributes: [],
+                            ownerUuid: formValues.ownerUuid || undefined,
+                            groupUuids: formValues.groupUuids?.length ? formValues.groupUuids : undefined,
                         },
                     }),
                 );
@@ -515,7 +562,7 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
 
                         <Widget title="Request Properties" busy={issuingCertificate || isFetchingResourceCustomAttributes}>
                             {!isRegister && isExternalSource && selectedRaProfile ? (
-                                <>
+                                <div className="mb-4">
                                     <FileUpload
                                         editable
                                         required
@@ -540,11 +587,11 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                     />
 
                                     {certificate && <CertificateAttributes csr certificate={certificate} />}
-                                </>
+                                </div>
                             ) : null}
 
                             {!isRegister && isExistingKeySource && selectedRaProfile ? (
-                                <div className="space-y-4">
+                                <div className="space-y-4 mb-4">
                                     <RenderTokenProfile type="normal" name="tokenProfileUuid" />
                                     <RenderRequestKey type="normal" name="keyUuid" tokenProfileField="tokenProfileUuid" />
 
@@ -578,62 +625,8 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                 </div>
                             ) : null}
 
-                            {/* The identity (Request Attributes) editor is shared by both modes; Signature Attributes
-                                tabs are issue-now only, since Pre-register never handles keys/signing locally. */}
-                            {isRegister || (isExistingKeySource && tokenProfileUuid) ? (
-                                <TabLayout
-                                    onlyActiveTabContent={false}
-                                    tabs={[
-                                        {
-                                            title: tabTitle('Request Attributes', csrAttributeDescriptors),
-                                            content: renderRequestAttributesTabContent({
-                                                csrAttributeDescriptors,
-                                                csrAttributesCallbackAttributes,
-                                                setCsrAttributesCallbackAttributes,
-                                                isFetchingCsrAttributes,
-                                                selectedRaProfileUuid,
-                                            }),
-                                        },
-                                        ...(!isRegister
-                                            ? [
-                                                  {
-                                                      title: tabTitle('Signature Attributes', signatureAttributeDescriptors),
-                                                      content: (
-                                                          <AttributeEditor
-                                                              id="signatureAttributes"
-                                                              attributeDescriptors={signatureAttributeDescriptors ?? []}
-                                                              groupAttributesCallbackAttributes={signatureAttributesCallbackAttributes}
-                                                              setGroupAttributesCallbackAttributes={
-                                                                  setSignatureAttributesCallbackAttributes
-                                                              }
-                                                          />
-                                                      ),
-                                                  },
-                                              ]
-                                            : []),
-                                        ...(!isRegister && includeAltKey && altTokenProfileUuid
-                                            ? [
-                                                  {
-                                                      title: tabTitle('Alternative Signature Attributes', altSignatureAttributeDescriptors),
-                                                      content: (
-                                                          <AttributeEditor
-                                                              id="altSignatureAttributes"
-                                                              attributeDescriptors={altSignatureAttributeDescriptors ?? []}
-                                                              groupAttributesCallbackAttributes={altSignatureAttributesCallbackAttributes}
-                                                              setGroupAttributesCallbackAttributes={
-                                                                  setAltSignatureAttributesCallbackAttributes
-                                                              }
-                                                          />
-                                                      ),
-                                                  },
-                                              ]
-                                            : []),
-                                    ]}
-                                />
-                            ) : null}
-
                             {isRegister && (
-                                <div className="space-y-4 mt-4">
+                                <div className="space-y-4 mb-4">
                                     <Controller
                                         control={control}
                                         name="authorizationSecret"
@@ -682,44 +675,49 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                 </div>
                             )}
 
-                            {/* Compliance/validation errors apply to any issuance mode, not just external CSR. */}
-                            {selectedRaProfile && issueValidationErrors?.length ? (
-                                <div className="mt-4">
-                                    <ComplianceErrorsPanel errors={issueValidationErrors} />
-                                </div>
-                            ) : null}
-                        </Widget>
-
-                        <Widget busy={issuingCertificate || isFetchingResourceCustomAttributes}>
                             <TabLayout
-                                noBorder
+                                selectedTab={activeRequestTab}
+                                onTabChange={setActiveRequestTab}
                                 onlyActiveTabContent={false}
                                 tabs={[
-                                    // Connector Attributes are discarded on register submit (attributes: [] by design),
-                                    // so this tab must stay hidden in Pre-register mode to avoid silently-ignored input.
-                                    ...(!isRegister
-                                        ? [
-                                              {
-                                                  title: tabTitle(
-                                                      'Connector Attributes',
-                                                      issuanceAttributeDescriptors[selectedRaProfileUuid || ''],
-                                                  ),
-                                                  content: (
-                                                      <AttributeEditor
-                                                          id="issuance_attributes"
-                                                          attributeDescriptors={
-                                                              issuanceAttributeDescriptors[selectedRaProfileUuid || ''] || []
-                                                          }
-                                                          callbackParentUuid={selectedRaProfile?.uuid}
-                                                          callbackResource={Resource.Certificates}
-                                                          groupAttributesCallbackAttributes={groupAttributesCallbackAttributes}
-                                                          setGroupAttributesCallbackAttributes={setGroupAttributesCallbackAttributes}
-                                                      />
-                                                  ),
-                                              },
-                                          ]
-                                        : []),
                                     {
+                                        title: tabTitle('Request Attributes', csrAttributeDescriptors),
+                                        hidden: !showRequestAttributesTab,
+                                        content: renderRequestAttributesTabContent({
+                                            csrAttributeDescriptors,
+                                            csrAttributesCallbackAttributes,
+                                            setCsrAttributesCallbackAttributes,
+                                            isFetchingCsrAttributes,
+                                            selectedRaProfileUuid,
+                                        }),
+                                    },
+                                    {
+                                        title: tabTitle('Signature Attributes', signatureAttributeDescriptors),
+                                        hidden: !showSignatureTab,
+                                        content: (
+                                            <AttributeEditor
+                                                id="signatureAttributes"
+                                                attributeDescriptors={signatureAttributeDescriptors ?? []}
+                                                groupAttributesCallbackAttributes={signatureAttributesCallbackAttributes}
+                                                setGroupAttributesCallbackAttributes={setSignatureAttributesCallbackAttributes}
+                                            />
+                                        ),
+                                    },
+                                    {
+                                        title: tabTitle('Alternative Signature Attributes', altSignatureAttributeDescriptors),
+                                        hidden: !showAltSignatureTab,
+                                        content: (
+                                            <AttributeEditor
+                                                id="altSignatureAttributes"
+                                                attributeDescriptors={altSignatureAttributeDescriptors ?? []}
+                                                groupAttributesCallbackAttributes={altSignatureAttributesCallbackAttributes}
+                                                setGroupAttributesCallbackAttributes={setAltSignatureAttributesCallbackAttributes}
+                                            />
+                                        ),
+                                    },
+                                    {
+                                        // Never hidden: kept mounted in both modes so a mode switch can't remount and
+                                        // clear entered custom-attribute values.
                                         title: tabTitle('Custom Attributes', resourceCustomAttributes),
                                         content: (
                                             <AttributeEditor
@@ -729,9 +727,73 @@ export default function CertificateForm({ onCancel }: CertificateFormProps = {})
                                             />
                                         ),
                                     },
+                                    {
+                                        title: 'Ownership',
+                                        hidden: !showOwnershipTab,
+                                        content: (
+                                            <div className="space-y-4">
+                                                <Controller
+                                                    control={control}
+                                                    name="ownerUuid"
+                                                    render={({ field: { value, onChange } }) => (
+                                                        <Select
+                                                            id="registerOwner"
+                                                            options={ownerOptions}
+                                                            placeholder="Select Owner"
+                                                            value={value ?? ''}
+                                                            label="Owner"
+                                                            isClearable
+                                                            onChange={(selected) => onChange((selected ?? undefined) as string | undefined)}
+                                                        />
+                                                    )}
+                                                />
+                                                <Controller
+                                                    control={control}
+                                                    name="groupUuids"
+                                                    render={({ field: { value, onChange } }) => (
+                                                        <Select
+                                                            id="registerGroups"
+                                                            isMulti
+                                                            options={groupOptions}
+                                                            placeholder="Select Groups"
+                                                            value={groupOptions.filter((option) => value?.includes(option.value))}
+                                                            label="Groups"
+                                                            onChange={(selected) =>
+                                                                onChange((selected ?? []).map((option) => option.value as string))
+                                                            }
+                                                        />
+                                                    )}
+                                                />
+                                            </div>
+                                        ),
+                                    },
+                                    {
+                                        // Connector Attributes are discarded on register submit (attributes: [] by design),
+                                        // so this tab is hidden in Pre-register mode to avoid silently-ignored input.
+                                        title: tabTitle('Connector Attributes', issuanceAttributeDescriptors[selectedRaProfileUuid || '']),
+                                        hidden: !showConnectorTab,
+                                        content: (
+                                            <AttributeEditor
+                                                id="issuance_attributes"
+                                                attributeDescriptors={issuanceAttributeDescriptors[selectedRaProfileUuid || ''] || []}
+                                                callbackParentUuid={selectedRaProfile?.uuid}
+                                                callbackResource={Resource.Certificates}
+                                                groupAttributesCallbackAttributes={groupAttributesCallbackAttributes}
+                                                setGroupAttributesCallbackAttributes={setGroupAttributesCallbackAttributes}
+                                            />
+                                        ),
+                                    },
                                 ]}
                             />
+
+                            {/* Compliance/validation errors apply to any issuance mode, not just external CSR. */}
+                            {selectedRaProfile && issueValidationErrors?.length ? (
+                                <div className="mt-4">
+                                    <ComplianceErrorsPanel errors={issueValidationErrors} />
+                                </div>
+                            ) : null}
                         </Widget>
+
                         <Container className="flex-row justify-end modal-footer" gap={4}>
                             <div className="flex gap-2">
                                 <Button
