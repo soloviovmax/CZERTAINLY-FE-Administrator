@@ -932,7 +932,7 @@ describe('connectors epics', () => {
     test('callbackConnector outer catchError emits callbackFailure and fetchError when callback throws', async () => {
         const action = slice.actions.callbackConnector({
             callbackId: 'cb-1',
-            callbackConnector: { uuid: 'c-1', requestAttributeCallback: { mappings: [] } } as any,
+            callbackConnector: { uuid: 'c-1', functionGroup: 'FG', kind: 'kind', requestAttributeCallback: { mappings: [] } } as any,
         });
         const emitted = await runEpic(
             17,
@@ -947,6 +947,54 @@ describe('connectors epics', () => {
             1,
         );
         expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: '' }));
+    });
+
+    test('callbackConnector without functionGroup/kind fails with the real callbackId instead of calling v1', async () => {
+        const action = slice.actions.callbackConnector({
+            callbackId: 'cb-no-kind',
+            callbackConnector: { uuid: 'c-1', requestAttributeCallback: { mappings: [] } } as any,
+        });
+        const callbackMock = vi.fn(() => of({}));
+        const emitted = await runEpic(17, action, { callback: { callback: callbackMock, callbackV2: callbackMock } as any }, 1);
+        expect(callbackMock).not.toHaveBeenCalled();
+        expect(emitted[0]).toEqual(slice.actions.callbackFailure({ callbackId: 'cb-no-kind' }));
+    });
+
+    test('callbackConnector with interfaceUuid routes to v2 and sends interfaceUuid in the body', async () => {
+        const action = slice.actions.callbackConnector({
+            callbackId: 'cb-ng',
+            callbackConnector: {
+                uuid: 'c-1',
+                interfaceUuid: 'iface-1',
+                requestAttributeCallback: { name: 'dependent', attributes: [] },
+            } as any,
+        });
+        const callbackV2Mock = vi.fn(() => of({ result: 'ok' }));
+        const legacyMock = vi.fn(() => of({}));
+        const emitted = await runEpic(17, action, { callback: { callback: legacyMock, callbackV2: callbackV2Mock } as any }, 1);
+        expect(legacyMock).not.toHaveBeenCalled();
+        expect(callbackV2Mock).toHaveBeenCalledWith({
+            uuid: 'c-1',
+            requestAttributeCallback: { name: 'dependent', attributes: [], interfaceUuid: 'iface-1' },
+        });
+        expect(emitted[0]).toEqual(slice.actions.callbackSuccess({ callbackId: 'cb-ng', data: { result: 'ok' } }));
+    });
+
+    test('callbackConnector without interfaceUuid does not add the field to the v2 body', async () => {
+        const action = slice.actions.callbackConnector({
+            callbackId: 'cb-v2',
+            callbackConnector: {
+                uuid: 'c-1',
+                version: ConnectorVersion.V2,
+                requestAttributeCallback: { name: 'dependent', attributes: [] },
+            } as any,
+        });
+        const callbackV2Mock = vi.fn(() => of({}));
+        await runEpic(17, action, { callback: { callbackV2: callbackV2Mock } as any }, 1);
+        expect(callbackV2Mock).toHaveBeenCalledWith({
+            uuid: 'c-1',
+            requestAttributeCallback: { name: 'dependent', attributes: [] },
+        });
     });
 
     test('callbackResource outer catchError emits callbackFailure and fetchError when resourceCallback throws', async () => {

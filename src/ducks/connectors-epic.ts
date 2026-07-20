@@ -473,30 +473,41 @@ const callbackConnector: AppEpic = (action$, state, deps) => {
     return action$.pipe(
         filter(slice.actions.callbackConnector.match),
         mergeMap((action) => {
-            const { callbackConnector: payload } = action.payload;
+            const { callbackConnector: payload, callbackId } = action.payload;
             const requestAttributeCallback = transformCallbackAttributeModelToDto(payload.requestAttributeCallback);
             // Guard against missing UUID (would produce /v1/connectors/undefined/... URLs)
             if (!payload.uuid) {
-                return of(slice.actions.callbackFailure({ callbackId: action.payload.callbackId }));
+                return of(slice.actions.callbackFailure({ callbackId }));
             }
             const rootState: any = (state as any).value ?? (state as any);
             const connectorsState: any = rootState.connectors;
             const connector = connectorsState?.connectors?.find((c: any) => c.uuid === payload.uuid) ?? connectorsState?.connector;
-            const isV2 = payload.version === ConnectorVersion.V2 || connector?.version === ConnectorVersion.V2;
-            const isStale = staleGuard(state, action.payload.callbackId);
-            const api$ = isV2
-                ? deps.apiClients.callback.callbackV2({
-                      uuid: payload.uuid,
-                      requestAttributeCallback,
-                  })
-                : deps.apiClients.callback.callback({
-                      uuid: payload.uuid,
-                      functionGroup: payload.functionGroup,
-                      kind: payload.kind,
-                      requestAttributeCallback,
-                  });
+            // An interfaceUuid exists only on interface-based connectors, so it pins the route on its own:
+            // parent-less NG forms carry no kind/functionGroup for the version lookup to fall back on.
+            const isV2 = !!payload.interfaceUuid || payload.version === ConnectorVersion.V2 || connector?.version === ConnectorVersion.V2;
+            const isStale = staleGuard(state, callbackId);
 
-            return api$.pipe(toCallbackActions(action.payload.callbackId, isStale, 'Connector callback failure'));
+            let api$: Observable<object>;
+            if (isV2) {
+                api$ = deps.apiClients.callback.callbackV2({
+                    uuid: payload.uuid,
+                    requestAttributeCallback: payload.interfaceUuid
+                        ? { ...requestAttributeCallback, interfaceUuid: payload.interfaceUuid }
+                        : requestAttributeCallback,
+                });
+            } else if (payload.functionGroup && payload.kind) {
+                api$ = deps.apiClients.callback.callback({
+                    uuid: payload.uuid,
+                    functionGroup: payload.functionGroup,
+                    kind: payload.kind,
+                    requestAttributeCallback,
+                });
+            } else {
+                // The v1 route requires both; without them the client throws synchronously.
+                return of(slice.actions.callbackFailure({ callbackId }));
+            }
+
+            return api$.pipe(toCallbackActions(callbackId, isStale, 'Connector callback failure'));
         }),
 
         catchError((error) =>
