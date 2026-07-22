@@ -291,28 +291,42 @@ describe('certificates epics', () => {
         expect(emitted[1].type).toBe(appRedirectActions.fetchError.type);
     });
 
-    test('completeRegisteredCertificate failure emits issue Failure, refetches detail, and a fetch error', async () => {
+    const completeRegisteredFailureAction = certificatesActions.completeRegisteredCertificate({
+        authorityUuid: 'auth-1',
+        raProfileUuid: 'ra-1',
+        certificateUuid: 'cert-1',
+        request: 'BASE64CSR',
+        format: 'PKCS10' as any,
+        authorizationSecret: 'secret',
+        attributes: [],
+    });
+
+    test('completeRegisteredCertificate 422 failure carries the validation-error list for the inline panel', async () => {
         const { emitted } = await runCompleteRegisteredEpic(
-            certificatesActions.completeRegisteredCertificate({
-                authorityUuid: 'auth-1',
-                raProfileUuid: 'ra-1',
-                certificateUuid: 'cert-1',
-                request: 'BASE64CSR',
-                format: 'PKCS10' as any,
-                authorizationSecret: 'secret',
-                attributes: [],
-            }),
+            completeRegisteredFailureAction,
             () => throwError(() => ({ status: 422, response: { message: 'challenge rejected' } })),
-            3,
+            1,
         );
 
-        expect(emitted).toHaveLength(3);
+        expect(emitted).toHaveLength(1);
         expect(emitted[0].type).toBe(certificatesActions.issueCertificateFailure.type);
-        // A rejected challenge can bump failedAttempts / flip the registration state server-side, so the
-        // epic must refetch detail to keep the displayed registration state accurate.
-        expect(emitted[1].type).toBe(certificatesActions.getCertificateDetail.type);
-        expect((emitted[1] as any).payload.uuid).toBe('cert-1');
-        expect(emitted[2].type).toBe(appRedirectActions.fetchError.type);
+        expect((emitted[0] as any).payload.validationErrors).toEqual(['challenge rejected']);
+    });
+
+    test('completeRegisteredCertificate failure emits only the inline Failure — no toast, no detail refetch', async () => {
+        const { emitted } = await runCompleteRegisteredEpic(
+            completeRegisteredFailureAction,
+            () => throwError(() => ({ status: 500, response: { message: 'boom' } })),
+            1,
+        );
+
+        // The dialog renders the error inline and stays open, so it is the single source of truth: no
+        // global fetchError toast, and no getCertificateDetail refetch (which would unmount the dialog).
+        expect(emitted).toHaveLength(1);
+        expect(emitted[0].type).toBe(certificatesActions.issueCertificateFailure.type);
+        expect((emitted[0] as any).payload.validationErrors).toBeUndefined();
+        expect(emitted.some((a) => a.type === appRedirectActions.fetchError.type)).toBe(false);
+        expect(emitted.some((a) => a.type === certificatesActions.getCertificateDetail.type)).toBe(false);
     });
 
     test('completeRegisteredCertificate CSR-upload mode forwards request/format without key fields', async () => {
