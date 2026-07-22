@@ -1,5 +1,6 @@
 import { test, expect } from '../../../../../playwright/ct-test';
 import TimeSeriesChartWithStore from './TimeSeriesChartWithStore';
+import TimeSeriesChartNavHarness from './TimeSeriesChartNavHarness';
 import { EntityType } from 'ducks/filters';
 import { SigningRecordStatisticsPeriod } from 'types/openapi';
 
@@ -38,5 +39,32 @@ test.describe('TimeSeriesChart', () => {
         await component.getByRole('button', { name: '7d' }).click();
         await expect(component.getByRole('button', { name: '7d' })).toHaveClass(/text-white/);
         await expect(component.getByRole('button', { name: '24h' })).not.toHaveClass(/text-white/);
+    });
+
+    test('clicking a data point drills down (navigates to the redirect)', async ({ mount, page }) => {
+        const component = await mount(
+            <TimeSeriesChartNavHarness title="Signings over Time" data={data} entity={EntityType.SIGNING_RECORD} onSetFilter={() => []} />,
+        );
+        const surface = component.locator('.recharts-surface').first();
+        await expect(surface).toBeVisible();
+        const box = await surface.boundingBox();
+        if (!box) throw new Error('chart surface not found');
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+        const activeDot = page.locator('.recharts-active-dot');
+        await expect(activeDot).toBeVisible();
+        await activeDot.click();
+        await expect(page.getByTestId('landed-on-redirect')).toBeVisible();
+    });
+
+    test('clicking empty plot space does not navigate', async ({ mount, page }) => {
+        const component = await mount(
+            <TimeSeriesChartNavHarness title="Signings over Time" data={data} entity={EntityType.SIGNING_RECORD} onSetFilter={() => []} />,
+        );
+        const surface = component.locator('.recharts-surface').first();
+        await expect(surface).toBeVisible();
+        const box = await surface.boundingBox();
+        if (!box) throw new Error('chart surface not found');
+        await page.mouse.click(box.x + 3, box.y + 3);
+        await expect(page.getByTestId('landed-on-redirect')).toHaveCount(0);
     });
 });
