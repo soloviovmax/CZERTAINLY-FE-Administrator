@@ -38,14 +38,18 @@ test.describe('RequestAttributesSettings (platform default set)', () => {
     });
 
     test('reflects the preloaded strict validation flag', async ({ mount, page }) => {
-        await mount(<RequestAttributesSettingsWithStore strict />);
+        const component = await mount(<RequestAttributesSettingsWithStore strict />);
 
-        await expect(page.getByTestId('switch-externalCsrValidationStrict-input')).toBeChecked();
+        await expect(page.getByTestId('request-validation-strict')).toBeVisible();
+        await expect(component.locator('input[type="radio"]').first()).toBeChecked();
+        await expect(component.locator('input[type="radio"]').nth(1)).not.toBeChecked();
     });
 
-    test('strict validation switch is off when the platform default is unset', async ({ mount, page }) => {
-        await mount(<RequestAttributesSettingsWithStore />);
+    test('lenient is selected when the platform default is unset', async ({ mount, page }) => {
+        const component = await mount(<RequestAttributesSettingsWithStore />);
 
-        await expect(page.getByTestId('switch-externalCsrValidationStrict-input')).not.toBeChecked();
+        await expect(page.getByTestId('request-validation-lenient')).toBeVisible();
+        await expect(component.locator('input[type="radio"]').first()).not.toBeChecked();
+        await expect(component.locator('input[type="radio"]').nth(1)).toBeChecked();
     });
 });
