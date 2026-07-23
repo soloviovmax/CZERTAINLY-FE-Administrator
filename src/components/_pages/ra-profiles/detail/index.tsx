@@ -18,6 +18,7 @@ import { useRunOnSuccessfulFinish } from 'utils/common-hooks';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router';
 import RaProfileForm from '../form';
+import RaProfileRequestAttributesWidget from '../RaProfileRequestAttributesWidget';
 import { Resource } from 'types/openapi';
 import { renderProtocolDetail } from './renderProtocolDetail';
 import CustomAttributeWidget from '../../../Attributes/CustomAttributeWidget';
@@ -53,6 +54,9 @@ export default function RaProfileDetail() {
     const { id, authorityId } = useParams();
 
     const raProfile = useSelector(raProfilesSelectors.raProfile);
+
+    const routeAuthorityUuid = authorityId && authorityId !== 'unknown' && authorityId !== 'undefined' ? authorityId : undefined;
+    const requestAttributesAuthorityUuid = raProfile?.authorityInstanceUuid ?? routeAuthorityUuid;
     const acmeDetails = useSelector(raProfilesSelectors.acmeDetails);
     const scepDetails = useSelector(raProfilesSelectors.scepDetails);
     const cmpDetails = useSelector(raProfilesSelectors.cmpDetails);
@@ -1004,26 +1008,45 @@ export default function RaProfileDetail() {
                                 {
                                     title: 'Attributes',
                                     content: (
-                                        <Container className="md:flex-row">
-                                            <Widget
-                                                title="RA Profile Attributes"
-                                                titleSize="large"
-                                                lockSize="large"
-                                                className="w-full md:w-1/2"
-                                            >
-                                                {raProfile?.attributes && raProfile.attributes.length > 0 ? (
-                                                    <AttributeViewer attributes={raProfile?.attributes} />
-                                                ) : (
-                                                    <></>
-                                                )}
-                                            </Widget>
-                                            {raProfile && (
-                                                <CustomAttributeWidget
-                                                    resource={Resource.RaProfiles}
-                                                    resourceUuid={raProfile.uuid}
-                                                    attributes={raProfile.customAttributes}
+                                        <Container>
+                                            <Container className="md:flex-row">
+                                                <Widget
+                                                    title="RA Profile Attributes"
+                                                    titleSize="large"
+                                                    lockSize="large"
                                                     className="w-full md:w-1/2"
-                                                />
+                                                >
+                                                    {raProfile?.attributes && raProfile.attributes.length > 0 ? (
+                                                        <AttributeViewer attributes={raProfile?.attributes} />
+                                                    ) : (
+                                                        <></>
+                                                    )}
+                                                </Widget>
+                                                {raProfile && (
+                                                    <CustomAttributeWidget
+                                                        resource={Resource.RaProfiles}
+                                                        resourceUuid={raProfile.uuid}
+                                                        attributes={raProfile.customAttributes}
+                                                        className="w-full md:w-1/2"
+                                                    />
+                                                )}
+                                            </Container>
+                                            {raProfile && requestAttributesAuthorityUuid && (
+                                                <Widget
+                                                    title="Request Attributes"
+                                                    titleSize="large"
+                                                    refreshAction={getFreshRaProfileDetail}
+                                                    lockSize="large"
+                                                    className="w-full"
+                                                    dataTestId="ra-profile-request-attributes-widget-card"
+                                                >
+                                                    <RaProfileRequestAttributesWidget
+                                                        authorityUuid={requestAttributesAuthorityUuid}
+                                                        raProfileUuid={raProfile.uuid}
+                                                        certificateRequestAttributes={raProfile.certificateRequestAttributes}
+                                                        onSaved={getFreshRaProfileDetail}
+                                                    />
+                                                </Widget>
                                             )}
                                         </Container>
                                     ),
