@@ -1,4 +1,5 @@
 import type { RaProfileCertificateRequestAttributesDto, RaProfileCertificateRequestAttributesUpdateDto } from 'types/openapi';
+import { DEFAULT_MERGE_MODE, MERGE_MODE_AND_BINDINGS_ENABLED } from 'utils/requestAttributeAuthoring';
 
 export type RequestValidationFormValues = {
     usePlatformSettings: boolean;
@@ -31,11 +32,15 @@ export function requestValidationDefaultFormValues(
 export function requestValidationFormValuesToUpdateDto(
     values: RequestValidationFormValues,
     currentConfiguration?: RaProfileCertificateRequestAttributesDto,
+    enabled: boolean = MERGE_MODE_AND_BINDINGS_ENABLED,
 ): RaProfileCertificateRequestAttributesUpdateDto {
+    // This dialog has no UI for merge mode / bindings, so while the feature is hidden (fe#1908) it
+    // coerces them to `DEFAULT_MERGE_MODE` / no bindings like every other save path. `enabled`
+    // defaults to the flag and is a seam so tests can exercise the re-enabled round-trip.
     return {
         requestAttributes: currentConfiguration?.requestAttributes,
-        mergeMode: currentConfiguration?.mergeMode,
-        valueSourceBindings: currentConfiguration?.valueSourceBindings,
+        mergeMode: enabled ? currentConfiguration?.mergeMode : DEFAULT_MERGE_MODE,
+        valueSourceBindings: enabled ? currentConfiguration?.valueSourceBindings : [],
         // `null` means "inherit the platform default", but the generated model types this field as
         // `boolean | undefined` (the spec omits `nullable`). Narrow the cast to just this field so the
         // rest of the literal stays type-checked against the DTO.
