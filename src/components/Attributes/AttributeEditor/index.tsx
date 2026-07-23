@@ -76,11 +76,14 @@ const contentItemLabel = (value: { reference?: string; data?: unknown } | null |
 };
 
 /**
- * A descriptor carries a configured default value when it holds content and is not a list — for a
- * list `content` is the set of selectable options, not a value to pre-fill.
+ * A descriptor carries a configured default value when it holds content and is neither a list nor a
+ * RESOURCE — for those `content` is the set of selectable options, not a value to pre-fill.
  */
 const hasDefaultValue = (descriptor: CustomAttributeModel): boolean =>
-    !descriptor.properties.list && Array.isArray(descriptor.content) && descriptor.content.length > 0;
+    !descriptor.properties.list &&
+    descriptor.contentType !== AttributeContentType.Resource &&
+    Array.isArray(descriptor.content) &&
+    descriptor.content.length > 0;
 
 export type Props = {
     id: string;
@@ -776,8 +779,6 @@ function AttributeEditorInner({
             attributeDescriptors.filter(
                 (descriptor) =>
                     isCustomAttributeModel(descriptor) &&
-                    // attributes rendered from the start are marked as shown so the "Show custom attribute"
-                    // selector does not offer them again
                     (attributes.some((attr) => attr.uuid === descriptor.uuid) || hasDefaultValue(descriptor)),
             ),
         );

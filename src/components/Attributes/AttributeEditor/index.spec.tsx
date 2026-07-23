@@ -362,6 +362,24 @@ test.describe('AttributeEditor', () => {
         await expect(page.getByTestId('select-__attributes__testEditor__.customList')).toHaveCount(0);
     });
 
+    test('RESOURCE custom attribute options are not treated as a default value', async ({ mount, page }) => {
+        const descriptors: AttributeDescriptorModel[] = [
+            customDescriptor({
+                name: 'customResource',
+                uuid: 'custom-resource-uuid',
+                contentType: AttributeContentType.Resource,
+                properties: { label: 'Custom Resource', required: false, readOnly: false, list: false, multiSelect: false } as any,
+                content: [
+                    { reference: 'Group A', data: { uuid: 'a' } },
+                    { reference: 'Group B', data: { uuid: 'b' } },
+                ] as any,
+            }),
+        ];
+        await mount(<AttributeEditorTestWrapper id={editorId} attributeDescriptors={descriptors} />);
+        await expect(page.getByText('Show custom attribute')).toBeVisible({ timeout: 10000 });
+        await expect(page.getByTestId('select-__attributes__testEditor__.customResource')).toHaveCount(0);
+    });
+
     test('Boolean required with no value shows false', async ({ mount, page }) => {
         const descriptors: AttributeDescriptorModel[] = [
             dataDescriptor({
