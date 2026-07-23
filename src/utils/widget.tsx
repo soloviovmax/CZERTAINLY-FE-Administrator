@@ -2,9 +2,9 @@ import AttributeEditor from 'components/Attributes/AttributeEditor';
 import type { TableDataRow, TableHeader } from 'components/CustomTable';
 import type { WidgetButtonProps } from 'components/WidgetButtons';
 import { useMemo } from 'react';
-import type { CustomAttributeModel } from 'types/attributes';
+import type { AttributeResponseModel, CustomAttributeModel } from 'types/attributes';
 import type { CertificateGroupResponseModel } from 'types/certificateGroups';
-import type { Resource, ResponseAttributeDto, UserDto } from 'types/openapi';
+import type { Resource, UserDto } from 'types/openapi';
 
 export function getEditAndDeleteWidgetButtons(
     onEditClick: (event: React.MouseEvent) => void,
@@ -43,7 +43,7 @@ export function createWidgetDetailHeaders(): TableHeader[] {
     ];
 }
 
-export function createTableDataRow(label: string, value: string | null | undefined): TableDataRow {
+export function createTableDataRow(label: string, value: React.ReactNode): TableDataRow {
     return {
         id: label.toLowerCase().replaceAll(/[^a-z0-9]/g, ''),
         columns: [label, value ?? ''],
@@ -86,7 +86,7 @@ function useAttributeEditor({
     isBusy: boolean;
     id: string;
     resourceKey: Resource;
-    attributes: ResponseAttributeDto[] | undefined;
+    attributes: AttributeResponseModel[] | undefined;
     multipleResourceCustomAttributes: Record<string, CustomAttributeModel[]>;
     withRemoveAction?: boolean;
 }) {

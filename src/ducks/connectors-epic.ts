@@ -1,8 +1,9 @@
-import type { AppEpic } from 'ducks';
+import type { AppEpic, AppState } from 'ducks';
+import type { StateObservable } from 'redux-observable';
 import { EMPTY, type Observable, of } from 'rxjs';
 import { catchError, filter, map, mergeMap, startWith, switchMap } from 'rxjs/operators';
 import { LockWidgetNameEnum } from 'types/user-interface';
-import { AuthType, ConnectorVersion } from 'types/openapi';
+import { AuthType, type ConnectorRequestDtoV2, ConnectorVersion, type ConnectorUpdateRequestDtoV2 } from 'types/openapi';
 import { extractError } from 'utils/net';
 import { actions as alertActions } from './alerts';
 import { actions as appRedirectActions } from './app-redirect';
@@ -184,7 +185,7 @@ const getConnectorHealth: AppEpic = (action$, state, deps) => {
             deps.apiClients.connectorsV2.checkHealthV2({ uuid: action.payload.uuid }).pipe(
                 map((healthInfo) =>
                     slice.actions.getConnectorHealthSuccess({
-                        health: transformHealthInfoToModel(healthInfo as any),
+                        health: transformHealthInfoToModel(healthInfo),
                     }),
                 ),
                 catchError((error) => of(slice.actions.getConnectorHealthFailure())),
@@ -198,7 +199,7 @@ const createConnector: AppEpic = (action$, state, deps) => {
         filter(slice.actions.createConnector.match),
         switchMap((action) =>
             deps.apiClients.connectorsV2
-                .createConnectorV2({ connectorRequestDtoV2: transformConnectorRequestModelToDto(action.payload) as any })
+                .createConnectorV2({ connectorRequestDtoV2: transformConnectorRequestModelToDto(action.payload) as ConnectorRequestDtoV2 })
                 .pipe(
                     mergeMap((connector) =>
                         of(
@@ -227,7 +228,9 @@ const updateConnector: AppEpic = (action$, state, deps) => {
             deps.apiClients.connectorsV2
                 .editConnectorV2({
                     uuid: action.payload.uuid,
-                    connectorUpdateRequestDtoV2: transformConnectorUpdateRequestModelToDto(action.payload.connectorUpdateRequest) as any,
+                    connectorUpdateRequestDtoV2: transformConnectorUpdateRequestModelToDto(
+                        action.payload.connectorUpdateRequest,
+                    ) as ConnectorUpdateRequestDtoV2,
                 })
                 .pipe(
                     mergeMap((connector) =>
@@ -308,7 +311,7 @@ const connectConnector: AppEpic = (action$, state, deps) => {
                     connectRequestDto: {
                         ...action.payload,
                         authAttributes: action.payload.authAttributes?.map(transformAttributeRequestModelToDto),
-                    } as any,
+                    },
                 })
                 .pipe(
                     map((connection) =>
@@ -449,11 +452,12 @@ const bulkForceDeleteConnectors: AppEpic = (action$, state, deps) => {
     );
 };
 
-const currentCallbackSeq = (state: any, callbackId: string): number => (state.value ?? state)?.connectors?.callbackSeq?.[callbackId] ?? 0;
+const currentCallbackSeq = (state: StateObservable<AppState>, callbackId: string): number =>
+    state.value?.connectors?.callbackSeq?.[callbackId] ?? 0;
 
 // Captures the dispatch sequence; a response arriving after a newer dispatch for the same
 // callbackId is stale and must be discarded (kept out of callbackData, no failure state, no toast).
-const staleGuard = (state: any, callbackId: string): (() => boolean) => {
+const staleGuard = (state: StateObservable<AppState>, callbackId: string): (() => boolean) => {
     const seq = currentCallbackSeq(state, callbackId);
     return () => currentCallbackSeq(state, callbackId) !== seq;
 };
@@ -480,9 +484,8 @@ const callbackConnector: AppEpic = (action$, state, deps) => {
                 if (!payload.uuid) {
                     return of(slice.actions.callbackFailure({ callbackId }));
                 }
-                const rootState: any = (state as any).value ?? (state as any);
-                const connectorsState: any = rootState.connectors;
-                const connector = connectorsState?.connectors?.find((c: any) => c.uuid === payload.uuid) ?? connectorsState?.connector;
+                const connectorsState = state.value?.connectors;
+                const connector = connectorsState?.connectors?.find((c) => c.uuid === payload.uuid) ?? connectorsState?.connector;
                 // An interfaceUuid exists only on interface-based connectors, so it pins the route on its own:
                 // parent-less NG forms carry no kind/functionGroup for the version lookup to fall back on.
                 const isV2 =
@@ -516,7 +519,10 @@ const callbackConnector: AppEpic = (action$, state, deps) => {
                 // callback would hang with isRunningCallback stuck true.
                 return of(
                     slice.actions.callbackFailure({ callbackId }),
-                    appRedirectActions.fetchError({ error, message: 'Failed to perform connector callback' }),
+                    appRedirectActions.fetchError({
+                        error: error instanceof Error ? error : undefined,
+                        message: 'Failed to perform connector callback',
+                    }),
                 );
             }
         }),
@@ -542,7 +548,10 @@ const callbackResource: AppEpic = (action$, state, deps) => {
                 // See callbackConnector: a throw reaching the outer stream would kill this epic for good.
                 return of(
                     slice.actions.callbackFailure({ callbackId }),
-                    appRedirectActions.fetchError({ error, message: 'Failed to perform resource callback' }),
+                    appRedirectActions.fetchError({
+                        error: error instanceof Error ? error : undefined,
+                        message: 'Failed to perform resource callback',
+                    }),
                 );
             }
         }),

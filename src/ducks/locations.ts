@@ -1,4 +1,6 @@
 import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { resetSliceState } from 'ducks/reducerUtils';
+import type { AppState } from 'ducks';
 import type { AttributeDescriptorModel } from 'types/attributes';
 import type { SearchRequestModel } from 'types/certificate';
 import type {
@@ -70,11 +72,7 @@ export const slice = createSlice({
 
     reducers: {
         resetState: (state, action: PayloadAction<void>) => {
-            Object.keys(state).forEach((key) => {
-                if (!Object.hasOwn(initialState, key)) (state as any)[key] = undefined;
-            });
-
-            Object.keys(initialState).forEach((key) => ((state as any)[key] = (initialState as any)[key]));
+            resetSliceState(state, initialState);
         },
 
         clearPushAttributeDescriptors: (state, action: PayloadAction<void>) => {
@@ -338,7 +336,7 @@ export const slice = createSlice({
     },
 });
 
-export const state = (reduxStore: any): State => reduxStore?.[slice.name];
+export const state = (reduxStore: AppState): State => reduxStore?.[slice.name];
 
 export const location = createSelector(state, (state) => state.location);
 export const locations = createSelector(state, (state) => state.locations);
