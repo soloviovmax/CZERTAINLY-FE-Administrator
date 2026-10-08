@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react-swc';
 import tailwindcss from '@tailwindcss/vite';
 import istanbul from 'vite-plugin-istanbul';
+import { ctCoverageOptions } from './scripts/ct-coverage.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,7 +18,7 @@ export default defineConfig({
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 2 : undefined,
+    workers: process.env.CI ? 4 : undefined,
     use: {
         trace: 'on-first-retry',
         ctPort: 3100,
@@ -76,41 +77,23 @@ export default defineConfig({
         { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
         { name: 'webkit', use: { ...devices['Desktop Safari'] } },
     ],
+    // CI shards the run and merges the shards afterwards: the blob report feeds `playwright merge-reports`, the raw
+    // coverage records feed scripts/merge-ct-coverage.mjs. The HTML and JUnit reports are then written by the merge.
     reporter: [
         ['list'],
-        ['html', { outputFolder: 'playwright-report', open: 'never' }],
-        ['junit', { outputFile: 'playwright-report/junit.xml' }],
+        ...(process.env.CI
+            ? [['blob'] as const]
+            : [
+                  ['html', { outputFolder: 'playwright-report', open: 'never' }] as const,
+                  ['junit', { outputFile: 'playwright-report/junit.xml' }] as const,
+              ]),
         [
             'monocart-reporter',
             {
                 name: 'CT Report',
                 outputFile: './monocart-report/index.html',
-                sourcePath: (filePath: string) => {
-                    const fp = filePath.replaceAll('\\', '/');
-                    const m = /(^|\/)(src\/.*)$/.exec(fp);
-                    if (m) return m[2];
-                    const cwd = process.cwd().replaceAll('\\', '/');
-                    if (fp.startsWith(cwd + '/')) return fp.slice(cwd.length + 1);
-                    return fp;
-                },
-                coverage: {
-                    outputDir: './coverage-playwright',
-                    reports: ['lcovonly', 'text-summary'],
-                    sourceFilter: (p: string) => {
-                        if (!p) return false;
-
-                        p = p.replaceAll('\\', '/');
-
-                        if (p.startsWith('localhost-')) return false;
-                        if (p.includes('/assets/') || p.includes('assets/')) return false;
-                        if (p.endsWith('.css')) return false;
-                        if (p.includes('node_modules')) return false;
-                        if (p.includes('/_pages/')) return false;
-                        if (p.includes('/types/openapi/')) return false; // Exclude generated types
-
-                        return /^src\/.*\.(ts|tsx|js|jsx)$/.test(p);
-                    },
-                },
+                sourcePath: ctCoverageOptions.sourcePath,
+                coverage: ctCoverageOptions,
             },
         ],
     ],
