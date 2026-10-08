@@ -277,6 +277,19 @@ credentials. Three workflows relay the context instead:
 `dispatch-sonar.yml` consumes the same `pr-context.json` to drive `sonar.yml`, so changing what
 `prepare_preview.yml` writes affects both paths.
 
+### Component tests and Sonar coverage
+
+`playwright.yml` splits the component suite into four shards per browser (`shard` job) and merges them in a job
+named `test (<browser>)`, so the required status check keeps the name it had when it was one job. Each shard writes a
+blob report and the raw coverage records (`scripts/ct-coverage.mjs` holds the shared coverage options); the merge
+job turns the blobs into the HTML and JUnit report with `playwright merge-reports` and the raw records into one
+`coverage-playwright/lcov.info` with `scripts/merge-ct-coverage.mjs`, published as the `playwright-coverage-<browser>`
+artifact.
+
+`sonar.yml` and `sonar-main.yml` do not run the component suite. They wait for the `playwright.yml` run of the same
+commit, require it to have passed, download that artifact and only run the Vitest suite themselves, so a change to the
+artifact name or to what the merge job publishes has to be mirrored there.
+
 Passing the head SHA works for a fork PR because fork objects live in this repository's network, so
 `actions/checkout` resolves them without a `repository` override. Pinning the commit rather than the
 branch also keeps the published tag honest when a push lands mid-run.
